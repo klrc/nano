@@ -1,4 +1,18 @@
+
+from _utils.loggers import Loggers
+from _utils.metrics import fitness
+from _utils.loggers.wandb.wandb_utils import check_wandb_resume
+from _utils.torch_utils import select_device, de_parallel
+from _utils.plots import plot_labels
+from _utils.general import labels_to_class_weights, increment_path, init_seeds, \
+    get_latest_run, check_dataset, check_file, check_img_size, set_logging, one_cycle, colorstr
+from _utils.datasets import create_dataloader
+from _utils.autoanchor import check_anchors
+from _utils.melt4 import shrink
+
 import torch
+from pathlib import Path
+
 
 def project_path(options):
     # Directories
@@ -24,16 +38,3 @@ def train(model, options, device):
         on_train_val_end()
     torch.cuda.empty_cache()
     return
-
-def main(opt):
-    device = select_device(opt)
-    model = create_model(opt, device)
-    return train(model, opt, device)
-
-
-def run(**kwargs):
-    # Usage: import train; train.run(data='coco128.yaml', imgsz=320, weights='yolov5m.pt')
-    opt = parse_opt(True)
-    for k, v in kwargs.items():
-        setattr(opt, k, v)
-    return main(opt)
