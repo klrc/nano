@@ -168,6 +168,7 @@ def _squeeze_layers(ll, fm, state_dict):
 def load_model(weights, device, nc) -> Xyolov5s:
     # Model
     model = Xyolov5s(nc=nc).to(device)  # create
+    ckpt, csd = None, None
     if weights is not None and weights.endswith('.pt'):
         ckpt = torch.load(weights, map_location=device)  # load checkpoint
         # for different version of checkpoint files
