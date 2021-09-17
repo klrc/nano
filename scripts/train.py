@@ -90,7 +90,7 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
 
     # Model
     model, ckpt, csd = load_model(weights, device, nc)
-    LOGGER.info(f'Transferred {len(csd)}/{len(model.state_dict())} items from {weights}')  # report
+    # LOGGER.info(f'Transferred {len(csd)}/{len(model.state_dict())} items from {weights}')  # report
 
     # Optimizer
     nbs = 64  # nominal batch size
