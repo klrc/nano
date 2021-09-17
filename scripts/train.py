@@ -409,7 +409,7 @@ def run(**kwargs):
 if __name__ == "__main__":
     options = {
         'data': 'VOC.yaml',
-        'weights': None,
+        'weights': '',
         'imgsz': 416,
         'batch-size': 32,
         'hyp': 'data/hyps/hyp.scratch.yaml',
