@@ -312,13 +312,13 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
         # check if need fpgm
         # FPGM for Xyolov5s only ------------------------
         if is_training_stuck:
-            model.cpu().dsp()
-            model = shrink(
-                model,
-                mode='fpgm',
-                blacklist=['backbone_stage_1.0.focus', 'detect.m.0', 'detect.m.1', 'detect.m.2'],
-            )
-            model.to(device).torch()
+            # model.cpu().dsp()
+            # model = shrink(
+            #     model,
+            #     mode='fpgm',
+            #     blacklist=['backbone_stage_1.0.focus', 'detect.m.0', 'detect.m.1', 'detect.m.2'],
+            # )
+            # model.to(device).torch()
             born = w / 'born.pt'
             ckpt = {'epoch': epoch,
                     'state_dict': deepcopy(de_parallel(model)).half().state_dict(),
@@ -406,21 +406,14 @@ def run(**kwargs):
     return main(opt)
 
 
-def fpgm_run():
+if __name__ == "__main__":
     options = {
-        'data': 'coco-l.yaml',
-        'weights': 'runs/train/exp91/weights/last.pt',
+        'data': 'VOC.yaml',
+        'weights': None,
         'imgsz': 416,
         'batch-size': 32,
-        'hyp': 'data/hyps/hyp.finetune.yaml',
+        'hyp': 'data/hyps/hyp.scratch.yaml',
     }
-    next_gen_seed = run(**options)
-    while next_gen_seed is not None:
-        options['weights'] = str(next_gen_seed)
-        next_gen_seed = run(**options)
-
-
-if __name__ == "__main__":
-    # opt = parse_opt()
-    # main(opt)
-    fpgm_run()
+    pretrained_seed = run(**options)
+    # options['weights'] = str(pretrained_seed)
+    # next_gen_seed = run(**options)
