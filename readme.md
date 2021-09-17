@@ -6,10 +6,10 @@ A light object detection project.
 
 ### Roadmap
 
-- [ ] Import training scripts
-  - [ ] Import basic trainer from [ultralytics/yolov5]().
-  - [ ] Remove unnecessary functions.
-  - [ ] Reset wandb behavior.
+- [x] Import training scripts
+  - [x] Import basic trainer from [ultralytics/yolov5]().
+  - [x] Remove unnecessary functions.
+  - [x] Reset wandb project.
 - [ ] Add baseline: [yolov5s]().
 - [ ] Add baseline: [yolov5s-relu]().
   - [ ] Replace yolov5s activation with ReLU to support FPGA.
