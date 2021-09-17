@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from common import Focus, Conv, C3, SPP, Detect
+from .common import Focus, Conv, C3, SPP, Detect
 
 
 def fuse_conv_and_bn(conv, bn):

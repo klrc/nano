@@ -97,7 +97,6 @@ def run(data,
         plots=True,
         loggers=Loggers(),
         compute_loss=None,
-        nc=6,
         ):
     # Initialize/load model and set device
     training = model is not None
