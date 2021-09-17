@@ -2,6 +2,7 @@
 
 A light object detection project.
 
+![](nano.jpg)
 
 
 ### Roadmap
@@ -14,7 +15,7 @@ A light object detection project.
 - [x] Add baseline: [yolov5s-relu]().
   - [x] Replace yolov5s activation with ReLU to support FPGA.
   - [x] Replace focus with conv.
-- [ ] Import FPGA builder.
+- [x] ~~Import FPGA builder.~~
 - [ ] Test build for yolov5s-relu.
 - [ ] Add baseline: [NanoDet](https://github.com/RangiLyu/nanodet).
   - [ ] Add [Generalized Focal Loss](https://zhuanlan.zhihu.com/p/147691786).
