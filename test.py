@@ -1,7 +1,7 @@
 
 import pytorch_lightning as pl
 from nano.datasets.object_detection import create_dataloader, check_dataset, colorstr
-from nano.models.yolov5s import Shell, Loss, yolov5s
+from nano.models.yolov5_cspdarknet_0_5x import Shell, Loss, yolov5s
 
 if __name__ == '__main__':
 
