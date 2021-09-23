@@ -27,6 +27,6 @@ if __name__ == '__main__':
     # Pytorch-lightning shell    
     shell = Shell(yolov5s(), Loss())
     trainer = pl.Trainer()
-
+ 
     # run fit
     trainer.fit(Shell(), train_loader)
