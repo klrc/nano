@@ -5,8 +5,8 @@ from nano.models.yolov5_cspdarknet_0_5x import Shell, Loss, yolov5s
 
 if __name__ == '__main__':
 
-    dataset_hyp = check_dataset('data/coco128.yaml')  # check
-    augmentation_hyp = check_dataset('data/hyps/hyp.scratch.yaml')
+    dataset_hyp = check_dataset('nano/configs/coco128.yaml')  # check
+    augmentation_hyp = check_dataset('nano/configs/hyps/hyp.scratch.yaml')
 
     # Trainloader
     train_loader, dataset = create_dataloader(
