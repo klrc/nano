@@ -4,7 +4,7 @@ from nano.datasets.object_detection import create_dataloader, check_dataset, col
 from nano.models.yolov5_cspdarknet_0_5x import Shell, Loss, yolov5s
 
 if __name__ == '__main__':
-
+    # load .yaml
     dataset_hyp = check_dataset('nano/configs/coco128.yaml')  # check
     augmentation_hyp = check_dataset('nano/configs/hyps/hyp.scratch.yaml')
 
@@ -28,5 +28,5 @@ if __name__ == '__main__':
     shell = Shell(yolov5s(), Loss())
     trainer = pl.Trainer()
 
-    # Run fit
+    # run fit
     trainer.fit(Shell(), train_loader)
