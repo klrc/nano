@@ -1,5 +1,5 @@
 
-from nano.models.yolov5_cspdarknet_0_5x import Shell, Loss, yolov5s
+from nano.models.yolov5_shufflenet_1_5x import Shell, Loss, yolov5_shufflenet_1_5x
 from nano.datasets.object_detection import create_dataloader, check_dataset, colorstr, check_file_and_load, select_device
 import pytorch_lightning as pl
 
@@ -7,7 +7,7 @@ if __name__ == '__main__':
     # load device &.yaml
     batch_size = 16
     device = select_device(batch_size=batch_size)
-    dataset_hyp = check_dataset('nano/configs/coco128.yaml')  # check
+    dataset_hyp = check_dataset('nano/configs/coco.yaml')  # check
     hyp = check_file_and_load('nano/configs/hyps/hyp.scratch.yaml')
 
     # Trainloader
@@ -29,7 +29,9 @@ if __name__ == '__main__':
     # Pytorch-lightning shell
     nc = 80
     anchors = ([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326])
-    shell = Shell(yolov5s(num_classes=nc, anchors=anchors), Loss(hyp, nc=nc, anchors=anchors), device)
+    shell = Shell(
+        yolov5_shufflenet_1_5x(num_classes=nc, anchors=anchors), 
+        Loss(hyp, nc=nc, anchors=anchors), device)
     trainer = pl.Trainer(gpus=1)
 
     # run fit
