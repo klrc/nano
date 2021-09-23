@@ -3,6 +3,7 @@ import torch.nn as nn
 from .pan import PAN
 from .shufflenetv2 import ShuffleNetV2
 
+
 class Detect(nn.Module):
     def __init__(self, nc, anchors, ch):  # detection layer
         super().__init__()
@@ -58,8 +59,8 @@ class YOLO_V5(nn.Module):
 
 
 def yolov5_shufflenet_1_5x(num_classes=80,
-            anchors=([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]),
-            ch=(128, 128, 128), **kwargs):
+                           anchors=([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]),
+                           ch=(128, 128, 128), **kwargs):
     backbone = ShuffleNetV2(activation='LeakyReLU')
     model = YOLO_V5(backbone, num_classes, anchors, ch, **kwargs)
     return model
