@@ -90,7 +90,7 @@ class SPP(nn.Module):
         hidden = in_channels // 2  # hidden channels
         self.cv1 = Conv(in_channels, hidden, 1, 1)
         self.cv2 = Conv(hidden * (len(k) + 1), in_channels, 1, 1)
-        self.m = nn.ModuleList([nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k])
+        self.m = nn.ModuleList([nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2, ceil_mode=True) for x in k])
 
     def forward(self, x):
         x = self.cv1(x)
