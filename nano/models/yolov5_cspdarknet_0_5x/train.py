@@ -65,7 +65,7 @@ class Loss(nn.Module):
         self.nc = nc                     # num_classes
         self.nl = len(anchors)           # num_detection_layers
         self.na = len(anchors[0]) // 2   # num_anchors
-        self.anchors = torch.tensor(anchors).float().view(self.nl, -1, 2)
+        self.anchors = nn.Parameter(torch.tensor(anchors).float().view(self.nl, -1, 2), requires_grad=False)
         self.hyp = hyp
 
     @staticmethod
@@ -171,10 +171,10 @@ class Loss(nn.Module):
 
 
 class Shell(pl.LightningModule):
-    def __init__(self, model, loss_fn):
+    def __init__(self, model, loss_fn, device):
         super().__init__()
-        self.model = model
-        self.loss_fn = loss_fn
+        self.model = model.to(device)
+        self.loss_fn = loss_fn.to(device)
 
     def forward(self, x):
         # in lightning, forward defines the prediction/inference actions
@@ -187,9 +187,9 @@ class Shell(pl.LightningModule):
         imgs, targets, paths, _ = batch
         imgs = imgs.float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0
         pred = self.model(imgs)  # forward
-        loss, loss_items = self.loss_fn(pred, targets)  # loss scaled by batch_size
+        loss, _ = self.loss_fn(pred, targets)  # loss scaled by batch_size
         # Logging to TensorBoard by default
-        self.log("train_loss", loss_items)
+        self.log("train_loss", loss)
         return loss
 
     def configure_optimizers(self):
