@@ -223,6 +223,12 @@ def check_file(file):
         return files[0]  # return file
 
 
+def check_file_and_load(file):
+    with open(check_file(file)) as f:
+        ret = yaml.safe_load(f)
+    return ret
+
+
 def check_dataset(data, autodownload=True):
     # Download and/or unzip dataset if not found locally
     # Usage: https://github.com/ultralytics/yolov5/releases/download/v1.0/coco128_with_yaml.zip

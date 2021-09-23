@@ -48,8 +48,9 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
     else:
         return iou  # IoU
 
+
 class Loss(nn.Module):
-    def __init__(self):
+    def __init__(self, hyp, nc=80, anchors=([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326])):
         super().__init__()
         # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
         self.cp, self.cn = self.smooth_BCE(eps=0)  # positive, negative BCE targets
@@ -61,10 +62,11 @@ class Loss(nn.Module):
 
         # Detection args
         self.gr = 1.0
-        self.na = 3  # num_anchors
-        self.nc = 80 # num_classes
-        self.nl = 3  # num_detection_layers
-        self.anchors = ([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326])
+        self.nc = nc                     # num_classes
+        self.nl = len(anchors)           # num_detection_layers
+        self.na = len(anchors[0]) // 2   # num_anchors
+        self.anchors = torch.tensor(anchors).float().view(self.nl, -1, 2)
+        self.hyp = hyp
 
     @staticmethod
     def smooth_BCE(eps=0.1):  # https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441
@@ -94,9 +96,6 @@ class Loss(nn.Module):
 
                 # Objectness
                 score_iou = iou.detach().clamp(0).type(tobj.dtype)
-                if self.sort_obj_iou:
-                    sort_id = torch.argsort(score_iou)
-                    b, a, gj, gi, score_iou = b[sort_id], a[sort_id], gj[sort_id], gi[sort_id], score_iou[sort_id]
                 tobj[b, a, gj, gi] = (1.0 - self.gr) + self.gr * score_iou  # iou ratio
 
                 # Classification

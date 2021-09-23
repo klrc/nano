@@ -98,10 +98,7 @@ class SPP(nn.Module):
 
 
 class Detect(nn.Module):
-    def __init__(self,
-                 nc=80,
-                 anchors=([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]),
-                 ch=(128, 256, 512)):  # detection layer
+    def __init__(self, nc, anchors, ch):  # detection layer
         super().__init__()
         self.nc = nc  # number of classes
         self.no = nc + 5  # number of outputs per anchor
@@ -146,10 +143,10 @@ class CSPNet(nn.Module):
         self.stage_1 = nn.Sequential(Focus(3, 32), Conv(32, 64, 3, 2), C3(64, 64, 1), Conv(64, 128, 3, 2), C3(128, 128, 3),)
         self.stage_2 = nn.Sequential(Conv(128, 256, 3, 2), C3(256, 256, 3),)
         self.stage_3 = nn.Sequential(Conv(256, 512, 3, 2), SPP(512),
-            C3(512, 512, 1, False),
-            Conv(512, 256, 1, 1),
-        )
-    
+                                     C3(512, 512, 1, False),
+                                     Conv(512, 256, 1, 1),
+                                     )
+
     def forward(self, x):
         x1 = self.stage_1(x)  # (1, 128, .., ..)
         x2 = self.stage_2(x1)  # (1, 256, .., ..)
@@ -179,11 +176,11 @@ class PAN(nn.Module):
 
 
 class YOLO_V5(nn.Module):
-    def __init__(self, backbone, num_classes):
+    def __init__(self, backbone, num_classes, anchors, ch):
         super().__init__()
         self.backbone = backbone
         self.mixer = PAN()
-        self.detect = Detect(nc=num_classes)
+        self.detect = Detect(num_classes, anchors, ch)
 
     def forward(self, x):
         x = self.backbone(x)
@@ -192,10 +189,9 @@ class YOLO_V5(nn.Module):
         return x
 
 
-def yolov5s(num_classes=80, **kwargs):
+def yolov5s(num_classes=80,
+            anchors=([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]),
+            ch=(128, 256, 512), **kwargs):
     backbone = CSPNet()
-    model = YOLO_V5(backbone, num_classes, **kwargs)
+    model = YOLO_V5(backbone, num_classes, anchors, ch, **kwargs)
     return model
-
-model = yolov5s()
-print(model.detect.nl)
