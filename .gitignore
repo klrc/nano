@@ -2,3 +2,5 @@
 __pycache__
 lightning_logs
 .DS_Store
+checkpoints
+wandb
