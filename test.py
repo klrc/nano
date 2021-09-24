@@ -50,14 +50,13 @@ if __name__ == '__main__':
     wandb_logger = WandbLogger(name='yolov5_shufflenet_1_5x', project='nano-coco-s')
     shell = Shell(
         yolov5_shufflenet_1_5x(num_classes=nc, anchors=anchors),
-        Loss(hyp, nc=nc, anchors=anchors), 
-        CallmAP(dataset_hyp['names']),
+        Loss(hyp, nc=nc, anchors=anchors),
+        CallmAP(dataset_hyp['names'], 0.001, 0.6),
         device,
     )
     trainer = pl.Trainer(
         gpus=1,
         logger=wandb_logger,
-        resume_from_checkpoint='nano-coco-s/2r6cjnvc/checkpoints/epoch=68-step=101912.ckpt',
     )
 
     # run fit

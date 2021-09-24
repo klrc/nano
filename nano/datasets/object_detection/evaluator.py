@@ -1,4 +1,3 @@
-from matplotlib.pyplot import cla
 import torch
 import torch.nn as nn
 import numpy as np
@@ -29,17 +28,19 @@ def process_batch(predictions, labels, iouv):
                         break
     return correct
 
+
 class CallmAP(nn.Module):
     def __init__(self, names, conf_thres=0.25, iou_thres=0.45):
         super().__init__()
-        self.names = {i:n for i, n in enumerate(names)}
-        self.conf_thres=conf_thres  # confidence threshold
-        self.iou_thres=iou_thres    # NMS IOU threshold
+        self.names = {i: n for i, n in enumerate(names)}
+        self.conf_thres = conf_thres  # confidence threshold
+        self.iou_thres = iou_thres    # NMS IOU threshold
 
     def forward(self, imgs, targets, out, shapes):
-        device = imgs.device()
+        device = imgs.device
         iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
         niou = iouv.numel()
+        p, r, f1, mp, mr, map50, map = 0, 0, 0, 0, 0, 0, 0
         stats, ap, ap_class = [], [], []
         _, _, height, width = imgs.shape  # batch size, channels, height, width
         names = self.names
@@ -86,17 +87,19 @@ class CallmAP(nn.Module):
             nt = torch.zeros(1)
         fi = fitness(np.array([mp, mr, map50, map]).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
         metrics = {
-            'num_targets': nt,
-            'mean_precision': mp,
-            'mean_recall': mr,
+            'precision': mp,
+            'recall': mr,
             'mAP:.5': map50,
             'mAP': map,
         }
         if nc > 1 and len(stats):
             for i, c in enumerate(ap_class):
-                metrics[f'num_targets@{names[c]}'] = nt[c]
-                metrics[f'mean_precision@{names[c]}'] = p[i],
-                metrics[f'mean_recall@{names[c]}'] = r[i],
-                metrics[f'mAP:.5@{names[c]}'] = ap50[i],
-                metrics[f'mAP@{names[c]}'] = ap[i],
+                metrics[f'num_targets-{names[c]}'] = nt[c]
+                metrics[f'precision-{names[c]}'] = p[i].item(),
+                metrics[f'recall-{names[c]}'] = r[i].item(),
+                metrics[f'mAP:.5-{names[c]}'] = ap50[i].item(),
+                metrics[f'mAP-{names[c]}'] = ap[i].item(),
+        for k, v in metrics.items():
+            if type(v) is tuple:
+                metrics[k] = v[0]
         return fi, metrics

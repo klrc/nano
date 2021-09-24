@@ -66,7 +66,7 @@ class Loss(nn.Module):
         self.nc = nc                     # num_classes
         self.nl = len(anchors)           # num_detection_layers
         self.na = len(anchors[0]) // 2   # num_anchors
-        self.anchors = nn.Parameter(torch.tensor(anchors).float().view(self.nl, -1, 2), requires_grad=False)
+        self.register_buffer('anchors', torch.tensor(anchors).float().view(self.nl, -1, 2))
         self.hyp = hyp
 
     @staticmethod
@@ -209,8 +209,12 @@ class Shell(pl.LightningModule):
         return fitness
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.model.parameters(), lr=1e-3)
+        optimizer = torch.optim.SGD(
+            params=[
+                {'params': self.model.backbone.parameters(), 'lr': 1e-3},
+                {'params': self.model.mixer.parameters(), 'lr': 1e-3},
+                {'params': self.model.detect.parameters(), 'lr': 1e-2},
+            ],
+            lr=1e-3,
+        )
         return optimizer
-
-
-
