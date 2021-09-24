@@ -1,3 +1,4 @@
+
 import pytorch_lightning as pl
 import torch.nn as nn
 import torch
@@ -171,10 +172,11 @@ class Loss(nn.Module):
 
 
 class Shell(pl.LightningModule):
-    def __init__(self, model, loss_fn, device):
+    def __init__(self, model, loss_fn, val_fn, device):
         super().__init__()
         self.model = model.to(device)
         self.loss_fn = loss_fn.to(device)
+        self.val_fn = val_fn.to(device)
 
     def forward(self, x):
         # in lightning, forward defines the prediction/inference actions
@@ -184,7 +186,7 @@ class Shell(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         # training_step defined the train loop.
         # It is independent of forward
-        imgs, targets, paths, _ = batch
+        imgs, targets, _, _ = batch
         imgs = imgs.float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0
         pred = self.model(imgs)  # forward
         loss, loss_items = self.loss_fn(pred, targets)  # loss scaled by batch_size
@@ -196,16 +198,19 @@ class Shell(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         # with auto model.eval()
-        imgs, targets, paths, _ = batch
+        imgs, targets, _, shapes = batch
         imgs = imgs.float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0
-        pred = self.model(imgs)  # forward
-        loss, loss_items = self.loss_fn(pred, targets)  # loss scaled by batch_size
+        with torch.no_grad():
+            pred = self.model.inference(imgs)  # inference and training outputs
+        fitness, metrics = self.val_fn(imgs, targets, pred, shapes)  # loss scaled by batch_size
         # Logging to TensorBoard by default
-        self.log("val_loss/lbox", loss_items[0])
-        self.log("val_loss/lobj", loss_items[1])
-        self.log("val_loss/lcls", loss_items[2])
-        return loss
+        for k, v in metrics.items():
+            self.log(k, v)
+        return fitness
 
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(self.model.parameters(), lr=1e-3)
         return optimizer
+
+
+
