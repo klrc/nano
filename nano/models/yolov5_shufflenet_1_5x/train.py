@@ -194,12 +194,17 @@ class Shell(pl.LightningModule):
         self.log("train_loss/lcls", loss_items[2])
         return loss
 
-  def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch, batch_idx):
         # with auto model.eval()
         imgs, targets, paths, _ = batch
         imgs = imgs.float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0
         pred = self.model(imgs)  # forward
-        self.log('val_loss', loss)
+        loss, loss_items = self.loss_fn(pred, targets)  # loss scaled by batch_size
+        # Logging to TensorBoard by default
+        self.log("val_loss/lbox", loss_items[0])
+        self.log("val_loss/lobj", loss_items[1])
+        self.log("val_loss/lcls", loss_items[2])
+        return loss
 
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(self.model.parameters(), lr=1e-3)
