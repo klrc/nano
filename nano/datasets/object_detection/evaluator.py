@@ -30,51 +30,60 @@ def process_batch(predictions, labels, iouv):
 
 
 class CallmAP(nn.Module):
-    def __init__(self, names, conf_thres=0.25, iou_thres=0.45):
+    def __init__(self, val_loader, names, conf_thres=0.25, iou_thres=0.45):
         super().__init__()
+        self.val_loader = val_loader
         self.names = {i: n for i, n in enumerate(names)}
         self.conf_thres = conf_thres  # confidence threshold
         self.iou_thres = iou_thres    # NMS IOU threshold
 
-    def forward(self, imgs, targets, out, shapes):
-        device = imgs.device
-        iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
-        niou = iouv.numel()
+    def forward(self, model):
+        val_loader = self.val_loader
         p, r, f1, mp, mr, map50, map = 0, 0, 0, 0, 0, 0, 0
         stats, ap, ap_class = [], [], []
-        _, _, height, width = imgs.shape  # batch size, channels, height, width
         names = self.names
         nc = len(names)
 
-        # Run NMS
-        targets[:, 2:] *= torch.Tensor([width, height, width, height]).to(device)  # to pixels
-        lb = []  # for autolabelling
-        out = non_max_suppression(out, self.conf_thres, self.iou_thres, labels=lb, multi_label=True, agnostic=False)
+        for batch_i, (imgs, targets, paths, shapes) in enumerate(val_loader):
+            imgs = imgs.float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0
+            with torch.no_grad():
+                pred = model.inference(imgs)  # inference and training outputs
+            device = imgs.device
+            iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
+            niou = iouv.numel()
+            _, _, height, width = imgs.shape  # batch size, channels, height, width
 
-        # Statistics per image
-        for si, pred in enumerate(out):
-            labels = targets[targets[:, 0] == si, 1:]
-            nl = len(labels)
-            tcls = labels[:, 0].tolist() if nl else []  # target class
-            shape = shapes[si][0]
+            # Run NMS
+            targets[:, 2:] *= torch.Tensor([width, height, width, height]).to(device)  # to pixels
+            lb = []  # for autolabelling
+            out = non_max_suppression(out, self.conf_thres, self.iou_thres, labels=lb, multi_label=True, agnostic=False)
 
-            # Predictions
-            if len(pred) == 0:
+            # Statistics per image
+            for si, pred in enumerate(out):
+                labels = targets[targets[:, 0] == si, 1:]
+                nl = len(labels)
+                tcls = labels[:, 0].tolist() if nl else []  # target class
+                shape = shapes[si][0]
+
+                # Predictions
+                if len(pred) == 0:
+                    if nl:
+                        stats.append((torch.zeros(0, niou, dtype=torch.bool), torch.Tensor(), torch.Tensor(), tcls))
+                    continue
+                predn = pred.clone()
+                scale_coords(imgs[si].shape[1:], predn[:, :4], shape, shapes[si][1])  # native-space pred
+
+                # Evaluate
                 if nl:
-                    stats.append((torch.zeros(0, niou, dtype=torch.bool), torch.Tensor(), torch.Tensor(), tcls))
-                continue
-            predn = pred.clone()
-            scale_coords(imgs[si].shape[1:], predn[:, :4], shape, shapes[si][1])  # native-space pred
+                    tbox = xywh2xyxy(labels[:, 1:5])  # target boxes
+                    scale_coords(imgs[si].shape[1:], tbox, shape, shapes[si][1])  # native-space labels
+                    labelsn = torch.cat((labels[:, 0:1], tbox), 1)  # native-space labels
+                    correct = process_batch(predn, labelsn, iouv)
+                else:
+                    correct = torch.zeros(pred.shape[0], niou, dtype=torch.bool)
+                stats.append((correct.cpu(), pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))  # (correct, conf, pcls, tcls)
 
-            # Evaluate
-            if nl:
-                tbox = xywh2xyxy(labels[:, 1:5])  # target boxes
-                scale_coords(imgs[si].shape[1:], tbox, shape, shapes[si][1])  # native-space labels
-                labelsn = torch.cat((labels[:, 0:1], tbox), 1)  # native-space labels
-                correct = process_batch(predn, labelsn, iouv)
-            else:
-                correct = torch.zeros(pred.shape[0], niou, dtype=torch.bool)
-            stats.append((correct.cpu(), pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))  # (correct, conf, pcls, tcls)
+            # End batch -------------------
 
         # Compute statistics
         stats = [np.concatenate(x, 0) for x in zip(*stats)]  # to numpy

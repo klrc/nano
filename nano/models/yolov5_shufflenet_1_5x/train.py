@@ -177,6 +177,7 @@ class Shell(pl.LightningModule):
         self.model = model.to(device)
         self.loss_fn = loss_fn.to(device)
         self.val_fn = val_fn.to(device)
+        self.best_fitness = 0
 
     def forward(self, x):
         # in lightning, forward defines the prediction/inference actions
@@ -196,17 +197,15 @@ class Shell(pl.LightningModule):
         self.log("train_loss/lcls", loss_items[2])
         return loss
 
-    def validation_step(self, batch, batch_idx):
-        # with auto model.eval()
-        imgs, targets, _, shapes = batch
-        imgs = imgs.float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0
-        with torch.no_grad():
-            pred = self.model.inference(imgs)  # inference and training outputs
-        fitness, metrics = self.val_fn(imgs, targets, pred, shapes)  # loss scaled by batch_size
+    def on_epoch_end(self) -> None:
+        fitness, metrics = self.val_fn(self.model)  # loss scaled by batch_size
         # Logging to TensorBoard by default
         for k, v in metrics.items():
             self.log(k, v)
-        return fitness
+        if fitness > self.best_fitness:
+            self.best_fitness = fitness
+            # save model
+            torch.save(self.model.state_dict(), f'yolov5_shufflenet_1_5x_e{self.current_epoch()}.pt')
 
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(

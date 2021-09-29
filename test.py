@@ -1,4 +1,5 @@
 
+import torch
 from nano.models.yolov5_shufflenet_1_5x import Shell, Loss, yolov5_shufflenet_1_5x
 from nano.datasets.object_detection import create_dataloader, check_dataset, colorstr, check_file_and_load, select_device, CallmAP
 import pytorch_lightning as pl
@@ -48,16 +49,23 @@ if __name__ == '__main__':
     nc = dataset_hyp['nc']
     anchors = ([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326])
     wandb_logger = WandbLogger(name='yolov5_shufflenet_1_5x', project='nano-coco-s')
-    shell = Shell(
-        yolov5_shufflenet_1_5x(num_classes=nc, anchors=anchors),
-        Loss(hyp, nc=nc, anchors=anchors),
-        CallmAP(dataset_hyp['names'], 0.001, 0.6),
-        device,
-    )
-    trainer = pl.Trainer(
-        gpus=1,
-        logger=wandb_logger,
-    )
+    evaluator = CallmAP(val_loader, dataset_hyp['names'], 0.001, 0.6)
 
-    # run fit
-    trainer.fit(shell, train_loader, val_loader)
+    model = yolov5_shufflenet_1_5x(num_classes=nc, anchors=anchors)
+    model.load_state_dict(torch.load('?'))
+    result = evaluator.forward(model)
+    print(result)
+
+    # shell = Shell(
+    #     yolov5_shufflenet_1_5x(num_classes=nc, anchors=anchors),
+    #     Loss(hyp, nc=nc, anchors=anchors),
+    #     evaluator,
+    #     device,
+    # )
+    # trainer = pl.Trainer(
+    #     gpus=1,
+    #     logger=wandb_logger,
+    # )
+
+    # # run fit
+    # trainer.fit(shell, train_loader)
