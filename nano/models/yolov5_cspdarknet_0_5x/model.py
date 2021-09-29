@@ -193,6 +193,12 @@ class YOLO_V5(nn.Module):
         x = self.detect(x)
         return x
 
+    def inference(self, x):
+        x = self.backbone(x)
+        x = self.mixer(x)
+        x = self.detect.inference(x)
+        return x
+
 
 def yolov5s(num_classes=80,
             anchors=([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]),
