@@ -215,6 +215,7 @@ class Shell(pl.LightningModule):
 
     def configure_optimizers(self):
         hyp = self.hyp
+        # Optimizer
         g0, g1, g2 = [], [], []
         for v in self.model.modules():
             if hasattr(v, 'bias') and isinstance(v.bias, nn.Parameter):  # bias
@@ -228,7 +229,9 @@ class Shell(pl.LightningModule):
         optimizer.add_param_group({'params': g1, 'weight_decay': hyp['weight_decay']})
         optimizer.add_param_group({'params': g2})
         del g0, g1, g2
-
+        # LR Scheduler
         lf = one_cycle(1, hyp['lrf'], 300)  # max epochs
         scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
+        # Model Parameters
+        # TODO
         return {'optimizer': optimizer, 'scheduler': scheduler}
