@@ -5,6 +5,11 @@ import torch
 import math
 
 
+def one_cycle(y1=0.0, y2=1.0, steps=100):
+    # lambda function for sinusoidal ramp from y1 to y2 https://arxiv.org/pdf/1812.01187.pdf
+    return lambda x: ((1 - math.cos(x * math.pi / steps)) / 2) * (y2 - y1) + y1
+
+
 def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=1e-7):
     # Returns the IoU of box1 to box2. box1 is 4, box2 is nx4
     box2 = box2.T
@@ -177,12 +182,13 @@ class Loss(nn.Module):
 
 
 class Shell(pl.LightningModule):
-    def __init__(self, model, loss_fn, val_fn, device):
+    def __init__(self, model, loss_fn, val_fn, device, hyp):
         super().__init__()
         self.model = model.to(device)
         self.loss_fn = loss_fn.to(device)
         self.val_fn = val_fn.to(device)
         self.best_fitness = 0
+        self.hyp = hyp
 
     def forward(self, x):
         # in lightning, forward defines the prediction/inference actions
@@ -216,12 +222,24 @@ class Shell(pl.LightningModule):
             torch.save(self.model.state_dict(), f'yolov5_shufflenet_1_5x_e{self.current_epoch()}.pt')
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(
-            params=[
-                {'params': self.model.backbone.parameters(), 'lr': 1e-3},
-                {'params': self.model.mixer.parameters(), 'lr': 1e-2},
-                {'params': self.model.detect.parameters(), 'lr': 1e-2},
-            ],
-            lr=1e-3,
-        )
-        return optimizer
+        hyp = self.hyp
+        # Optimizer
+        g0, g1, g2 = [], [], []
+        for v in self.model.modules():
+            if hasattr(v, 'bias') and isinstance(v.bias, nn.Parameter):  # bias
+                g2.append(v.bias)
+            if isinstance(v, nn.BatchNorm2d):  # weight with decay
+                g0.append(v.weight)
+            elif hasattr(v, 'weight') and isinstance(v.weight, nn.Parameter):  # weight without decay
+                g1.append(v.weight)
+
+        optimizer = torch.optim.SGD(g0, lr=hyp['lr0'], momentum=hyp['momentum'], nesterov=True)
+        optimizer.add_param_group({'params': g1, 'weight_decay': hyp['weight_decay']})
+        optimizer.add_param_group({'params': g2})
+        del g0, g1, g2
+        # LR Scheduler
+        lf = one_cycle(1, hyp['lrf'], 300)  # max epochs
+        scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
+        # Model Parameters
+        # TODO
+        return {'optimizer': optimizer, 'scheduler': scheduler}

@@ -30,25 +30,32 @@ def process_batch(predictions, labels, iouv):
 
 
 class CallmAP(nn.Module):
-    def __init__(self, val_loader, names, conf_thres=0.25, iou_thres=0.45):
+    def __init__(self, val_loader, device, names, conf_thres=0.25, iou_thres=0.45):
         super().__init__()
         self.val_loader = val_loader
         self.names = {i: n for i, n in enumerate(names)}
         self.conf_thres = conf_thres  # confidence threshold
         self.iou_thres = iou_thres    # NMS IOU threshold
+        self.device = device
 
     def forward(self, model):
         val_loader = self.val_loader
         p, r, f1, mp, mr, map50, map = 0, 0, 0, 0, 0, 0, 0
         stats, ap, ap_class = [], [], []
         names = self.names
+        device = self.device
         nc = len(names)
 
+        # Start evaluation
+        model.to(device)
+        model.eval()
+
         for batch_i, (imgs, targets, paths, shapes) in enumerate(val_loader):
+            imgs = imgs.to(device)
+            targets = targets.to(device)
             imgs = imgs.float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0
             with torch.no_grad():
-                pred = model.inference(imgs)  # inference and training outputs
-            device = imgs.device
+                out = model.inference(imgs)  # inference and training outputs
             iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
             niou = iouv.numel()
             _, _, height, width = imgs.shape  # batch size, channels, height, width

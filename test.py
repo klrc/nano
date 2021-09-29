@@ -49,13 +49,14 @@ if __name__ == '__main__':
     nc = dataset_hyp['nc']
     anchors = ([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326])
     wandb_logger = WandbLogger(name='yolov5_shufflenet_1_5x', project='nano-coco-s')
-    evaluator = CallmAP(val_loader, dataset_hyp['names'], 0.001, 0.6)
+    evaluator = CallmAP(val_loader, device, dataset_hyp['names'], 0.001, 0.6)
 
     shell = Shell(
         yolov5_shufflenet_1_5x(num_classes=nc, anchors=anchors),
         Loss(hyp, nc=nc, imgsz=416, anchors=anchors),
         evaluator,
         device,
+        hyp,
     )
     trainer = pl.Trainer(
         gpus=1,
