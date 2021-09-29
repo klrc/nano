@@ -211,7 +211,7 @@ class Shell(pl.LightningModule):
         optimizer = torch.optim.SGD(
             params=[
                 {'params': self.model.backbone.parameters(), 'lr': 1e-3},
-                {'params': self.model.mixer.parameters(), 'lr': 1e-3},
+                {'params': self.model.mixer.parameters(), 'lr': 1e-2},
                 {'params': self.model.detect.parameters(), 'lr': 1e-2},
             ],
             lr=1e-3,
