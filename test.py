@@ -49,10 +49,13 @@ if __name__ == '__main__':
     nc = dataset_hyp['nc']
     anchors = ([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326])
     wandb_logger = WandbLogger(name='yolov5_shufflenet_1_5x', project='nano-coco-s')
-    evaluator = CallmAP(val_loader, dataset_hyp['names'], 0.001, 0.6)
+    evaluator = CallmAP(val_loader, device, dataset_hyp['names'], 0.001, 0.6)
 
     model = yolov5_shufflenet_1_5x(num_classes=nc, anchors=anchors)
-    model.load_state_dict(torch.load('?'))
+    ckpt = torch.load('nano-coco-s/3noc7qpk/checkpoints/epoch=499-step=738499.ckpt')
+    state_dict = {k.replace('model.', ''): v for k, v in ckpt['state_dict'].items() if 'model.' in k}
+
+    model.load_state_dict(state_dict)
     result = evaluator.forward(model)
     print(result)
 
