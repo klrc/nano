@@ -240,6 +240,4 @@ class Shell(pl.LightningModule):
         # LR Scheduler
         lf = one_cycle(1, hyp['lrf'], 300)  # max epochs
         scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
-        # Model Parameters
-        # TODO
         return {'optimizer': optimizer, 'scheduler': scheduler}

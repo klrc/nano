@@ -36,7 +36,6 @@ if __name__ == '__main__':
         stride=32,                     # grid_size
         single_cls=False,              #
         hyp=hyp,                       # augmentation_sets_yaml
-        augment=True,                  # use_augmentation
         cache=False,                   # cache_image
         rect=True,                     #
         rank=-1,                       #
@@ -63,5 +62,5 @@ if __name__ == '__main__':
         logger=wandb_logger,
     )
 
-    # # run fit
-    # trainer.fit(shell, train_loader)
+    # run fit
+    trainer.fit(shell, train_loader)
