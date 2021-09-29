@@ -51,7 +51,7 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
 
 
 class Loss(nn.Module):
-    def __init__(self, hyp, nc=80, anchors=([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326])):
+    def __init__(self, hyp, nc=80, imgsz=416, anchors=([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326])):
         super().__init__()
         # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
         self.cp, self.cn = self.smooth_BCE(eps=0)  # positive, negative BCE targets
@@ -68,6 +68,11 @@ class Loss(nn.Module):
         self.na = len(anchors[0]) // 2   # num_anchors
         self.register_buffer('anchors', torch.tensor(anchors).float().view(self.nl, -1, 2))
         self.hyp = hyp
+
+        # Model parameters
+        hyp['box'] *= 3. / self.nl  # scale to layers
+        hyp['cls'] *= nc / 80. * 3. / self.nl  # scale to classes and layers
+        hyp['obj'] *= (imgsz / 640) ** 2 * 3. / self.nl  # scale to image size and layers
 
     @staticmethod
     def smooth_BCE(eps=0.1):  # https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441
@@ -198,7 +203,10 @@ class Shell(pl.LightningModule):
         return loss
 
     def on_epoch_end(self) -> None:
-        fitness, metrics = self.val_fn(self.model)  # loss scaled by batch_size
+        # evaluation at the end of an epoch.
+        with torch.no_grad():
+            fitness, metrics = self.val_fn(self.model)  # loss scaled by batch_size
+        self.model.train()
         # Logging to TensorBoard by default
         for k, v in metrics.items():
             self.log(k, v)
