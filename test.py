@@ -51,21 +51,17 @@ if __name__ == '__main__':
     wandb_logger = WandbLogger(name='yolov5_shufflenet_1_5x', project='nano-coco-s')
     evaluator = CallmAP(val_loader, device, dataset_hyp['names'], 0.001, 0.6)
 
-    # from nano.models.deprecated_yolov5s.models import load_model
-    # model = load_model('/home/sh/Projects/klrc/yolov5s-trainer/runs/train/exp90/weights/best.pt', 'cuda:0', 6)[0]
-    # result = evaluator.forward(model)
-    # print(result)
-
-    # shell = Shell(
-    #     yolov5_shufflenet_1_5x(num_classes=nc, anchors=anchors),
-    #     Loss(hyp, nc=nc, anchors=anchors),
-    #     evaluator,
-    #     device,
-    # )
-    # trainer = pl.Trainer(
-    #     gpus=1,
-    #     logger=wandb_logger,
-    # )
+    shell = Shell(
+        yolov5_shufflenet_1_5x(num_classes=nc, anchors=anchors),
+        Loss(hyp, nc=nc, anchors=anchors),
+        evaluator,
+        device,
+        hyp,
+    )
+    trainer = pl.Trainer(
+        gpus=1,
+        logger=wandb_logger,
+    )
 
     # # run fit
     # trainer.fit(shell, train_loader)
