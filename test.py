@@ -51,11 +51,10 @@ if __name__ == '__main__':
     wandb_logger = WandbLogger(name='yolov5_shufflenet_1_5x', project='nano-coco-s')
     evaluator = CallmAP(val_loader, device, dataset_hyp['names'], 0.001, 0.6)
 
-    model = yolov5_shufflenet_1_5x(num_classes=nc, anchors=anchors)
-    ckpt = torch.load('nano-coco-s/3noc7qpk/checkpoints/epoch=499-step=738499.ckpt')
-    state_dict = {k.replace('model.', ''): v for k, v in ckpt['state_dict'].items() if 'model.' in k}
-
-    model.load_state_dict(state_dict)
+    # model = yolov5_shufflenet_1_5x(num_classes=nc, anchors=anchors)
+    # model.load_state_dict(torch.load('?'))
+    from nano.models.deprecated_yolov5s.models import load_model
+    model = load_model('/home/sh/Projects/klrc/yolov5s-trainer/runs/train/exp90/weights/best.pt', 'cuda:0', 6)[0]
     result = evaluator.forward(model)
     print(result)
 
