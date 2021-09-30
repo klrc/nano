@@ -10,12 +10,10 @@ import os
 import random
 import sys
 import time
-from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
 import torch
-import torch.distributed as dist
 import torch.nn as nn
 import yaml
 from torch.cuda import amp
