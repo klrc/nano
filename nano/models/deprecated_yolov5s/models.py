@@ -75,6 +75,18 @@ class Xyolov5s(nn.Module):
 
         return self.detect([f2, f3, f4])
 
+    def inference(self, x):
+        x1 = self.backbone_stage_1(x)  # (1, 128, .., ..)
+        x2 = self.backbone_stage_2(x1)  # (1, 256, .., ..)
+        x3 = self.backbone_stage_3(x2)  # (1, 256, .., ..)
+
+        f1 = self.head_p1(torch.cat((self.up_p1(x3), x2), dim=1))  # (1, 128, .., ..)
+        f2 = self.c3_p2(torch.cat((self.up_p2(f1), x1), dim=1))  # (1, 128, .., ..)
+        f3 = self.c3_p3(torch.cat((self.conv_p3(f2), f1), dim=1))  # (1, 256, .., ..)
+        f4 = self.c3_p4(torch.cat((self.conv_p4(f3), x3), dim=1))  # (1, 512, .., ..)
+
+        return self.detect.inference([f2, f3, f4])
+
     def fuse(self):
         for m in self.modules():
             if type(m) is Conv and hasattr(m, 'bn'):
@@ -207,9 +219,8 @@ def load_model(weights, device, nc) -> Xyolov5s:
     return model, ckpt, csd
 
 
-
 if __name__ == '__main__':
     model = load_model('/Volumes/ASM236X NVM/e90.pt', 'cpu', 6)[0]
     print(model.detect.anchors)
-    x = torch.rand(4,3,224,224)
+    x = torch.rand(4, 3, 224, 224)
     model(x)
