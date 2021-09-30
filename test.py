@@ -7,16 +7,16 @@
 
 
 # Trainer Scripts
-# from nano.datasets.object_detection import create_dataloader, check_dataset, colorstr, check_file_and_load, select_device, CallmAP
-# import pytorch_lightning as pl
-# from pytorch_lightning.loggers import WandbLogger
+from nano.datasets.object_detection import create_dataloader, check_dataset, colorstr, check_file_and_load, select_device, CallmAP
+import pytorch_lightning as pl
+from pytorch_lightning.loggers import WandbLogger
 
-# if __name__ == '__main__':
-#     # load device &.yaml
-#     batch_size = 16
-#     device = select_device(batch_size=batch_size)
-#     dataset_hyp = check_dataset('nano/configs/coco-s.yaml')  # check
-#     hyp = check_file_and_load('nano/configs/hyps/hyp.scratch.yaml')
+if __name__ == '__main__':
+    # load device &.yaml
+    batch_size = 16
+    device = select_device(batch_size=batch_size)
+    dataset_hyp = check_dataset('nano/configs/coco-s.yaml')  # check
+    hyp = check_file_and_load('nano/configs/hyps/hyp.scratch.yaml')
 
 #     # Trainloader
 #     train_loader, dataset = create_dataloader(
@@ -34,21 +34,29 @@
 #         quad=False,                    #
 #         prefix=colorstr('train: '),    # logger_display_title
 #     )
-#     # Valloader
-#     val_loader, _ = create_dataloader(
-#         path=dataset_hyp['val'],       # dataset_path
-#         imgsz=416,                     # image_size
-#         batch_size=batch_size*2,       # batch_size
-#         stride=32,                     # grid_size
-#         single_cls=False,              #
-#         hyp=hyp,                       # augmentation_sets_yaml
-#         cache=False,                   # cache_image
-#         rect=True,                     #
-#         rank=-1,                       #
-#         workers=4,                     # num_workers
-#         pad=0.5,                       #
-#         prefix=colorstr('val: '),      # logger_display_title
-#     )
+    # Valloader
+    val_loader, _ = create_dataloader(
+        path=dataset_hyp['val'],       # dataset_path
+        imgsz=416,                     # image_size
+        batch_size=batch_size*2,       # batch_size
+        stride=32,                     # grid_size
+        single_cls=False,              #
+        hyp=hyp,                       # augmentation_sets_yaml
+        cache=False,                   # cache_image
+        rect=True,                     #
+        rank=-1,                       #
+        workers=4,                     # num_workers
+        pad=0.5,                       #
+        prefix=colorstr('val: '),      # logger_display_title
+    )
+
+
+# temp test -----------------------------------------
+    for imgs, targets, _, _  in val_loader:
+        print(imgs)
+        break
+# test end -----------------------------------------
+
 
 #     # Pytorch-lightning shell
 #     nc = dataset_hyp['nc']
