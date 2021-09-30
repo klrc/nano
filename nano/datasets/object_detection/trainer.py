@@ -3,7 +3,6 @@
 Train a YOLOv5 model on a custom dataset
 """
 
-from .evaluator import val
 from .torch_utils import EarlyStopping, ModelEMA, select_device
 from .loss import ComputeLoss
 from .general import labels_to_class_weights, increment_path, labels_to_image_weights, init_seeds, \
@@ -11,6 +10,8 @@ from .general import labels_to_class_weights, increment_path, labels_to_image_we
     set_logging, one_cycle, colorstr
 from .datasets import create_dataloader
 from .autoanchor import check_anchors
+from .metrics import fitness
+from . import evaluator
 
 import argparse
 import logging
@@ -243,7 +244,7 @@ def train(model, hyp, opt, device):
             # end batch ------------------------------------------------------------------------------------------------
 
         # Scheduler
-        # lr = [x['lr'] for x in optimizer.param_groups]  # for loggers
+        lr = [x['lr'] for x in optimizer.param_groups]  # for loggers
         scheduler.step()
 
         if RANK in [-1, 0]:
@@ -251,7 +252,7 @@ def train(model, hyp, opt, device):
             ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'names', 'stride', 'class_weights'])
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
             if not noval or final_epoch:  # Calculate mAP
-                results, maps, _ = val.run(data_dict,
+                results, maps, _ = evaluator.run(data_dict,
                                            batch_size=batch_size // WORLD_SIZE * 2,
                                            imgsz=imgsz,
                                            model=ema.ema,
@@ -259,7 +260,6 @@ def train(model, hyp, opt, device):
                                            dataloader=val_loader,
                                            save_dir=save_dir,
                                            plots=False,
-                                           callbacks=callbacks,
                                            compute_loss=compute_loss)
 
             # Update best mAP
@@ -275,7 +275,6 @@ def train(model, hyp, opt, device):
                     'best_fitness': best_fitness,
                     'state_dict': deepcopy(model).half().state_dict(),
                     'optimizer': optimizer.state_dict(),
-                    'metrics': metrics,
                 }
 
                 # Save last, best and delete
