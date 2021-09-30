@@ -5,3 +5,5 @@ lightning_logs
 checkpoints
 wandb
 *.pt
+runs
+data

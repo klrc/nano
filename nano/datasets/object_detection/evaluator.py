@@ -99,6 +99,13 @@ def val(model, val_loader, names, device, conf_thres, iou_thres):
         'mAP:.5': map50,
         'mAP': map,
     }
+
+    # log info
+    print()
+    for k, v in metrics.items():
+        print(f'{k:12s}\t{v:.4f}')
+    print()
+    
     # precision, recall, mAP:.5, mAP
     if nc > 1 and len(stats):
         for i, c in enumerate(ap_class):

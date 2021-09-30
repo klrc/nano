@@ -3,13 +3,22 @@
 Train a YOLOv5 model on a custom dataset
 """
 
+from .evaluator import val
+from .torch_utils import EarlyStopping, ModelEMA, select_device
+from .loss import ComputeLoss
+from .general import labels_to_class_weights, increment_path, labels_to_image_weights, init_seeds, \
+    check_dataset, check_img_size, check_file, check_yaml, print_args, \
+    set_logging, one_cycle, colorstr
+from .datasets import create_dataloader
+from .autoanchor import check_anchors
+
 import argparse
 import logging
 import math
 import os
 import random
-import sys
 import time
+from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -23,19 +32,11 @@ from tqdm import tqdm
 
 
 FILE = Path(__file__).resolve()
-ROOT = FILE.parents[0]  # YOLOv5 root directory
-if str(ROOT) not in sys.path:
-    sys.path.append(str(ROOT))  # add ROOT to PATH
-ROOT = ROOT.relative_to(Path.cwd())  # relative
+# ROOT = FILE.parents[0]  # YOLOv5 root directory
+# if str(ROOT) not in sys.path:
+#     sys.path.append(str(ROOT))  # add ROOT to PATH
+# ROOT = ROOT.relative_to(Path.cwd())  # relative
 
-from .autoanchor import check_anchors
-from .datasets import create_dataloader
-from .general import labels_to_class_weights, increment_path, labels_to_image_weights, init_seeds, \
-    check_dataset, check_img_size, check_file, check_yaml, print_args, \
-    set_logging, one_cycle, colorstr
-from .loss import ComputeLoss
-from .torch_utils import EarlyStopping, ModelEMA, select_device
-from .evaluator import val
 
 LOGGER = logging.getLogger(__name__)
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
@@ -102,7 +103,7 @@ def train(model, hyp, opt, device):
 
     # Scheduler
     if opt.linear_lr:
-        lf = lambda x: (1 - x / (epochs - 1)) * (1.0 - hyp['lrf']) + hyp['lrf']  # linear
+        def lf(x): return (1 - x / (epochs - 1)) * (1.0 - hyp['lrf']) + hyp['lrf']  # linear
     else:
         lf = one_cycle(1, hyp['lrf'], epochs)  # cosine 1->hyp['lrf']
     scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)  # plot_lr_scheduler(optimizer, scheduler, epochs)
@@ -114,8 +115,8 @@ def train(model, hyp, opt, device):
     start_epoch, best_fitness = 0, 0.0
 
     # Image sizes
-    gs = max(int(model.stride.max()), 32)  # grid size (max stride)
-    nl = model.model[-1].nl  # number of detection layers (used for scaling hyp['obj'])
+    gs = 32  # grid size (max stride)
+    nl = 3  # number of detection layers (used for scaling hyp['obj'])
     imgsz = check_img_size(opt.imgsz, gs, floor=gs * 2)  # verify imgsz is gs-multiple
 
     # Trainloader
@@ -129,9 +130,9 @@ def train(model, hyp, opt, device):
 
     # Evaluator
     val_loader = create_dataloader(val_path, imgsz, batch_size // WORLD_SIZE * 2, gs, single_cls,
-                                    hyp=hyp, cache=None if noval else opt.cache, rect=True, rank=-1,
-                                    workers=workers, pad=0.5,
-                                    prefix=colorstr('val: '))[0]
+                                   hyp=hyp, cache=None if noval else opt.cache, rect=True, rank=-1,
+                                   workers=workers, pad=0.5,
+                                   prefix=colorstr('val: '))[0]
 
     if not resume:
         # Anchors
@@ -242,7 +243,7 @@ def train(model, hyp, opt, device):
             # end batch ------------------------------------------------------------------------------------------------
 
         # Scheduler
-        lr = [x['lr'] for x in optimizer.param_groups]  # for loggers
+        # lr = [x['lr'] for x in optimizer.param_groups]  # for loggers
         scheduler.step()
 
         if RANK in [-1, 0]:
@@ -250,14 +251,15 @@ def train(model, hyp, opt, device):
             ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'names', 'stride', 'class_weights'])
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
             if not noval or final_epoch:  # Calculate mAP
-                fi, maps, metrics = val(
-                    model=model,
-                    val_loader=val_loader,
-                    names=names,
-                    device=device,
-                    conf_thres=0.001,
-                    iou_thres=0.6,
-                )
+                with torch.no_grad():
+                    fi, maps, metrics = val(
+                        model=model,
+                        val_loader=val_loader,
+                        names=names,
+                        device=device,
+                        conf_thres=0.001,
+                        iou_thres=0.6,
+                    )
 
             # Update best mAP
             if fi > best_fitness:
@@ -268,7 +270,7 @@ def train(model, hyp, opt, device):
                 ckpt = {
                     'epoch': epoch,
                     'best_fitness': best_fitness,
-                    'state_dict': model.half().state_dict(),
+                    'state_dict': deepcopy(model).half().state_dict(),
                     'optimizer': optimizer.state_dict(),
                     'metrics': metrics,
                 }
@@ -295,8 +297,8 @@ def train(model, hyp, opt, device):
 
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data', type=str, default=ROOT / 'data/coco128.yaml', help='dataset.yaml path')
-    parser.add_argument('--hyp', type=str, default=ROOT / 'data/hyps/hyp.scratch.yaml', help='hyperparameters path')
+    parser.add_argument('--data', type=str, default='data/coco128.yaml', help='dataset.yaml path')
+    parser.add_argument('--hyp', type=str, default='data/hyps/hyp.scratch.yaml', help='hyperparameters path')
     parser.add_argument('--epochs', type=int, default=300)
     parser.add_argument('--batch-size', type=int, default=16, help='total batch size for all GPUs')
     parser.add_argument('--imgsz', '--img', '--img-size', type=int, default=640, help='train, val image size (pixels)')
@@ -316,7 +318,7 @@ def parse_opt(known=False):
     parser.add_argument('--sync-bn', action='store_true', help='use SyncBatchNorm, only available in DDP mode')
     parser.add_argument('--workers', type=int, default=8, help='maximum number of dataloader workers')
     parser.add_argument('--entity', default=None, help='W&B entity')
-    parser.add_argument('--project', default=ROOT / 'runs/train', help='save to project/name')
+    parser.add_argument('--project', default='runs/train', help='save to project/name')
     parser.add_argument('--name', default='exp', help='save to project/name')
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
     parser.add_argument('--quad', action='store_true', help='quad dataloader')
@@ -344,12 +346,13 @@ def main(model, opt):
     opt.data, opt.hyp, opt.project = \
         check_file(opt.data), check_yaml(opt.hyp), str(opt.project)  # checks
     if opt.evolve:
-        opt.project = str(ROOT / 'runs/evolve')
+        opt.project = str('runs/evolve')
         opt.exist_ok, opt.resume = opt.resume, False  # pass resume to exist_ok and disable resume
     opt.save_dir = str(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))
 
     # Train
     device = select_device(opt.device, batch_size=opt.batch_size)
+    model.to(device)
     train(model, opt.hyp, opt, device)
 
 
