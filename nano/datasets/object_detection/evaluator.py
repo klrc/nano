@@ -5,12 +5,15 @@ Usage:
     $ python path/to/val.py --data coco128.yaml --weights yolov5s.pt --img 640
 """
 
+from .torch_utils import time_sync
+from .metrics import ap_per_class
+from .general import check_requirements, \
+    check_yaml, box_iou, non_max_suppression, scale_coords, xywh2xyxy, set_logging, \
+    colorstr, print_args
 import argparse
-import json
 import os
 import sys
 from pathlib import Path
-from threading import Thread
 
 import numpy as np
 import torch
@@ -23,11 +26,6 @@ if str(ROOT) not in sys.path:
 ROOT = ROOT.relative_to(Path.cwd())  # relative
 
 # from utils.datasets import create_dataloader
-from .general import coco80_to_coco91_class, check_dataset, check_img_size, check_requirements, \
-    check_suffix, check_yaml, box_iou, non_max_suppression, scale_coords, xyxy2xywh, xywh2xyxy, set_logging, \
-    increment_path, colorstr, print_args
-from .metrics import ap_per_class, ConfusionMatrix
-from .torch_utils import select_device, time_sync
 
 
 def process_batch(detections, labels, iouv):
@@ -64,7 +62,6 @@ def run(data,
         task='val',  # train, val, test, speed or study
         device='',  # cuda device, i.e. 0 or 0,1,2,3 or cpu
         single_cls=False,  # treat as single-class dataset
-        augment=False,  # augmented inference
         verbose=False,  # verbose output
         save_txt=False,  # save results to *.txt
         save_hybrid=False,  # save label+prediction hybrid results to *.txt
@@ -93,7 +90,6 @@ def run(data,
 
     # Configure
     model.eval()
-    is_coco = isinstance(data.get('val'), str) and data['val'].endswith('coco/val2017.txt')  # COCO dataset
     nc = 1 if single_cls else int(data['nc'])  # number of classes
     iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
     niou = iouv.numel()
@@ -105,11 +101,11 @@ def run(data,
     seen = 0
     # confusion_matrix = ConfusionMatrix(nc=nc)
     names = {k: v for k, v in enumerate(model.names if hasattr(model, 'names') else model.module.names)}
-    class_map = coco80_to_coco91_class() if is_coco else list(range(1000))
+    # class_map = coco80_to_coco91_class() if is_coco else list(range(1000))
     s = ('%20s' + '%11s' * 6) % ('Class', 'Images', 'Labels', 'P', 'R', 'mAP@.5', 'mAP@.5:.95')
     dt, p, r, f1, mp, mr, map50, map = [0.0, 0.0, 0.0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
     loss = torch.zeros(3, device=device)
-    jdict, stats, ap, ap_class = [], [], [], []
+    stats, ap, ap_class = [], [], []
     for batch_i, (img, targets, paths, shapes) in enumerate(tqdm(dataloader, desc=s)):
         t1 = time_sync()
         img = img.to(device, non_blocking=True)
@@ -121,7 +117,7 @@ def run(data,
         dt[0] += t2 - t1
 
         # Run model
-        out, train_out = model(img, augment=augment)  # inference and training outputs
+        out, train_out = model.inference(img)  # inference and training outputs
         dt[1] += time_sync() - t2
 
         # Compute loss
@@ -140,7 +136,7 @@ def run(data,
             labels = targets[targets[:, 0] == si, 1:]
             nl = len(labels)
             tcls = labels[:, 0].tolist() if nl else []  # target class
-            path, shape = Path(paths[si]), shapes[si][0]
+            shape = shapes[si][0]
             seen += 1
 
             if len(pred) == 0:

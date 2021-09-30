@@ -150,7 +150,7 @@ class Detect(nn.Module):
             y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
             z.append(y.view(bs, -1, self.no))
 
-        return torch.cat(z, 1)
+        return torch.cat(z, 1), x
 
     def _dsp_forward(self, x):
         for i in range(self.nl):
