@@ -31,14 +31,11 @@ ROOT = ROOT.relative_to(Path.cwd())  # relative
 from .autoanchor import check_anchors
 from .datasets import create_dataloader
 from .general import labels_to_class_weights, increment_path, labels_to_image_weights, init_seeds, \
-    strip_optimizer, get_latest_run, check_dataset, check_git_status, check_img_size, check_requirements, \
-    check_file, check_yaml, check_suffix, print_args, print_mutation, set_logging, one_cycle, colorstr, methods
-# from utils.downloads import attempt_download
+    check_dataset, check_img_size, check_file, check_yaml, print_args, \
+    set_logging, one_cycle, colorstr
 from .loss import ComputeLoss
-from .torch_utils import EarlyStopping, ModelEMA, de_parallel, intersect_dicts, select_device, \
-    torch_distributed_zero_first
+from .torch_utils import EarlyStopping, ModelEMA, select_device
 from .evaluator import val
-# from utils.callbacks import Callbacks
 
 LOGGER = logging.getLogger(__name__)
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
@@ -69,16 +66,13 @@ def train(model, hyp, opt, device):
     data_dict = None
 
     # Config
-    plots = not evolve  # create plots
     cuda = device.type != 'cpu'
     init_seeds(1 + RANK)
-    with torch_distributed_zero_first(RANK):
-        data_dict = data_dict or check_dataset(data)  # check if None
+    data_dict = data_dict or check_dataset(data)  # check if None
     train_path, val_path = data_dict['train'], data_dict['val']
     nc = 1 if single_cls else int(data_dict['nc'])  # number of classes
     names = ['item'] if single_cls and len(data_dict['names']) != 1 else data_dict['names']  # class names
     assert len(names) == nc, f'{len(names)} names found for nc={nc} dataset in {data}'  # check
-    is_coco = data.endswith('coco.yaml') and nc == 80  # COCO dataset
 
     # Model
     assert isinstance(model, torch.nn.Module)
