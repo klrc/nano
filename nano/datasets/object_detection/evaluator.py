@@ -54,8 +54,7 @@ class CallmAP(nn.Module):
             imgs = imgs.to(device)
             targets = targets.to(device)
             imgs = imgs.float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0
-            with torch.no_grad():
-                out = model.inference(imgs)  # inference and training outputs
+            out = model.inference(imgs)  # inference and training outputs
             iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
             niou = iouv.numel()
             _, _, height, width = imgs.shape  # batch size, channels, height, width

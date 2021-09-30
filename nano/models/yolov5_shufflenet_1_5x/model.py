@@ -54,25 +54,32 @@ class YOLO_V5(nn.Module):
     def __init__(self, backbone, num_classes, anchors, ch):
         super().__init__()
         self.backbone = backbone
-        self.mixer = PAN([176, 352, 704], 128, start_level=0, num_outs=3)
+        self.fpn = PAN([176, 352, 704], 128, start_level=0, num_outs=3)
         self.detect = Detect(num_classes, anchors, ch)
 
     def forward(self, x):
         x = self.backbone(x)
-        x = self.mixer(x)
+        x = self.fpn(x)
         x = self.detect(x)
         return x
 
     def inference(self, x):
         x = self.backbone(x)
-        x = self.mixer(x)
+        x = self.fpn(x)
         x = self.detect.inference(x)
         return x
 
 
 def yolov5_shufflenet_1_5x(num_classes=80,
                            anchors=([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]),
-                           ch=(128, 128, 128), **kwargs):
+                           ch=(128, 128, 128), backbone_ckpt=None, **kwargs):
     backbone = ShuffleNetV2(activation='LeakyReLU')
     model = YOLO_V5(backbone, num_classes, anchors, ch, **kwargs)
+    if backbone_ckpt is not None:
+        ckpt = torch.load(backbone_ckpt, 'cpu')
+        state_dict = ckpt['state_dict']
+        backbone_state_dict = {k.replace('model.', ''):v for k, v in state_dict.items() if 'model.backbone' in k or 'model.fpn' in k}
+        state_dict = model.state_dict()
+        state_dict.update(backbone_state_dict)
+        model.load_state_dict(state_dict)
     return model
