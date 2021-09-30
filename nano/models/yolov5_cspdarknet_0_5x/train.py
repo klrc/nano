@@ -219,7 +219,7 @@ class Shell(pl.LightningModule):
         if fitness > self.best_fitness:
             self.best_fitness = fitness
             # save model
-            # torch.save(self.model.state_dict(), f'yolov5_cspdarknet_0_5x_e{self.current_epoch()}.pt')
+            # torch.save(self.model.state_dict(), f'yolov5_cspdarknet_0_5x_e{self.current_epoch}.pt')
 
     def configure_optimizers(self):
         hyp = self.hyp
