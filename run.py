@@ -6,4 +6,4 @@ from nano.datasets.object_detection import trainer
 from nano.models.deprecated_yolov5s.models import load_model
 model = load_model('/home/sh/Projects/klrc/yolov5s-trainer/runs/train/exp90/weights/best.pt', 'cpu', 6)[0]
 
-trainer.run(model, data='data/coco-s.yaml', imgsz=416)
+trainer.run(model, data='data/coco-s.yaml', hyp='data/hyps/hyp.finetune.yaml', epochs=1000, imgsz=416)
