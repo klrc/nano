@@ -250,18 +250,22 @@ def train(model, hyp, opt, device):
             ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'names', 'stride', 'class_weights'])
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
             if not noval or final_epoch:  # Calculate mAP
-                fi, maps, metrics = val(
-                    model=model,
-                    val_loader=val_loader,
-                    names=names,
-                    device=device,
-                    conf_thres=0.001,
-                    iou_thres=0.6,
-                )
+                results, maps, _ = val.run(data_dict,
+                                           batch_size=batch_size // WORLD_SIZE * 2,
+                                           imgsz=imgsz,
+                                           model=ema.ema,
+                                           single_cls=single_cls,
+                                           dataloader=val_loader,
+                                           save_dir=save_dir,
+                                           plots=False,
+                                           callbacks=callbacks,
+                                           compute_loss=compute_loss)
 
             # Update best mAP
+            fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
             if fi > best_fitness:
                 best_fitness = fi
+            log_vals = list(mloss) + list(results) + lr
 
             # Save model
             if (not nosave) or (final_epoch and not evolve):  # if save
