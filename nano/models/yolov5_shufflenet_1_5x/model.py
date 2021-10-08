@@ -24,9 +24,9 @@ class Detect(nn.Module):
         return torch.stack((xv, yv), 2).view((1, 1, ny, nx, 2)).float()
 
     def forward(self, x):
-        x = list(x)
+        # x = list(x)
         # x = x.copy()  # for profiling
-        z = []  # inference output
+        # z = []  # inference output
         for i in range(self.nl):
             x[i] = self.m[i](x[i])  # conv
             bs, _, ny, nx = x[i].shape  # x(bs,255,20,20) to x(bs,3,20,20,85)
@@ -34,7 +34,7 @@ class Detect(nn.Module):
         return x
 
     def inference(self, x):
-        x = list(x)
+        # x = list(x)
         # x = x.copy()  # for profiling
         z = []  # inference output
         for i in range(self.nl):
@@ -78,8 +78,9 @@ def yolov5_shufflenet_1_5x(num_classes=80,
     if backbone_ckpt is not None:
         ckpt = torch.load(backbone_ckpt, 'cpu')
         state_dict = ckpt['state_dict']
-        backbone_state_dict = {k.replace('model.', ''):v for k, v in state_dict.items() if 'model.backbone' in k or 'model.fpn' in k}
+        backbone_state_dict = {k.replace('model.', ''): v for k, v in state_dict.items() if 'model.backbone' in k or 'model.fpn' in k}
         state_dict = model.state_dict()
         state_dict.update(backbone_state_dict)
         model.load_state_dict(state_dict)
+        print("loaded backbone from ", backbone_ckpt)
     return model

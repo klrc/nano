@@ -1,0 +1,2739 @@
+layer {
+  name: "images"
+  type: "Input"
+  top: "images"
+  input_param {
+    shape {
+      dim: 1
+      dim: 3
+      dim: 224
+      dim: 416
+    }
+  }
+}
+layer {
+  name: "Conv_0"
+  type: "Convolution"
+  bottom: "images"
+  top: "857"
+  convolution_param {
+    num_output: 24
+    bias_term: true
+    group: 1
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_1"
+  type: "ReLU"
+  bottom: "857"
+  top: "347"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "MaxPool_2"
+  type: "Pooling"
+  bottom: "347"
+  top: "348"
+  pooling_param {
+    pool: MAX
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+    pad_h: 0
+    pad_w: 0
+  }
+}
+layer {
+  name: "Conv_3"
+  type: "Convolution"
+  bottom: "348"
+  top: "860"
+  convolution_param {
+    num_output: 24
+    bias_term: true
+    group: 24
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_4"
+  type: "Convolution"
+  bottom: "860"
+  top: "863"
+  convolution_param {
+    num_output: 88
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_5"
+  type: "ReLU"
+  bottom: "863"
+  top: "353"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_6"
+  type: "Convolution"
+  bottom: "348"
+  top: "866"
+  convolution_param {
+    num_output: 88
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_7"
+  type: "ReLU"
+  bottom: "866"
+  top: "356"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_8"
+  type: "Convolution"
+  bottom: "356"
+  top: "869"
+  convolution_param {
+    num_output: 88
+    bias_term: true
+    group: 88
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_9"
+  type: "Convolution"
+  bottom: "869"
+  top: "872"
+  convolution_param {
+    num_output: 88
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_10"
+  type: "ReLU"
+  bottom: "872"
+  top: "361"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_11"
+  type: "Concat"
+  bottom: "353"
+  bottom: "361"
+  top: "362"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_13"
+  type: "Reshape"
+  bottom: "362"
+  top: "364"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 88
+      dim: 1456
+    }
+  }
+}
+layer {
+  name: "Transpose_14"
+  type: "Permute"
+  bottom: "364"
+  top: "365"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_16"
+  type: "Reshape"
+  bottom: "365"
+  top: "367"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 176
+      dim: 28
+      dim: 52
+    }
+  }
+}
+layer {
+  name: "Slice_27"
+  type: "Slice"
+  bottom: "367"
+  top: "378"
+  top: "378slice_another"
+  slice_param {
+    slice_dim: 1
+    slice_point: 88
+  }
+}
+layer {
+  name: "Slice_30"
+  type: "Slice"
+  bottom: "367"
+  top: "381slice_another"
+  top: "381"
+  slice_param {
+    slice_dim: 1
+    slice_point: 88
+  }
+}
+layer {
+  name: "Conv_31"
+  type: "Convolution"
+  bottom: "381"
+  top: "875"
+  convolution_param {
+    num_output: 88
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_32"
+  type: "ReLU"
+  bottom: "875"
+  top: "384"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_33"
+  type: "Convolution"
+  bottom: "384"
+  top: "878"
+  convolution_param {
+    num_output: 88
+    bias_term: true
+    group: 88
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_34"
+  type: "Convolution"
+  bottom: "878"
+  top: "881"
+  convolution_param {
+    num_output: 88
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_35"
+  type: "ReLU"
+  bottom: "881"
+  top: "389"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_36"
+  type: "Concat"
+  bottom: "378"
+  bottom: "389"
+  top: "390"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_38"
+  type: "Reshape"
+  bottom: "390"
+  top: "392"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 88
+      dim: 1456
+    }
+  }
+}
+layer {
+  name: "Transpose_39"
+  type: "Permute"
+  bottom: "392"
+  top: "393"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_41"
+  type: "Reshape"
+  bottom: "393"
+  top: "395"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 176
+      dim: 28
+      dim: 52
+    }
+  }
+}
+layer {
+  name: "Slice_52"
+  type: "Slice"
+  bottom: "395"
+  top: "406"
+  top: "406slice_another"
+  slice_param {
+    slice_dim: 1
+    slice_point: 88
+  }
+}
+layer {
+  name: "Slice_55"
+  type: "Slice"
+  bottom: "395"
+  top: "409slice_another"
+  top: "409"
+  slice_param {
+    slice_dim: 1
+    slice_point: 88
+  }
+}
+layer {
+  name: "Conv_56"
+  type: "Convolution"
+  bottom: "409"
+  top: "884"
+  convolution_param {
+    num_output: 88
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_57"
+  type: "ReLU"
+  bottom: "884"
+  top: "412"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_58"
+  type: "Convolution"
+  bottom: "412"
+  top: "887"
+  convolution_param {
+    num_output: 88
+    bias_term: true
+    group: 88
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_59"
+  type: "Convolution"
+  bottom: "887"
+  top: "890"
+  convolution_param {
+    num_output: 88
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_60"
+  type: "ReLU"
+  bottom: "890"
+  top: "417"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_61"
+  type: "Concat"
+  bottom: "406"
+  bottom: "417"
+  top: "418"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_63"
+  type: "Reshape"
+  bottom: "418"
+  top: "420"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 88
+      dim: 1456
+    }
+  }
+}
+layer {
+  name: "Transpose_64"
+  type: "Permute"
+  bottom: "420"
+  top: "421"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_66"
+  type: "Reshape"
+  bottom: "421"
+  top: "423"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 176
+      dim: 28
+      dim: 52
+    }
+  }
+}
+layer {
+  name: "Slice_77"
+  type: "Slice"
+  bottom: "423"
+  top: "434"
+  top: "434slice_another"
+  slice_param {
+    slice_dim: 1
+    slice_point: 88
+  }
+}
+layer {
+  name: "Slice_80"
+  type: "Slice"
+  bottom: "423"
+  top: "437slice_another"
+  top: "437"
+  slice_param {
+    slice_dim: 1
+    slice_point: 88
+  }
+}
+layer {
+  name: "Conv_81"
+  type: "Convolution"
+  bottom: "437"
+  top: "893"
+  convolution_param {
+    num_output: 88
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_82"
+  type: "ReLU"
+  bottom: "893"
+  top: "440"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_83"
+  type: "Convolution"
+  bottom: "440"
+  top: "896"
+  convolution_param {
+    num_output: 88
+    bias_term: true
+    group: 88
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_84"
+  type: "Convolution"
+  bottom: "896"
+  top: "899"
+  convolution_param {
+    num_output: 88
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_85"
+  type: "ReLU"
+  bottom: "899"
+  top: "445"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_86"
+  type: "Concat"
+  bottom: "434"
+  bottom: "445"
+  top: "446"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_88"
+  type: "Reshape"
+  bottom: "446"
+  top: "448"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 88
+      dim: 1456
+    }
+  }
+}
+layer {
+  name: "Transpose_89"
+  type: "Permute"
+  bottom: "448"
+  top: "449"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_91"
+  type: "Reshape"
+  bottom: "449"
+  top: "451"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 176
+      dim: 28
+      dim: 52
+    }
+  }
+}
+layer {
+  name: "Conv_92"
+  type: "Convolution"
+  bottom: "451"
+  top: "902"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 176
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_93"
+  type: "Convolution"
+  bottom: "902"
+  top: "905"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_94"
+  type: "ReLU"
+  bottom: "905"
+  top: "456"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_95"
+  type: "Convolution"
+  bottom: "451"
+  top: "908"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_96"
+  type: "ReLU"
+  bottom: "908"
+  top: "459"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_97"
+  type: "Convolution"
+  bottom: "459"
+  top: "911"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 176
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_98"
+  type: "Convolution"
+  bottom: "911"
+  top: "914"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_99"
+  type: "ReLU"
+  bottom: "914"
+  top: "464"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_100"
+  type: "Concat"
+  bottom: "456"
+  bottom: "464"
+  top: "465"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_102"
+  type: "Reshape"
+  bottom: "465"
+  top: "467"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 176
+      dim: 364
+    }
+  }
+}
+layer {
+  name: "Transpose_103"
+  type: "Permute"
+  bottom: "467"
+  top: "468"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_105"
+  type: "Reshape"
+  bottom: "468"
+  top: "470"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 352
+      dim: 14
+      dim: 26
+    }
+  }
+}
+layer {
+  name: "Slice_116"
+  type: "Slice"
+  bottom: "470"
+  top: "481"
+  top: "481slice_another"
+  slice_param {
+    slice_dim: 1
+    slice_point: 176
+  }
+}
+layer {
+  name: "Slice_119"
+  type: "Slice"
+  bottom: "470"
+  top: "484slice_another"
+  top: "484"
+  slice_param {
+    slice_dim: 1
+    slice_point: 176
+  }
+}
+layer {
+  name: "Conv_120"
+  type: "Convolution"
+  bottom: "484"
+  top: "917"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_121"
+  type: "ReLU"
+  bottom: "917"
+  top: "487"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_122"
+  type: "Convolution"
+  bottom: "487"
+  top: "920"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 176
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_123"
+  type: "Convolution"
+  bottom: "920"
+  top: "923"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_124"
+  type: "ReLU"
+  bottom: "923"
+  top: "492"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_125"
+  type: "Concat"
+  bottom: "481"
+  bottom: "492"
+  top: "493"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_127"
+  type: "Reshape"
+  bottom: "493"
+  top: "495"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 176
+      dim: 364
+    }
+  }
+}
+layer {
+  name: "Transpose_128"
+  type: "Permute"
+  bottom: "495"
+  top: "496"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_130"
+  type: "Reshape"
+  bottom: "496"
+  top: "498"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 352
+      dim: 14
+      dim: 26
+    }
+  }
+}
+layer {
+  name: "Slice_141"
+  type: "Slice"
+  bottom: "498"
+  top: "509"
+  top: "509slice_another"
+  slice_param {
+    slice_dim: 1
+    slice_point: 176
+  }
+}
+layer {
+  name: "Slice_144"
+  type: "Slice"
+  bottom: "498"
+  top: "512slice_another"
+  top: "512"
+  slice_param {
+    slice_dim: 1
+    slice_point: 176
+  }
+}
+layer {
+  name: "Conv_145"
+  type: "Convolution"
+  bottom: "512"
+  top: "926"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_146"
+  type: "ReLU"
+  bottom: "926"
+  top: "515"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_147"
+  type: "Convolution"
+  bottom: "515"
+  top: "929"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 176
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_148"
+  type: "Convolution"
+  bottom: "929"
+  top: "932"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_149"
+  type: "ReLU"
+  bottom: "932"
+  top: "520"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_150"
+  type: "Concat"
+  bottom: "509"
+  bottom: "520"
+  top: "521"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_152"
+  type: "Reshape"
+  bottom: "521"
+  top: "523"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 176
+      dim: 364
+    }
+  }
+}
+layer {
+  name: "Transpose_153"
+  type: "Permute"
+  bottom: "523"
+  top: "524"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_155"
+  type: "Reshape"
+  bottom: "524"
+  top: "526"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 352
+      dim: 14
+      dim: 26
+    }
+  }
+}
+layer {
+  name: "Slice_166"
+  type: "Slice"
+  bottom: "526"
+  top: "537"
+  top: "537slice_another"
+  slice_param {
+    slice_dim: 1
+    slice_point: 176
+  }
+}
+layer {
+  name: "Slice_169"
+  type: "Slice"
+  bottom: "526"
+  top: "540slice_another"
+  top: "540"
+  slice_param {
+    slice_dim: 1
+    slice_point: 176
+  }
+}
+layer {
+  name: "Conv_170"
+  type: "Convolution"
+  bottom: "540"
+  top: "935"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_171"
+  type: "ReLU"
+  bottom: "935"
+  top: "543"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_172"
+  type: "Convolution"
+  bottom: "543"
+  top: "938"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 176
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_173"
+  type: "Convolution"
+  bottom: "938"
+  top: "941"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_174"
+  type: "ReLU"
+  bottom: "941"
+  top: "548"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_175"
+  type: "Concat"
+  bottom: "537"
+  bottom: "548"
+  top: "549"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_177"
+  type: "Reshape"
+  bottom: "549"
+  top: "551"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 176
+      dim: 364
+    }
+  }
+}
+layer {
+  name: "Transpose_178"
+  type: "Permute"
+  bottom: "551"
+  top: "552"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_180"
+  type: "Reshape"
+  bottom: "552"
+  top: "554"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 352
+      dim: 14
+      dim: 26
+    }
+  }
+}
+layer {
+  name: "Slice_191"
+  type: "Slice"
+  bottom: "554"
+  top: "565"
+  top: "565slice_another"
+  slice_param {
+    slice_dim: 1
+    slice_point: 176
+  }
+}
+layer {
+  name: "Slice_194"
+  type: "Slice"
+  bottom: "554"
+  top: "568slice_another"
+  top: "568"
+  slice_param {
+    slice_dim: 1
+    slice_point: 176
+  }
+}
+layer {
+  name: "Conv_195"
+  type: "Convolution"
+  bottom: "568"
+  top: "944"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_196"
+  type: "ReLU"
+  bottom: "944"
+  top: "571"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_197"
+  type: "Convolution"
+  bottom: "571"
+  top: "947"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 176
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_198"
+  type: "Convolution"
+  bottom: "947"
+  top: "950"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_199"
+  type: "ReLU"
+  bottom: "950"
+  top: "576"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_200"
+  type: "Concat"
+  bottom: "565"
+  bottom: "576"
+  top: "577"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_202"
+  type: "Reshape"
+  bottom: "577"
+  top: "579"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 176
+      dim: 364
+    }
+  }
+}
+layer {
+  name: "Transpose_203"
+  type: "Permute"
+  bottom: "579"
+  top: "580"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_205"
+  type: "Reshape"
+  bottom: "580"
+  top: "582"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 352
+      dim: 14
+      dim: 26
+    }
+  }
+}
+layer {
+  name: "Slice_216"
+  type: "Slice"
+  bottom: "582"
+  top: "593"
+  top: "593slice_another"
+  slice_param {
+    slice_dim: 1
+    slice_point: 176
+  }
+}
+layer {
+  name: "Slice_219"
+  type: "Slice"
+  bottom: "582"
+  top: "596slice_another"
+  top: "596"
+  slice_param {
+    slice_dim: 1
+    slice_point: 176
+  }
+}
+layer {
+  name: "Conv_220"
+  type: "Convolution"
+  bottom: "596"
+  top: "953"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_221"
+  type: "ReLU"
+  bottom: "953"
+  top: "599"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_222"
+  type: "Convolution"
+  bottom: "599"
+  top: "956"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 176
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_223"
+  type: "Convolution"
+  bottom: "956"
+  top: "959"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_224"
+  type: "ReLU"
+  bottom: "959"
+  top: "604"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_225"
+  type: "Concat"
+  bottom: "593"
+  bottom: "604"
+  top: "605"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_227"
+  type: "Reshape"
+  bottom: "605"
+  top: "607"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 176
+      dim: 364
+    }
+  }
+}
+layer {
+  name: "Transpose_228"
+  type: "Permute"
+  bottom: "607"
+  top: "608"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_230"
+  type: "Reshape"
+  bottom: "608"
+  top: "610"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 352
+      dim: 14
+      dim: 26
+    }
+  }
+}
+layer {
+  name: "Slice_241"
+  type: "Slice"
+  bottom: "610"
+  top: "621"
+  top: "621slice_another"
+  slice_param {
+    slice_dim: 1
+    slice_point: 176
+  }
+}
+layer {
+  name: "Slice_244"
+  type: "Slice"
+  bottom: "610"
+  top: "624slice_another"
+  top: "624"
+  slice_param {
+    slice_dim: 1
+    slice_point: 176
+  }
+}
+layer {
+  name: "Conv_245"
+  type: "Convolution"
+  bottom: "624"
+  top: "962"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_246"
+  type: "ReLU"
+  bottom: "962"
+  top: "627"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_247"
+  type: "Convolution"
+  bottom: "627"
+  top: "965"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 176
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_248"
+  type: "Convolution"
+  bottom: "965"
+  top: "968"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_249"
+  type: "ReLU"
+  bottom: "968"
+  top: "632"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_250"
+  type: "Concat"
+  bottom: "621"
+  bottom: "632"
+  top: "633"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_252"
+  type: "Reshape"
+  bottom: "633"
+  top: "635"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 176
+      dim: 364
+    }
+  }
+}
+layer {
+  name: "Transpose_253"
+  type: "Permute"
+  bottom: "635"
+  top: "636"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_255"
+  type: "Reshape"
+  bottom: "636"
+  top: "638"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 352
+      dim: 14
+      dim: 26
+    }
+  }
+}
+layer {
+  name: "Slice_266"
+  type: "Slice"
+  bottom: "638"
+  top: "649"
+  top: "649slice_another"
+  slice_param {
+    slice_dim: 1
+    slice_point: 176
+  }
+}
+layer {
+  name: "Slice_269"
+  type: "Slice"
+  bottom: "638"
+  top: "652slice_another"
+  top: "652"
+  slice_param {
+    slice_dim: 1
+    slice_point: 176
+  }
+}
+layer {
+  name: "Conv_270"
+  type: "Convolution"
+  bottom: "652"
+  top: "971"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_271"
+  type: "ReLU"
+  bottom: "971"
+  top: "655"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_272"
+  type: "Convolution"
+  bottom: "655"
+  top: "974"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 176
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_273"
+  type: "Convolution"
+  bottom: "974"
+  top: "977"
+  convolution_param {
+    num_output: 176
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_274"
+  type: "ReLU"
+  bottom: "977"
+  top: "660"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_275"
+  type: "Concat"
+  bottom: "649"
+  bottom: "660"
+  top: "661"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_277"
+  type: "Reshape"
+  bottom: "661"
+  top: "663"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 176
+      dim: 364
+    }
+  }
+}
+layer {
+  name: "Transpose_278"
+  type: "Permute"
+  bottom: "663"
+  top: "664"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_280"
+  type: "Reshape"
+  bottom: "664"
+  top: "666"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 352
+      dim: 14
+      dim: 26
+    }
+  }
+}
+layer {
+  name: "Conv_281"
+  type: "Convolution"
+  bottom: "666"
+  top: "980"
+  convolution_param {
+    num_output: 352
+    bias_term: true
+    group: 352
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_282"
+  type: "Convolution"
+  bottom: "980"
+  top: "983"
+  convolution_param {
+    num_output: 352
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_283"
+  type: "ReLU"
+  bottom: "983"
+  top: "671"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_284"
+  type: "Convolution"
+  bottom: "666"
+  top: "986"
+  convolution_param {
+    num_output: 352
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_285"
+  type: "ReLU"
+  bottom: "986"
+  top: "674"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_286"
+  type: "Convolution"
+  bottom: "674"
+  top: "989"
+  convolution_param {
+    num_output: 352
+    bias_term: true
+    group: 352
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_287"
+  type: "Convolution"
+  bottom: "989"
+  top: "992"
+  convolution_param {
+    num_output: 352
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_288"
+  type: "ReLU"
+  bottom: "992"
+  top: "679"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_289"
+  type: "Concat"
+  bottom: "671"
+  bottom: "679"
+  top: "680"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_291"
+  type: "Reshape"
+  bottom: "680"
+  top: "682"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 352
+      dim: 91
+    }
+  }
+}
+layer {
+  name: "Transpose_292"
+  type: "Permute"
+  bottom: "682"
+  top: "683"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_294"
+  type: "Reshape"
+  bottom: "683"
+  top: "685"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 704
+      dim: 7
+      dim: 13
+    }
+  }
+}
+layer {
+  name: "Slice_305"
+  type: "Slice"
+  bottom: "685"
+  top: "696"
+  top: "696slice_another"
+  slice_param {
+    slice_dim: 1
+    slice_point: 352
+  }
+}
+layer {
+  name: "Slice_308"
+  type: "Slice"
+  bottom: "685"
+  top: "699slice_another"
+  top: "699"
+  slice_param {
+    slice_dim: 1
+    slice_point: 352
+  }
+}
+layer {
+  name: "Conv_309"
+  type: "Convolution"
+  bottom: "699"
+  top: "995"
+  convolution_param {
+    num_output: 352
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_310"
+  type: "ReLU"
+  bottom: "995"
+  top: "702"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_311"
+  type: "Convolution"
+  bottom: "702"
+  top: "998"
+  convolution_param {
+    num_output: 352
+    bias_term: true
+    group: 352
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_312"
+  type: "Convolution"
+  bottom: "998"
+  top: "1001"
+  convolution_param {
+    num_output: 352
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_313"
+  type: "ReLU"
+  bottom: "1001"
+  top: "707"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_314"
+  type: "Concat"
+  bottom: "696"
+  bottom: "707"
+  top: "708"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_316"
+  type: "Reshape"
+  bottom: "708"
+  top: "710"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 352
+      dim: 91
+    }
+  }
+}
+layer {
+  name: "Transpose_317"
+  type: "Permute"
+  bottom: "710"
+  top: "711"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_319"
+  type: "Reshape"
+  bottom: "711"
+  top: "713"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 704
+      dim: 7
+      dim: 13
+    }
+  }
+}
+layer {
+  name: "Slice_330"
+  type: "Slice"
+  bottom: "713"
+  top: "724"
+  top: "724slice_another"
+  slice_param {
+    slice_dim: 1
+    slice_point: 352
+  }
+}
+layer {
+  name: "Slice_333"
+  type: "Slice"
+  bottom: "713"
+  top: "727slice_another"
+  top: "727"
+  slice_param {
+    slice_dim: 1
+    slice_point: 352
+  }
+}
+layer {
+  name: "Conv_334"
+  type: "Convolution"
+  bottom: "727"
+  top: "1004"
+  convolution_param {
+    num_output: 352
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_335"
+  type: "ReLU"
+  bottom: "1004"
+  top: "730"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_336"
+  type: "Convolution"
+  bottom: "730"
+  top: "1007"
+  convolution_param {
+    num_output: 352
+    bias_term: true
+    group: 352
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_337"
+  type: "Convolution"
+  bottom: "1007"
+  top: "1010"
+  convolution_param {
+    num_output: 352
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_338"
+  type: "ReLU"
+  bottom: "1010"
+  top: "735"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_339"
+  type: "Concat"
+  bottom: "724"
+  bottom: "735"
+  top: "736"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_341"
+  type: "Reshape"
+  bottom: "736"
+  top: "738"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 352
+      dim: 91
+    }
+  }
+}
+layer {
+  name: "Transpose_342"
+  type: "Permute"
+  bottom: "738"
+  top: "739"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_344"
+  type: "Reshape"
+  bottom: "739"
+  top: "741"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 704
+      dim: 7
+      dim: 13
+    }
+  }
+}
+layer {
+  name: "Slice_355"
+  type: "Slice"
+  bottom: "741"
+  top: "752"
+  top: "752slice_another"
+  slice_param {
+    slice_dim: 1
+    slice_point: 352
+  }
+}
+layer {
+  name: "Slice_358"
+  type: "Slice"
+  bottom: "741"
+  top: "755slice_another"
+  top: "755"
+  slice_param {
+    slice_dim: 1
+    slice_point: 352
+  }
+}
+layer {
+  name: "Conv_359"
+  type: "Convolution"
+  bottom: "755"
+  top: "1013"
+  convolution_param {
+    num_output: 352
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_360"
+  type: "ReLU"
+  bottom: "1013"
+  top: "758"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Conv_361"
+  type: "Convolution"
+  bottom: "758"
+  top: "1016"
+  convolution_param {
+    num_output: 352
+    bias_term: true
+    group: 352
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_362"
+  type: "Convolution"
+  bottom: "1016"
+  top: "1019"
+  convolution_param {
+    num_output: 352
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "LeakyRelu_363"
+  type: "ReLU"
+  bottom: "1019"
+  top: "763"
+  relu_param {
+    negative_slope: 0.10000000149011612
+  }
+}
+layer {
+  name: "Concat_364"
+  type: "Concat"
+  bottom: "752"
+  bottom: "763"
+  top: "764"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "Reshape_366"
+  type: "Reshape"
+  bottom: "764"
+  top: "766"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 2
+      dim: 352
+      dim: 91
+    }
+  }
+}
+layer {
+  name: "Transpose_367"
+  type: "Permute"
+  bottom: "766"
+  top: "767"
+  permute_param {
+    order: 0
+    order: 2
+    order: 1
+    order: 3
+  }
+}
+layer {
+  name: "Reshape_369"
+  type: "Reshape"
+  bottom: "767"
+  top: "769"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 704
+      dim: 7
+      dim: 13
+    }
+  }
+}
+layer {
+  name: "Conv_370"
+  type: "Convolution"
+  bottom: "451"
+  top: "770"
+  convolution_param {
+    num_output: 128
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_371"
+  type: "Convolution"
+  bottom: "666"
+  top: "771"
+  convolution_param {
+    num_output: 128
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_372"
+  type: "Convolution"
+  bottom: "769"
+  top: "772"
+  convolution_param {
+    num_output: 128
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Resize_374"
+  type: "Deconvolution"
+  bottom: "772"
+  top: "777"
+  param {
+    lr_mult: 0.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 128
+    bias_term: false
+    group: 128
+    weight_filler {
+      type: "bilinear"
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 4
+    kernel_w: 4
+    stride_h: 2
+    stride_w: 2
+  }
+}
+layer {
+  name: "Add_375"
+  type: "Eltwise"
+  bottom: "771"
+  bottom: "777"
+  top: "778"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "Resize_377"
+  type: "Deconvolution"
+  bottom: "778"
+  top: "783"
+  param {
+    lr_mult: 0.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 128
+    bias_term: false
+    group: 128
+    weight_filler {
+      type: "bilinear"
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 4
+    kernel_w: 4
+    stride_h: 2
+    stride_w: 2
+  }
+}
+layer {
+  name: "Add_378"
+  type: "Eltwise"
+  bottom: "770"
+  bottom: "783"
+  top: "784"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "Resize_380"
+  type: "Pooling"
+  bottom: "784"
+  top: "789"
+  pooling_param {
+    pool: AVE
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+    pad_h: 0
+    pad_w: 0
+  }
+}
+layer {
+  name: "Add_381"
+  type: "Eltwise"
+  bottom: "778"
+  bottom: "789"
+  top: "790"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "Resize_383"
+  type: "Pooling"
+  bottom: "790"
+  top: "795"
+  pooling_param {
+    pool: AVE
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+    pad_h: 0
+    pad_w: 0
+  }
+}
+layer {
+  name: "Add_384"
+  type: "Eltwise"
+  bottom: "772"
+  bottom: "795"
+  top: "796"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "Conv_385"
+  type: "Convolution"
+  bottom: "784"
+  top: "797"
+  convolution_param {
+    num_output: 33
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Reshape_399"
+  type: "Reshape"
+  bottom: "797"
+  top: "815"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 3
+      dim: 11
+      dim: 28
+      dim: 52
+    }
+  }
+}
+layer {
+  name: "Transpose_400"
+  type: "Permute"
+  bottom: "815"
+  top: "output"
+  permute_param {
+    order: 0
+    order: 1
+    order: 3
+    order: 4
+    order: 2
+  }
+}
+layer {
+  name: "Conv_401"
+  type: "Convolution"
+  bottom: "790"
+  top: "817"
+  convolution_param {
+    num_output: 33
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Reshape_415"
+  type: "Reshape"
+  bottom: "817"
+  top: "835"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 3
+      dim: 11
+      dim: 14
+      dim: 26
+    }
+  }
+}
+layer {
+  name: "Transpose_416"
+  type: "Permute"
+  bottom: "835"
+  top: "836"
+  permute_param {
+    order: 0
+    order: 1
+    order: 3
+    order: 4
+    order: 2
+  }
+}
+layer {
+  name: "Conv_417"
+  type: "Convolution"
+  bottom: "796"
+  top: "837"
+  convolution_param {
+    num_output: 33
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "Reshape_431"
+  type: "Reshape"
+  bottom: "837"
+  top: "855"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 3
+      dim: 11
+      dim: 7
+      dim: 13
+    }
+  }
+}
+layer {
+  name: "Transpose_432"
+  type: "Permute"
+  bottom: "855"
+  top: "856"
+  permute_param {
+    order: 0
+    order: 1
+    order: 3
+    order: 4
+    order: 2
+  }
+}
+
