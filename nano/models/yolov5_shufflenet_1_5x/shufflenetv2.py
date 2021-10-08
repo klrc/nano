@@ -147,7 +147,7 @@ class ShuffleNetV2(nn.Module):
         )
         input_channels = output_channels
 
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=0, ceil_mode=True)
 
         stage_names = ["stage{}".format(i) for i in [2, 3, 4]]
         for name, repeats, output_channels in zip(
