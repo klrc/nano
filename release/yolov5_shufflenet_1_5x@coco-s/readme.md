@@ -2,3 +2,15 @@
 # autoanchor: thr=0.34: 0.9903 best possible recall, 3.12 anchors past thr
 # autoanchor: n=9, img_size=416, metric_all=0.292/0.701-mean/best, past_thr=0.537-mean: 6,7,  8,19,  18,14,  16,36,  39,29,  31,77,  83,61,  75,159,  223,179
 # autoanchor: New anchors saved to model. Update model *.yaml to use these anchors in the future.
+
+
+layer {
+name: "shuffle2"
+type: "CppCustom"
+bottom: "resx2_conv1"
+top: "shuffle2"
+cpp_custom_param {
+module: "XnncShuffleChannel"
+param_map_str: "group:3 "
+}
+}
