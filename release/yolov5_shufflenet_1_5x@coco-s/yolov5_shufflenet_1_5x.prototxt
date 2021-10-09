@@ -181,43 +181,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_13"
-  type: "Reshape"
+  name: "shuffle_0"
+  type: "CppCustom"
   bottom: "362"
-  top: "364"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 88
-      dim: 1456
-    }
-  }
-}
-layer {
-  name: "Transpose_14"
-  type: "Permute"
-  bottom: "364"
-  top: "365"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_16"
-  type: "Reshape"
-  bottom: "365"
   top: "367"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 176
-      dim: 28
-      dim: 52
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -325,43 +295,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_38"
-  type: "Reshape"
+  name: "shuffle_1"
+  type: "CppCustom"
   bottom: "390"
-  top: "392"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 88
-      dim: 1456
-    }
-  }
-}
-layer {
-  name: "Transpose_39"
-  type: "Permute"
-  bottom: "392"
-  top: "393"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_41"
-  type: "Reshape"
-  bottom: "393"
   top: "395"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 176
-      dim: 28
-      dim: 52
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -469,43 +409,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_63"
-  type: "Reshape"
+  name: "shuffle_2"
+  type: "CppCustom"
   bottom: "418"
-  top: "420"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 88
-      dim: 1456
-    }
-  }
-}
-layer {
-  name: "Transpose_64"
-  type: "Permute"
-  bottom: "420"
-  top: "421"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_66"
-  type: "Reshape"
-  bottom: "421"
   top: "423"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 176
-      dim: 28
-      dim: 52
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -613,43 +523,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_88"
-  type: "Reshape"
+  name: "shuffle_3"
+  type: "CppCustom"
   bottom: "446"
-  top: "448"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 88
-      dim: 1456
-    }
-  }
-}
-layer {
-  name: "Transpose_89"
-  type: "Permute"
-  bottom: "448"
-  top: "449"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_91"
-  type: "Reshape"
-  bottom: "449"
   top: "451"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 176
-      dim: 28
-      dim: 52
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -780,43 +660,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_102"
-  type: "Reshape"
+  name: "shuffle_4"
+  type: "CppCustom"
   bottom: "465"
-  top: "467"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 176
-      dim: 364
-    }
-  }
-}
-layer {
-  name: "Transpose_103"
-  type: "Permute"
-  bottom: "467"
-  top: "468"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_105"
-  type: "Reshape"
-  bottom: "468"
   top: "470"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 352
-      dim: 14
-      dim: 26
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -924,43 +774,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_127"
-  type: "Reshape"
+  name: "shuffle_5"
+  type: "CppCustom"
   bottom: "493"
-  top: "495"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 176
-      dim: 364
-    }
-  }
-}
-layer {
-  name: "Transpose_128"
-  type: "Permute"
-  bottom: "495"
-  top: "496"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_130"
-  type: "Reshape"
-  bottom: "496"
   top: "498"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 352
-      dim: 14
-      dim: 26
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -1068,43 +888,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_152"
-  type: "Reshape"
+  name: "shuffle_6"
+  type: "CppCustom"
   bottom: "521"
-  top: "523"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 176
-      dim: 364
-    }
-  }
-}
-layer {
-  name: "Transpose_153"
-  type: "Permute"
-  bottom: "523"
-  top: "524"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_155"
-  type: "Reshape"
-  bottom: "524"
   top: "526"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 352
-      dim: 14
-      dim: 26
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -1212,43 +1002,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_177"
-  type: "Reshape"
+  name: "shuffle_7"
+  type: "CppCustom"
   bottom: "549"
-  top: "551"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 176
-      dim: 364
-    }
-  }
-}
-layer {
-  name: "Transpose_178"
-  type: "Permute"
-  bottom: "551"
-  top: "552"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_180"
-  type: "Reshape"
-  bottom: "552"
   top: "554"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 352
-      dim: 14
-      dim: 26
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -1356,43 +1116,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_202"
-  type: "Reshape"
+  name: "shuffle_8"
+  type: "CppCustom"
   bottom: "577"
-  top: "579"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 176
-      dim: 364
-    }
-  }
-}
-layer {
-  name: "Transpose_203"
-  type: "Permute"
-  bottom: "579"
-  top: "580"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_205"
-  type: "Reshape"
-  bottom: "580"
   top: "582"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 352
-      dim: 14
-      dim: 26
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -1500,43 +1230,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_227"
-  type: "Reshape"
+  name: "shuffle_9"
+  type: "CppCustom"
   bottom: "605"
-  top: "607"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 176
-      dim: 364
-    }
-  }
-}
-layer {
-  name: "Transpose_228"
-  type: "Permute"
-  bottom: "607"
-  top: "608"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_230"
-  type: "Reshape"
-  bottom: "608"
   top: "610"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 352
-      dim: 14
-      dim: 26
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -1644,43 +1344,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_252"
-  type: "Reshape"
+  name: "shuffle_10"
+  type: "CppCustom"
   bottom: "633"
-  top: "635"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 176
-      dim: 364
-    }
-  }
-}
-layer {
-  name: "Transpose_253"
-  type: "Permute"
-  bottom: "635"
-  top: "636"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_255"
-  type: "Reshape"
-  bottom: "636"
   top: "638"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 352
-      dim: 14
-      dim: 26
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -1788,43 +1458,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_277"
-  type: "Reshape"
+  name: "shuffle_11"
+  type: "CppCustom"
   bottom: "661"
-  top: "663"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 176
-      dim: 364
-    }
-  }
-}
-layer {
-  name: "Transpose_278"
-  type: "Permute"
-  bottom: "663"
-  top: "664"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_280"
-  type: "Reshape"
-  bottom: "664"
   top: "666"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 352
-      dim: 14
-      dim: 26
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -1955,43 +1595,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_291"
-  type: "Reshape"
+  name: "shuffle_12"
+  type: "CppCustom"
   bottom: "680"
-  top: "682"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 352
-      dim: 91
-    }
-  }
-}
-layer {
-  name: "Transpose_292"
-  type: "Permute"
-  bottom: "682"
-  top: "683"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_294"
-  type: "Reshape"
-  bottom: "683"
   top: "685"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 704
-      dim: 7
-      dim: 13
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -2099,43 +1709,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_316"
-  type: "Reshape"
+  name: "shuffle_13"
+  type: "CppCustom"
   bottom: "708"
-  top: "710"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 352
-      dim: 91
-    }
-  }
-}
-layer {
-  name: "Transpose_317"
-  type: "Permute"
-  bottom: "710"
-  top: "711"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_319"
-  type: "Reshape"
-  bottom: "711"
   top: "713"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 704
-      dim: 7
-      dim: 13
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -2243,43 +1823,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_341"
-  type: "Reshape"
+  name: "shuffle_14"
+  type: "CppCustom"
   bottom: "736"
-  top: "738"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 352
-      dim: 91
-    }
-  }
-}
-layer {
-  name: "Transpose_342"
-  type: "Permute"
-  bottom: "738"
-  top: "739"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_344"
-  type: "Reshape"
-  bottom: "739"
   top: "741"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 704
-      dim: 7
-      dim: 13
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -2387,43 +1937,13 @@ layer {
   }
 }
 layer {
-  name: "Reshape_366"
-  type: "Reshape"
+  name: "shuffle_15"
+  type: "CppCustom"
   bottom: "764"
-  top: "766"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 2
-      dim: 352
-      dim: 91
-    }
-  }
-}
-layer {
-  name: "Transpose_367"
-  type: "Permute"
-  bottom: "766"
-  top: "767"
-  permute_param {
-    order: 0
-    order: 2
-    order: 1
-    order: 3
-  }
-}
-layer {
-  name: "Reshape_369"
-  type: "Reshape"
-  bottom: "767"
   top: "769"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 704
-      dim: 7
-      dim: 13
-    }
+  cpp_custom_param {
+    module: "XnncShuffleChannel"
+    param_map_str: "group:2 "
   }
 }
 layer {
@@ -2617,34 +2137,6 @@ layer {
   }
 }
 layer {
-  name: "Reshape_399"
-  type: "Reshape"
-  bottom: "797"
-  top: "815"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 3
-      dim: 11
-      dim: 28
-      dim: 52
-    }
-  }
-}
-layer {
-  name: "Transpose_400"
-  type: "Permute"
-  bottom: "815"
-  top: "output"
-  permute_param {
-    order: 0
-    order: 1
-    order: 3
-    order: 4
-    order: 2
-  }
-}
-layer {
   name: "Conv_401"
   type: "Convolution"
   bottom: "790"
@@ -2660,34 +2152,6 @@ layer {
     stride_h: 1
     stride_w: 1
     dilation: 1
-  }
-}
-layer {
-  name: "Reshape_415"
-  type: "Reshape"
-  bottom: "817"
-  top: "835"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 3
-      dim: 11
-      dim: 14
-      dim: 26
-    }
-  }
-}
-layer {
-  name: "Transpose_416"
-  type: "Permute"
-  bottom: "835"
-  top: "836"
-  permute_param {
-    order: 0
-    order: 1
-    order: 3
-    order: 4
-    order: 2
   }
 }
 layer {
@@ -2708,32 +2172,3 @@ layer {
     dilation: 1
   }
 }
-layer {
-  name: "Reshape_431"
-  type: "Reshape"
-  bottom: "837"
-  top: "855"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 3
-      dim: 11
-      dim: 7
-      dim: 13
-    }
-  }
-}
-layer {
-  name: "Transpose_432"
-  type: "Permute"
-  bottom: "855"
-  top: "856"
-  permute_param {
-    order: 0
-    order: 1
-    order: 3
-    order: 4
-    order: 2
-  }
-}
-

@@ -5,12 +5,12 @@
 
 
 layer {
-name: "shuffle2"
+name: "shuffle@"
 type: "CppCustom"
-bottom: "resx2_conv1"
-top: "shuffle2"
+bottom: "?"
+top: "?"
 cpp_custom_param {
 module: "XnncShuffleChannel"
-param_map_str: "group:3 "
+param_map_str: "group:2 "
 }
 }

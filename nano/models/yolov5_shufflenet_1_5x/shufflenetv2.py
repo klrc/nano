@@ -17,6 +17,17 @@ def channel_shuffle(x, groups):
     batchsize, num_channels, height, width = x.data.size()
     channels_per_group = num_channels // groups
 
+    # according to XNNC permute op
+    # allows only DWH-WHD permute
+    # as:   1,C,W,H -> 1,W,H,C
+    # or:   1,W,H,C -> 1,C,W,H
+    # need: 1,C,W,H -> 1,A,B,W,H -> 1,B,A,W,H -> 1,C,W,H
+    # need: 1,1,A,B -> 1,B,1,A
+    # -----------------------------------------
+    
+
+    # -----------------------------------------
+
     # reshape
     # x = x.view(batchsize, groups, channels_per_group, height, width)
     x = x.view(batchsize, groups, channels_per_group, height * width)

@@ -14,7 +14,7 @@ def export_onnx(model, dummy_input, f):
             f,
             verbose=True,
             keep_initializers_as_inputs=False,
-            opset_version=11,
+            opset_version=10,
             input_names=['images'],
             output_names=['output'],
         )
@@ -52,8 +52,8 @@ if __name__ == '__main__':
     # Model
     from nano.models.yolov5_shufflenet_1_5x import yolov5_shufflenet_1_5x
     model = yolov5_shufflenet_1_5x(num_classes=6)
-    state_dict = torch.load('runs/train/exp21/weights/best.pt')['state_dict']
+    state_dict = torch.load('release/yolov5_shufflenet_1_5x@coco-s+animal/best.pt', map_location='cpu')['state_dict']
     model.load_state_dict(state_dict)
 
     model.eval()
-    run(model, 'release/yolov5_shufflenet_1_5x.onnx')
+    run(model, 'release/yolov5_shufflenet_1_5x@coco-s+animal/yolov5_shufflenet_1_5x.onnx')
