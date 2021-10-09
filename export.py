@@ -1,4 +1,5 @@
 import torch
+import os
 
 
 def export_onnx(model, dummy_input, f):
@@ -14,7 +15,7 @@ def export_onnx(model, dummy_input, f):
             f,
             verbose=True,
             keep_initializers_as_inputs=False,
-            opset_version=10,
+            opset_version=11,
             input_names=['images'],
             output_names=['output'],
         )
@@ -56,4 +57,14 @@ if __name__ == '__main__':
     model.load_state_dict(state_dict)
 
     model.eval()
-    run(model, 'release/yolov5_shufflenet_1_5x@coco-s+animal/yolov5_shufflenet_1_5x.onnx')
+    target_path = 'release/yolov5_shufflenet_1_5x@coco-s+animal/yolov5_shufflenet_1_5x.onnx'
+    sim_target_path = target_path.replace(".onnx", "-sim.onnx")
+    run(model, target_path)
+    os.system(f'python -m onnxsim {target_path} {sim_target_path}')
+
+    proto_path = target_path.replace(".onnx", ".prototxt")
+    caffemodel_path = target_path.replace(".onnx", ".caffemodel")
+    os.system(f'cd nano/onnx2caffe; python convertCaffe.py ../../{sim_target_path} ../../{proto_path} ../../{caffemodel_path}')
+
+    from nano.xnnc import convert_to_xnnc
+    convert_to_xnnc(proto_path, [['856'], ['836'], ['output']])
