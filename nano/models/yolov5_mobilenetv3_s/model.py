@@ -59,8 +59,6 @@ class YOLO_V5(nn.Module):
 
     def forward(self, x):
         x = self.backbone(x)
-        for i in x:
-            print(i.shape)
         x = self.fpn(x)
         x = self.detect(x)
         return x
