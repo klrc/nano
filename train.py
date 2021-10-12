@@ -1,8 +1,8 @@
 from nano.datasets.object_detection import trainer
 import torch
 
-from nano.models.yolov5_shufflenet_1_5x import yolov5_shufflenet_1_5x
-model = yolov5_shufflenet_1_5x(num_classes=6, backbone_ckpt='nano/models/yolov5_shufflenet_1_5x/nanodet_m_1.5x_416.ckpt')
-model.load_state_dict(torch.load('release/yolov5_shufflenet_1_5x@coco-s/best.pt')['state_dict'])
+from nano.models.yolov5_mobilenetv3_s import yolov5_mobilenetv3_s
+model = yolov5_mobilenetv3_s(num_classes=6)
+model.forward(torch.rand(4, 3, 224, 416))
 
-trainer.run(model, data='data/coco-s+animal.yaml', hyp='data/hyps/hyp.finetune.yaml', epochs=1000, imgsz=416)
+# trainer.run(model, data='data/coco-s+indoor.yaml', hyp='data/hyps/hyp.finetune.yaml', epochs=1000, imgsz=416)

@@ -51,8 +51,8 @@ if __name__ == '__main__':
     device = 'cpu'
 
     # Model
-    from nano.models.yolov5_shufflenet_1_5x import yolov5_shufflenet_1_5x
-    model = yolov5_shufflenet_1_5x(num_classes=6)
+    from nano.models.yolov5_mobilenetv3_s import yolov5_mobilenetv3_s
+    model = yolov5_mobilenetv3_s(num_classes=6)
     state_dict = torch.load('release/yolov5_shufflenet_1_5x@coco-s+animal/best.pt', map_location='cpu')['state_dict']
     model.load_state_dict(state_dict)
 

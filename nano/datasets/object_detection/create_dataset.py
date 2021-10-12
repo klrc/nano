@@ -160,7 +160,7 @@ def prune_func(cocox, __dist, dataset='train2017'):
                 person_ins += 1
             # add customized negative sample image
             # use full images for validation
-            if b.supercat in ('person', 'vehicle', 'animal') or 'val' in dataset:
+            if b.supercat in ('person', 'vehicle', 'animal', 'indoor') or 'val' in dataset:
                 is_valid = True
 
         # remove crowd images for balance
@@ -194,4 +194,4 @@ if __name__ == "__main__":
     __newsize = sum([len(x) for x in dataset.data.values()])
     print(f"{__newsize/__rawsize:.2%}({__newsize}/{__rawsize}) data preserved")
 
-    export(dataset, '../datasets/coco-s+animal')
+    export(dataset, '../datasets/coco-s+indoor')
