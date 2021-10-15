@@ -7,3 +7,4 @@ wandb
 *.pt
 runs
 data
+build

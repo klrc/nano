@@ -54,13 +54,13 @@ if __name__ == '__main__':
     device = 'cpu'
 
     # Model
-    from nano.models.yolov5_mobilenetv3_s import yolov5_mobilenetv3_s
-    model = yolov5_mobilenetv3_s(num_classes=6)
+    from nano.models.yolov5_mobilenetv3_l import yolov5_mobilenetv3_l
+    model = yolov5_mobilenetv3_l(num_classes=6)
     # state_dict = torch.load('release/yolov5_shufflenet_1_5x@coco-s+animal/best.pt', map_location='cpu')['state_dict']
     # model.load_state_dict(state_dict)
 
     model.eval()
-    target_path = 'y_mv3s.onnx'
+    target_path = 'build/yolov5_mobilenet_v3_l.onnx'
     # target_path = 'release/yolov5_shufflenet_1_5x@coco-s+animal/yolov5_shufflenet_1_5x.onnx'
     sim_target_path = target_path.replace(".onnx", "-sim.onnx")
     run(model, target_path)
@@ -70,5 +70,5 @@ if __name__ == '__main__':
     caffemodel_path = target_path.replace(".onnx", ".caffemodel")
     os.system(f'cd nano/onnx2caffe; python convertCaffe.py ../../{sim_target_path} ../../{proto_path} ../../{caffemodel_path}')
 
-    from nano.xnnc import convert_to_xnnc
-    convert_to_xnnc(proto_path, [['856'], ['836'], ['output']])
+    # from nano.xnnc import convert_to_xnnc
+    # convert_to_xnnc(proto_path, [['856'], ['836'], ['output']])

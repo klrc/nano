@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 
 sns.set()
 
+trainset_name = 'train2017'
+valset_name = 'val2017'
+
 
 class Bbox():
     def __init__(self, cid, name, supercat, x, y, w, h,):
@@ -36,8 +39,8 @@ class COCOX():
         super().__init__()
         self.root = root
         self.data = {
-            'train2017': self.load_data('train2017'),
-            'val2017': self.load_data('val2017'),
+            trainset_name: self.load_data(trainset_name),
+            valset_name: self.load_data(valset_name),
         }
 
     def load_data(self, dataset):
@@ -111,7 +114,7 @@ def export(cocox, root):
     return root
 
 
-def get_class_hist(cocox, dataset='train2017'):
+def get_class_hist(cocox, dataset=trainset_name):
     x = []
     for m in cocox.data[dataset]:
         for b in m.annotations:
@@ -120,7 +123,7 @@ def get_class_hist(cocox, dataset='train2017'):
     plt.show()
 
 
-def get_instance_dist(cocox, dataset='train2017'):
+def get_instance_dist(cocox, dataset=trainset_name):
     ret = {}
     for dataset in cocox.data.keys():
         for m in cocox.data[dataset]:
@@ -132,7 +135,7 @@ def get_instance_dist(cocox, dataset='train2017'):
     return ret
 
 
-def prune_func(cocox, __dist, dataset='train2017'):
+def prune_func(cocox, __dist, dataset=trainset_name):
 
     # supercategory from https://tech.amikelive.com/node-718/what-object-categories-labels-are-in-coco-dataset/
     # ----------------------------------
@@ -160,7 +163,7 @@ def prune_func(cocox, __dist, dataset='train2017'):
                 person_ins += 1
             # add customized negative sample image
             # use full images for validation
-            if b.supercat in ('person', 'vehicle', 'animal', 'indoor') or 'val' in dataset:
+            if b.supercat in ('person', 'vehicle', 'animal') or 'val' in dataset:
                 is_valid = True
 
         # remove crowd images for balance
@@ -188,10 +191,10 @@ if __name__ == "__main__":
     __rawsize = sum([len(x) for x in dataset.data.values()])
 
     __dist = get_instance_dist(dataset)
-    prune_func(dataset, __dist, 'train2017')
-    prune_func(dataset, __dist, 'val2017')
+    prune_func(dataset, __dist, trainset_name)
+    prune_func(dataset, __dist, valset_name)
     get_class_hist(dataset)
     __newsize = sum([len(x) for x in dataset.data.values()])
     print(f"{__newsize/__rawsize:.2%}({__newsize}/{__rawsize}) data preserved")
 
-    export(dataset, '../datasets/coco-s+indoor')
+    export(dataset, '../datasets/coco-s+animal')
