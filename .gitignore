@@ -5,5 +5,4 @@ lightning_logs
 checkpoints
 wandb
 runs
-data
 build
