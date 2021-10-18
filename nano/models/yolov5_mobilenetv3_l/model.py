@@ -49,6 +49,16 @@ class Detect(nn.Module):
             z.append(y.view(bs, -1, self.no))
         return torch.cat(z, 1), x
 
+    def dsp_forward(self, x):
+        for i in range(self.nl):
+            x[i] = self.m[i](x[i])  # conv
+        return x
+
+    def dsp(self):
+        self.cached_func = self.forward
+        self.forward = self.dsp_forward
+        return self
+
 
 class YOLO_V5(nn.Module):
     def __init__(self, backbone, num_classes, anchors, ch):
@@ -68,6 +78,10 @@ class YOLO_V5(nn.Module):
         x = self.fpn(x)
         x = self.detect.inference(x)
         return x
+
+    def dsp(self):
+        self.detect.dsp()
+        return self
 
 
 def yolov5_mobilenetv3_l(num_classes=80,

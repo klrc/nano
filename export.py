@@ -56,12 +56,12 @@ if __name__ == '__main__':
     # Model
     from nano.models.yolov5_mobilenetv3_l import yolov5_mobilenetv3_l
     model = yolov5_mobilenetv3_l(num_classes=6)
-    # state_dict = torch.load('release/yolov5_shufflenet_1_5x@coco-s+animal/best.pt', map_location='cpu')['state_dict']
-    # model.load_state_dict(state_dict)
+    state_dict = torch.load('release/yolov5_mobilenetv3_l/best.pt', map_location='cpu')['state_dict']
+    model.load_state_dict(state_dict)
 
-    model.eval()
+    model.eval().dsp()
     target_path = 'build/yolov5_mobilenet_v3_l.onnx'
-    # target_path = 'release/yolov5_shufflenet_1_5x@coco-s+animal/yolov5_shufflenet_1_5x.onnx'
+    target_path = 'release/yolov5_mobilenetv3_l/yolov5_mobilenetv3_l.onnx'
     sim_target_path = target_path.replace(".onnx", "-sim.onnx")
     run(model, target_path)
     os.system(f'python -m onnxsim {target_path} {sim_target_path}')
