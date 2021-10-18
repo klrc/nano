@@ -52,24 +52,23 @@ def run(model, output_path):
 if __name__ == '__main__':
 
     device = 'cpu'
-
+    root = 'release/yolov5_mobilenetv3_l@coco-s'
     # Model
     from nano.models.yolov5_mobilenetv3_l import yolov5_mobilenetv3_l
     model = yolov5_mobilenetv3_l(num_classes=6)
-    state_dict = torch.load('release/yolov5_mobilenetv3_l/best.pt', map_location='cpu')['state_dict']
+    state_dict = torch.load(root+'/best.pt', map_location='cpu')['state_dict']
     model.load_state_dict(state_dict)
 
     model.eval().dsp()
-    print(model.detect.anchors)
-    print(model.detect.anchor_grid)
+    # print(model.detect.anchors)
+    # print(model.detect.anchor_grid)
 
-    # target_path = 'build/yolov5_mobilenet_v3_l.onnx'
-    # target_path = 'release/yolov5_mobilenetv3_l/yolov5_mobilenetv3_l.onnx'
-    # sim_target_path = target_path.replace(".onnx", "-sim.onnx")
-    # run(model, target_path)
-    # os.system(f'python -m onnxsim {target_path} {sim_target_path}')
+    target_path = root+'/yolov5_mobilenetv3_l.onnx'
+    sim_target_path = target_path.replace(".onnx", "-sim.onnx")
+    run(model, target_path)
+    os.system(f'python -m onnxsim {target_path} {sim_target_path}')
 
-    # proto_path = target_path.replace(".onnx", ".prototxt")
-    # caffemodel_path = target_path.replace(".onnx", ".caffemodel")
-    # os.system(f'cd nano/onnx2caffe; python convertCaffe.py ../../{sim_target_path} ../../{proto_path} ../../{caffemodel_path}')
+    proto_path = target_path.replace(".onnx", ".prototxt")
+    caffemodel_path = target_path.replace(".onnx", ".caffemodel")
+    os.system(f'cd nano/onnx2caffe; python convertCaffe.py ../../{sim_target_path} ../../{proto_path} ../../{caffemodel_path}')
 
