@@ -77,9 +77,9 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     # [f'class{i}' for i in range(1000)]  # assign defaults
     if pt:
         print('warning: hard-coded yolov5 shufflenet')
-        from nano.models.yolov5_shufflenet_1_5x import yolov5_shufflenet_1_5x
-        model = yolov5_shufflenet_1_5x(num_classes=6)
-        model.load_state_dict(torch.load(w)['state_dict'])
+        from nano.models.yolov5_mobilenetv3_l import yolov5_mobilenetv3_l
+        model = yolov5_mobilenetv3_l(num_classes=6)
+        model.load_state_dict(torch.load(w, map_location=device)['state_dict'])
         model.to(device).eval()
     elif onnx:
         check_requirements(('onnx', 'onnxruntime'))
