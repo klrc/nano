@@ -253,14 +253,14 @@ def train(model, hyp, opt, device):
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
             if not noval or final_epoch:  # Calculate mAP
                 results, maps, _ = evaluator.run(data_dict,
-                                           batch_size=batch_size // WORLD_SIZE * 2,
-                                           imgsz=imgsz,
-                                           model=ema.ema,
-                                           single_cls=single_cls,
-                                           dataloader=val_loader,
-                                           save_dir=save_dir,
-                                           plots=False,
-                                           compute_loss=compute_loss)
+                                                 batch_size=batch_size // WORLD_SIZE * 2,
+                                                 imgsz=imgsz,
+                                                 model=ema.ema,
+                                                 single_cls=single_cls,
+                                                 dataloader=val_loader,
+                                                 save_dir=save_dir,
+                                                 plots=False,
+                                                 compute_loss=compute_loss)
 
             # Update best mAP
             fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
