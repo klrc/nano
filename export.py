@@ -52,7 +52,7 @@ def run(model, output_path):
 if __name__ == '__main__':
 
     device = 'cpu'
-    root = 'release/yolov5_mobilenetv3_l@coco-s'
+    root = 'release/yolov5_mobilenetv3_l@coco-s+indoor'
     # Model
     from nano.models.yolov5_mobilenetv3_l import yolov5_mobilenetv3_l
     model = yolov5_mobilenetv3_l(num_classes=6)
