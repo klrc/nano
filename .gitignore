@@ -4,7 +4,6 @@ lightning_logs
 .DS_Store
 checkpoints
 wandb
-*.pt
 runs
 data
 build

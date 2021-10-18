@@ -60,15 +60,16 @@ if __name__ == '__main__':
     model.load_state_dict(state_dict)
 
     model.eval().dsp()
-    target_path = 'build/yolov5_mobilenet_v3_l.onnx'
-    target_path = 'release/yolov5_mobilenetv3_l/yolov5_mobilenetv3_l.onnx'
-    sim_target_path = target_path.replace(".onnx", "-sim.onnx")
-    run(model, target_path)
-    os.system(f'python -m onnxsim {target_path} {sim_target_path}')
+    print(model.detect.anchors)
+    print(model.detect.anchor_grid)
 
-    proto_path = target_path.replace(".onnx", ".prototxt")
-    caffemodel_path = target_path.replace(".onnx", ".caffemodel")
-    os.system(f'cd nano/onnx2caffe; python convertCaffe.py ../../{sim_target_path} ../../{proto_path} ../../{caffemodel_path}')
+    # target_path = 'build/yolov5_mobilenet_v3_l.onnx'
+    # target_path = 'release/yolov5_mobilenetv3_l/yolov5_mobilenetv3_l.onnx'
+    # sim_target_path = target_path.replace(".onnx", "-sim.onnx")
+    # run(model, target_path)
+    # os.system(f'python -m onnxsim {target_path} {sim_target_path}')
 
-    # from nano.xnnc import convert_to_xnnc
-    # convert_to_xnnc(proto_path, [['856'], ['836'], ['output']])
+    # proto_path = target_path.replace(".onnx", ".prototxt")
+    # caffemodel_path = target_path.replace(".onnx", ".caffemodel")
+    # os.system(f'cd nano/onnx2caffe; python convertCaffe.py ../../{sim_target_path} ../../{proto_path} ../../{caffemodel_path}')
+
