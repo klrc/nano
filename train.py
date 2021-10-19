@@ -1,8 +1,7 @@
-from nano.datasets.object_detection import trainer
-import torch
 
-from nano.models.yolov5_mobilenetv3_l import yolov5_mobilenetv3_l
-model = yolov5_mobilenetv3_l(num_classes=6)
-model.load_state_dict(torch.load('release/yolov5_mobilenetv3_l@coco-s/best.pt')['state_dict'])
+import nano
 
-trainer.run(model, data='data/coco-s+indoor.yaml', hyp='data/hyps/hyp.finetune.yaml', epochs=1000, imgsz=416)
+model = nano.models._test_sample_model()
+# trainer = nano.datasets.detection.some_trainer()
+
+# trainer.run(model, data='data/coco-s+indoor.yaml', hyp='data/hyps/hyp.finetune.yaml', epochs=1000, imgsz=416)
