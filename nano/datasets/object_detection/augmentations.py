@@ -20,6 +20,7 @@ class Albumentations:
             check_version(A.__version__, '1.0.3')  # version requirement
 
             self.transform = A.Compose([
+                A.HorizontalFlip(p=0.5),
                 A.Blur(p=0.1),
                 A.MedianBlur(p=0.1),
                 A.ToGray(p=0.01)],
