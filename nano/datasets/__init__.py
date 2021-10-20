@@ -1,1 +1,1 @@
-from . import detection
+from . import object_detection
