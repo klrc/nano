@@ -1,9 +1,7 @@
 .idea
-__pycache__
-lightning_logs
 .DS_Store
-checkpoints
+.vscode
+__pycache__
 wandb
 runs
-build
 deprecated

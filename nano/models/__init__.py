@@ -1,1 +1,2 @@
 from .sample_model import _test_sample_model
+from .yolov5_mobilenetv3_l import yolov5_mobilenetv3_l

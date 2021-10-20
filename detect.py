@@ -1,8 +1,9 @@
 
-# import something
+import nano
+import torch
 
-# model = nano.models.some_model()
-# model.load_state_dict(torch.load('my/path/to.pt')['model'])
-# detector = nano.datasets.detection.some_detector()
+model = nano.models.yolov5_mobilenetv3_l(num_classes=6)
+model.load_state_dict(torch.load('/Volumes/ASM236X/best.pt', map_location='cpu')['state_dict'])
+detector = nano.datasets.detection.detector
 
-# detector.run(model, source='../path/to/imgs', imgsz=416)
+detector.run(model, source='/Volumes/ASM236X/fuh-testpic', imgsz=416)
