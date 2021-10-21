@@ -134,7 +134,7 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
         elif node.op_type == "Concat":
             node_name = node.name
             input_names = [str(x) for x in node.input]
-            output_names = str(node.output[0])
+            output_names = [str(node.output[0])]
             blob_channels[output_names[0]] = sum([blob_channels[x] for x in input_names])
             axis = attrs.get("axis", 1)
             caffe_layers.append(

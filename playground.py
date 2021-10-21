@@ -4,7 +4,7 @@ from nano.evolution import to_onnx, onnx_to_caffe
 
 import torch.nn as nn
 
-model = nano.models.yolov5_mobilenetv3_l()
+model = nano.models.tmp_test_yolov5_cspm()
 
-onnx_path = to_onnx(model, "runs/build/test.onnx", dummy_input=(1, 1, 4, 4), output_names=["output"])
+onnx_path = to_onnx(model, "runs/build/test.onnx")
 onnx_to_caffe(onnx_path)

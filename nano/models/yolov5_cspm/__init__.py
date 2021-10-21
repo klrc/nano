@@ -1,1 +1,1 @@
-from .model import yolov5_mobilenetv3_l
+from .backbone import tmp_test_yolov5_cspm

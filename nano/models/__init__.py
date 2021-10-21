@@ -1,2 +1,1 @@
-from .sample_model import _test_sample_model
-from .yolov5_mobilenetv3_l import yolov5_mobilenetv3_l
+from .yolov5_cspm import tmp_test_yolov5_cspm
