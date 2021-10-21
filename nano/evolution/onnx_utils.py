@@ -1,5 +1,5 @@
 import torch
-from torch import onnx
+import os
 
 
 def to_onnx(
@@ -9,6 +9,11 @@ def to_onnx(
     input_names=["input"],
     output_names=["output.1", "output.2", "output.3"],
 ):
+    # create dir
+    dir = '/'.join(onnx_path.split('/')[:-1])
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
     # load model
     device = "cpu"
     model = model.to(device).eval()

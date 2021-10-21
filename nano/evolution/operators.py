@@ -1,6 +1,8 @@
 from caffe.proto import caffe_pb2
 from caffe import params as P
+from numpy.core.fromnumeric import shape
 import six
+import math
 
 
 def param_name_dict():
@@ -126,7 +128,7 @@ _param_names = param_name_dict()
 
 def conv2d(node_name, input_names, output_names, out_channels, kernel_size, stride, padding, groups, dilation, bias):
     # register weight shape
-    assert padding[0] != padding[2] and padding[1] != padding[3]
+    assert padding[0] == padding[2] and padding[1] == padding[3]
     return Function(
         "Convolution",
         node_name,
@@ -154,6 +156,7 @@ def concat(node_name, input_names, output_names, axis):
 
 
 def maxpool2d(node_name, input_names, output_names, kernel_size, stride, padding):
+    assert padding[0] == padding[2] and padding[1] == padding[3]
     return Function(
         "Pooling",
         node_name,
@@ -170,7 +173,9 @@ def maxpool2d(node_name, input_names, output_names, kernel_size, stride, padding
         ),
     )
 
+
 def avgpool2d(node_name, input_names, output_names, kernel_size, stride, padding):
+    assert padding[0] == padding[2] and padding[1] == padding[3]
     return Function(
         "Pooling",
         node_name,
@@ -187,3 +192,63 @@ def avgpool2d(node_name, input_names, output_names, kernel_size, stride, padding
         ),
     )
 
+
+def add(node_name, input_names, output_names):
+    return Function(
+        "Eltwise",
+        node_name,
+        input_names,
+        output_names,
+        operation=P.Eltwise.SUM,
+    )
+
+
+def flatten(node_name, input_names, output_names):
+    return Function(
+        "Flatten",
+        node_name,
+        input_names,
+        output_names,
+    )
+
+
+def bias(node_name, input_names, output_names, axis):
+    return Function(
+        "Bias",
+        node_name,
+        input_names,
+        output_names,
+        axis=axis,
+    )
+
+
+def upsample_bilinear2d(node_name, input_names, output_names, in_channels, scale_factor):
+    kernel_h = int(2 * scale_factor[0] - scale_factor[0] % 2)
+    kernel_w = int(2 * scale_factor[1] - scale_factor[1] % 2)
+    stride_h = int(scale_factor[0])
+    stride_w = int(scale_factor[1])
+    pad_h = int(math.ceil((scale_factor[0]-1)/2.))
+    pad_w = int(math.ceil((scale_factor[1]-1)/2.))
+    return Function(
+        "Deconvolution",
+        node_name,
+        input_names,
+        output_names,
+        convolution_param=dict(
+            num_output=in_channels,
+            kernel_h=kernel_h,
+            kernel_w=kernel_w,
+            stride_h=stride_h,
+            stride_w=stride_w,
+            pad_h=pad_h,
+            pad_w=pad_w,
+            group=in_channels,
+            bias_term=False,
+            weight_filler=dict(type="bilinear"),
+        ),
+    )
+
+
+def input_node(node_name, output_names, output_shape):
+    input_names = []
+    return Function("Input", node_name, input_names, output_names, input_param=dict(shape=dict(dim=output_shape)))
