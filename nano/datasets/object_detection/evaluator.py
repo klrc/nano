@@ -214,7 +214,7 @@ def main(model, opt):
 
 def run(model, **kwargs):
     # Usage: import train; train.run(model, data='coco128.yaml', imgsz=320)
-    opt = parse_opt(True)
+    opt = parse_opt()
     for k, v in kwargs.items():
         setattr(opt, k, v)
     main(model, opt)
