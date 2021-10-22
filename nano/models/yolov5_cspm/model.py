@@ -257,7 +257,8 @@ class YoloCSPMobilenetV2(nn.Module):
         self.pan = PathAggregationPyramid([192, 288, 640], [128, 128, 128])
         self.detect = DetectHead(
             num_classes=num_classes,
-            anchors=([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]),
+            anchors=([16, 30], [62, 45], [156, 198]),
+            # anchors=([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]),
             ch=(128, 128, 128),
         )
         for m in self.modules():
@@ -284,3 +285,8 @@ class YoloCSPMobilenetV2(nn.Module):
 
 def yolov5_cspm(num_classes=6):
     return YoloCSPMobilenetV2(num_classes)
+
+
+model = yolov5_cspm()
+for y in model(torch.rand(4, 3, 224, 416)):
+    print(y.shape)
