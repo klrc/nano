@@ -47,20 +47,20 @@ class DecoupledHead(nn.Module):
             convpack_3x3_1x(hidden_channels, hidden_channels),
             convpack_1x1(hidden_channels, hidden_channels),
             convpack_3x3_1x(hidden_channels, hidden_channels),
-            convpack_1x1(hidden_channels, num_classes),
+            convpack_1x1(hidden_channels, num_classes, 'linear'),
         )
         self.branch_2 = nn.Sequential(
             convpack_3x3_1x(hidden_channels, hidden_channels),
             convpack_1x1(hidden_channels, hidden_channels),
             convpack_3x3_1x(hidden_channels, hidden_channels),
-            convpack_1x1(hidden_channels, 5),
+            convpack_1x1(hidden_channels, 5, 'linear'),
         )
 
     def forward(self, x):
         x = self.squeeze(x)
         x1 = self.branch_1(x)
         x2 = self.branch_2(x)
-        x = torch.cat((x1, x2), dim=1)
+        x = torch.cat((x2, x1), dim=1) # bboxes + classes
         return x
 
 
@@ -288,8 +288,7 @@ class YoloCSPMobilenetV2(nn.Module):
         self.pan = PathAggregationPyramid([192, 288, 640], [128, 128, 128])
         self.detect = DetectHead(
             num_classes=num_classes,
-            anchors=([16, 30], [62, 45], [156, 198]),
-            # anchors=([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]),
+            anchors=([11, 13], [25, 41], [104, 108]),
             ch=(128, 128, 128),
         )
         for m in self.modules():
@@ -321,11 +320,11 @@ class YoloCSPMobilenetV2(nn.Module):
         return self
 
 
-def yolov5_cspm(num_classes=6):
+def yolox_cspm(num_classes=6):
     return YoloCSPMobilenetV2(num_classes)
 
 
 if __name__ == "__main__":
-    model = yolov5_cspm()
+    model = yolox_cspm()
     for y in model(torch.rand(4, 3, 224, 416)):
         print(y.shape)

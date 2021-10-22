@@ -1,1 +1,1 @@
-from .yolov5_cspm import yolov5_cspm
+from .yolox_cspm import yolox_cspm

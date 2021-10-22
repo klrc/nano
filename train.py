@@ -1,6 +1,6 @@
 import nano
 
-model = nano.models.yolov5_cspm(num_classes=3)
+model = nano.models.yolox_cspm(num_classes=3)
 trainer = nano.datasets.object_detection.trainer
 
 trainer.run(
