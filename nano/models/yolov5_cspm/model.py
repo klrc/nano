@@ -45,9 +45,13 @@ class DecoupledHead(nn.Module):
         self.squeeze = convpack_1x1(in_channels, hidden_channels)
         self.branch_1 = nn.Sequential(
             convpack_3x3_1x(hidden_channels, hidden_channels),
+            convpack_1x1(hidden_channels, hidden_channels),
+            convpack_3x3_1x(hidden_channels, hidden_channels),
             convpack_1x1(hidden_channels, num_classes),
         )
         self.branch_2 = nn.Sequential(
+            convpack_3x3_1x(hidden_channels, hidden_channels),
+            convpack_1x1(hidden_channels, hidden_channels),
             convpack_3x3_1x(hidden_channels, hidden_channels),
             convpack_1x1(hidden_channels, 5),
         )
@@ -314,6 +318,7 @@ class YoloCSPMobilenetV2(nn.Module):
 
     def dsp(self):
         self.detect.dsp()
+        return self
 
 
 def yolov5_cspm(num_classes=6):

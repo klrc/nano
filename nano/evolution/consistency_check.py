@@ -151,8 +151,8 @@ def net_forward_caffe(caffe_model, in_node, out_node, input_tensor):
 def check_results(net_results, onnx_info, caffe_info, dump_path):
     onnx_results = net_results[0]
     caffe_results = net_results[1]
-    print(onnx_results)
-    print(caffe_results)
+    # print(onnx_results)
+    # print(caffe_results)
     for i, result in enumerate(onnx_results):
         # check if result are same by cosine distance
         dot_result = np.dot(result.flatten(), caffe_results[i].flatten())
