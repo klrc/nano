@@ -6,7 +6,7 @@ Validate a trained YOLOv5 model accuracy on a custom dataset
 from .torch_utils import time_sync, select_device
 from .metrics import ap_per_class
 from .general import check_requirements, \
-    check_yaml, box_iou, non_max_suppression, scale_coords, xywh2xyxy, set_logging, \
+    check_file, box_iou, non_max_suppression, scale_coords, xywh2xyxy, set_logging, \
     colorstr, print_args, check_dataset
 from .datasets import create_dataloader
 import argparse
@@ -69,13 +69,13 @@ def eval(model, opt, device):
 
     # Configure
     model.eval()
-    nc = 1 if single_cls else int(data['nc'])  # number of classes
+    data_dict = check_dataset(data)  # check if None
+    nc = 1 if single_cls else int(data_dict['nc'])  # number of classes
     iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
     niou = iouv.numel()
 
     # Evaluator
     if not training:
-        data_dict = check_dataset(data)  # check if None
         val_path = data_dict['val']
         dataloader = create_dataloader(val_path, imgsz, batch_size // 2, gs, single_cls,
                                     rect=True, rank=-1, pad=0.5,
@@ -202,7 +202,7 @@ def main(model, opt):
     print_args(FILE.stem, opt)
 
     # Configs
-    opt.data = check_yaml(opt.data)  # check YAML
+    opt.data = check_file(opt.data)  # check file
     if opt.save_dir is None:
         opt.save_dir = Path('') 
 

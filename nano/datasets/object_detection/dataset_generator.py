@@ -113,7 +113,6 @@ class DatasetContainer:
         print("len(data):", len(self.data))
         print(self.data[-1])
 
-
     def export(self, root):
         # clean target root
         if os.path.exists(root):
@@ -154,23 +153,29 @@ class DatasetContainer:
     def reduce_instances(self, cut_val=True):
         reduced = []
         for D in self.data:
-            if not cut_val and D.dataset == 'val':  # skip val dataset
+            if not cut_val and D.dataset == "val":  # skip val dataset
                 reduced.append(D)
                 continue
             instances_person = 0
             instances_vehicle = 0
             instances_all = 0
+            reduced_annotations = []
             for b in D.annotations:
+                if float(b.x) * 416 <= 3 or float(b.y) * 416 <= 3:  # reduce extremely small objects
+                    continue
                 if b.name == "person":
                     instances_person += 1
                 if b.name in ["bicycle", "motorcycle", "car", "bus", "truck"]:
                     instances_vehicle += 1
                 instances_all += 1
+                reduced_annotations.append(b)
+            D.annotations = reduced_annotations
             if instances_vehicle == 0:  # reduce non-vehicle images
-                if instances_person == 0 and random.random() < 0.5: # keep 1/2 negativa samples
+                if instances_person == 0 and random.random() < 0.5:  # keep 1/2 negativa samples
                     pass
                 else:
                     continue
+                # continue
             reduced.append(D)
         print("len(reduced):", len(reduced))
         self.data = reduced
@@ -204,7 +209,7 @@ c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
 c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
 c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
 
-# c.reduce_instances(cut_val=True)
-# c.show_class_histplot()
+c.reduce_instances(cut_val=False)
+c.show_class_histplot()
 
-c.export("/home/sh/Datasets/coc-f")
+c.export("/home/sh/Datasets/coc-n")

@@ -240,7 +240,7 @@ def train(model, hyp, opt, device):
                 mem = f'{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G'  # (GB)
                 pbar.set_description(('%10s' * 2 + '%10.4g' * 5) % (
                     f'{epoch}/{epochs - 1}', mem, *mloss, targets.shape[0], imgs.shape[-1]))
-
+            break
             # end batch ------------------------------------------------------------------------------------------------
 
         # Scheduler

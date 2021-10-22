@@ -36,6 +36,30 @@ def constant_init(module, val, bias=0):
         nn.init.constant_(module.bias, bias)
 
 
+class DecoupledHead(nn.Module):
+    def __init__(self, in_channels, num_classes, hidden_channels=128):
+        super().__init__()
+        # 128 -> 128
+        # (128 3x3-> 128)*2 -> 80
+        # (128 3x3-> 128)*2 -> 5
+        self.squeeze = convpack_1x1(in_channels, hidden_channels)
+        self.branch_1 = nn.Sequential(
+            convpack_3x3_1x(hidden_channels, hidden_channels),
+            convpack_1x1(hidden_channels, num_classes),
+        )
+        self.branch_2 = nn.Sequential(
+            convpack_3x3_1x(hidden_channels, hidden_channels),
+            convpack_1x1(hidden_channels, 5),
+        )
+
+    def forward(self, x):
+        x = self.squeeze(x)
+        x1 = self.branch_1(x)
+        x2 = self.branch_2(x)
+        x = torch.cat((x1, x2), dim=1)
+        return x
+
+
 class DetectHead(nn.Module):
     def __init__(self, num_classes, anchors, ch):  # detection layer
         super().__init__()
@@ -48,7 +72,10 @@ class DetectHead(nn.Module):
         a = torch.tensor(anchors).float().view(self.nl, -1, 2)
         self.register_buffer("anchors", a)  # shape(nl,na,2)
         self.register_buffer("anchor_grid", a.clone().view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
-        self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
+
+        # 128 -> 85 * 3
+        # self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
+        self.m = nn.ModuleList(DecoupledHead(x, num_classes) for x in ch)  # output conv
 
     @staticmethod
     def _make_grid(nx=20, ny=20):
@@ -279,6 +306,12 @@ class YoloCSPMobilenetV2(nn.Module):
         x = self.detect(x)
         return x
 
+    def inference(self, x):
+        x = self.backbone(x)
+        x = self.pan(x)
+        x = self.detect.inference(x)
+        return x
+
     def dsp(self):
         self.detect.dsp()
 
@@ -287,6 +320,7 @@ def yolov5_cspm(num_classes=6):
     return YoloCSPMobilenetV2(num_classes)
 
 
-model = yolov5_cspm()
-for y in model(torch.rand(4, 3, 224, 416)):
-    print(y.shape)
+if __name__ == "__main__":
+    model = yolov5_cspm()
+    for y in model(torch.rand(4, 3, 224, 416)):
+        print(y.shape)
