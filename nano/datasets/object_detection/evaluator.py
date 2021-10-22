@@ -198,8 +198,8 @@ def parse_opt():
 def main(model, opt):
     # Checks
     set_logging()
-    check_requirements(exclude=('tensorboard', 'thop'))
-    print_args(FILE.stem, opt)
+    # check_requirements(exclude=('tensorboard', 'thop'))
+    # print_args(FILE.stem, opt)
 
     # Configs
     opt.data = check_file(opt.data)  # check file
@@ -209,7 +209,7 @@ def main(model, opt):
     # Evaluate
     device = select_device(opt.device, batch_size=opt.batch_size)
     model.to(device)
-    eval(model, opt, device)
+    return eval(model, opt, device)
 
 
 def run(model, **kwargs):
@@ -217,4 +217,4 @@ def run(model, **kwargs):
     opt = parse_opt()
     for k, v in kwargs.items():
         setattr(opt, k, v)
-    main(model, opt)
+    return main(model, opt)
