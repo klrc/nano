@@ -50,8 +50,6 @@ class DetectHead(nn.Module):
         self.register_buffer("anchor_grid", a.clone().view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
         self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
 
-        self.dsp()  # ! TODO: remove this
-
     @staticmethod
     def _make_grid(nx=20, ny=20):
         yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
@@ -89,7 +87,6 @@ class DetectHead(nn.Module):
         return x
 
     def dsp(self):
-        self.cached_func = self.forward
         self.forward = self.dsp_forward
         return self
 
@@ -280,6 +277,9 @@ class YoloCSPMobilenetV2(nn.Module):
         x = self.pan(x)
         x = self.detect(x)
         return x
+
+    def dsp(self):
+        self.detect.dsp()
 
 
 def yolov5_cspm(num_classes=6):
