@@ -1,8 +1,6 @@
-import torch
 import nano
 from nano.evolution import to_onnx, onnx_to_caffe
 
-import torch.nn as nn
 
 model = nano.models.tmp_test_yolov5_cspm()
 

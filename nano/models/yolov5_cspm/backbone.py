@@ -3,6 +3,39 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+def kaiming_init(module, a=0, mode="fan_out", nonlinearity="relu", bias=0, distribution="normal"):
+    assert distribution in ["uniform", "normal"]
+    if distribution == "uniform":
+        nn.init.kaiming_uniform_(module.weight, a=a, mode=mode, nonlinearity=nonlinearity)
+    else:
+        nn.init.kaiming_normal_(module.weight, a=a, mode=mode, nonlinearity=nonlinearity)
+    if hasattr(module, "bias") and module.bias is not None:
+        nn.init.constant_(module.bias, bias)
+
+
+def xavier_init(module, gain=1, bias=0, distribution="normal"):
+    assert distribution in ["uniform", "normal"]
+    if distribution == "uniform":
+        nn.init.xavier_uniform_(module.weight, gain=gain)
+    else:
+        nn.init.xavier_normal_(module.weight, gain=gain)
+    if hasattr(module, "bias") and module.bias is not None:
+        nn.init.constant_(module.bias, bias)
+
+
+def normal_init(module, mean=0, std=1, bias=0):
+    nn.init.normal_(module.weight, mean, std)
+    if hasattr(module, "bias") and module.bias is not None:
+        nn.init.constant_(module.bias, bias)
+
+
+def constant_init(module, val, bias=0):
+    if hasattr(module, "weight") and module.weight is not None:
+        nn.init.constant_(module.weight, val)
+    if hasattr(module, "bias") and module.bias is not None:
+        nn.init.constant_(module.bias, bias)
+
+
 class DetectHead(nn.Module):
     def __init__(self, num_classes, anchors, ch):  # detection layer
         super().__init__()
@@ -16,8 +49,8 @@ class DetectHead(nn.Module):
         self.register_buffer("anchors", a)  # shape(nl,na,2)
         self.register_buffer("anchor_grid", a.clone().view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
         self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
-        
-        self.dsp() # ! TODO: remove this
+
+        self.dsp()  # ! TODO: remove this
 
     @staticmethod
     def _make_grid(nx=20, ny=20):
@@ -201,6 +234,13 @@ class PathAggregationPyramid(nn.Module):
         self.lateral_convs = nn.ModuleList()
         for in_channels, out_channels in zip(in_channels_list, out_channels_list):
             self.lateral_convs.append(convpack_1x1(in_channels, out_channels))
+        self.init_weights()
+
+    def init_weights(self):
+        # default init_weights for conv(msra) and norm in ConvModule
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                xavier_init(m, distribution="uniform")
 
     def forward(self, x):
         laterals = [lateral_conv(x[i]) for i, lateral_conv in enumerate(self.lateral_convs)]
@@ -218,6 +258,7 @@ class PathAggregationPyramid(nn.Module):
         outs.append(inter_outs[0])
         outs.extend([inter_outs[i] for i in range(1, used_backbone_levels)])
         return outs
+
 
 def tmp_test_yolov5_cspm():
     return nn.Sequential(
