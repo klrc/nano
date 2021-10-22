@@ -1,1 +1,1 @@
-from .backbone import tmp_test_yolov5_cspm
+from .model import yolov5_cspm
