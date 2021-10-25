@@ -47,7 +47,7 @@ def detect(model, opt, device):
 
     # Load model
     stride = 32
-    names = ['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck']
+    names = ['person', 'two-wheeler', 'car']
     model.eval()
     # [f'class{i}' for i in range(1000)]  # assign defaults
     imgsz = check_img_size(imgsz, s=stride)  # check image size
@@ -195,7 +195,6 @@ def parse_opt():
 def main(model, opt):
     # Checks
     set_logging()
-    check_requirements(exclude=('tensorboard', 'thop'))
     if type(opt.imgsz) is int:
         opt.imgsz = [opt.imgsz]
     opt.imgsz *= 2 if len(opt.imgsz) == 1 else 1  # expand

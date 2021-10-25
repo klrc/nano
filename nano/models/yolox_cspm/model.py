@@ -320,7 +320,7 @@ class YoloCSPMobilenetV2(nn.Module):
         return self
 
 
-def yolox_cspm(num_classes=6):
+def yolox_cspm(num_classes=3):
     return YoloCSPMobilenetV2(num_classes)
 
 
