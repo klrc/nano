@@ -275,10 +275,11 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
     return
 
 
-def onnx_to_caffe(onnx_path):
+def onnx_to_caffe(onnx_path, check_consistency):
     prototxt_path = onnx_path.replace(".onnx", ".prototxt")
     caffemodel_path = onnx_path.replace(".onnx", ".caffemodel")
     graph = get_graph(onnx_path)
     convert_to_caffe(graph, prototxt_path, caffemodel_path)
-    compare_onnx_and_caffe(onnx_path, prototxt_path, caffemodel_path)
+    if check_consistency:
+        compare_onnx_and_caffe(onnx_path, prototxt_path, caffemodel_path)
     return prototxt_path, caffemodel_path

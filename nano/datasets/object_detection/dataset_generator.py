@@ -171,11 +171,11 @@ class DatasetContainer:
                 reduced_annotations.append(b)
             D.annotations = reduced_annotations
             if instances_vehicle == 0:  # reduce non-vehicle images
-                if instances_person == 0 and random.random() < 0.5:  # keep 1/2 negativa samples
-                    pass
-                else:
-                    continue
-                # continue
+                # if instances_person == 0 and random.random() < 0.5:  # keep 1/2 negativa samples
+                #     pass
+                # else:
+                #     continue
+                continue
             reduced.append(D)
         print("len(reduced):", len(reduced))
         self.data = reduced
@@ -209,7 +209,7 @@ c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
 c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
 c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
 
-# c.reduce_instances(cut_val=False)
+c.reduce_instances(cut_val=False)
 c.show_class_histplot()
 
-c.export("/home/sh/Datasets/coc-f")
+c.export("/home/sh/Datasets/coc-s")

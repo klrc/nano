@@ -7,11 +7,10 @@ trainer = nano.datasets.object_detection.trainer
 
 trainer.run(
     model,
-    data="nano/datasets/object_detection/configs/coc-f.yaml",
+    data="nano/datasets/object_detection/configs/coc-n.yaml",
     hyp="nano/datasets/object_detection/configs/hyps/hyp.finetune.yaml",
     epochs=1000,
     imgsz=416,
 )
 
-
-# 11,13, 28,46, 143,120
+# 20,23, 70,93, 237,202

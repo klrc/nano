@@ -9,7 +9,8 @@ def freeze(
     input_names=["input"],
     output_names=["output.1", "output.2", "output.3"],
     to_caffe=True,
+    check_consistency=True,
 ):
     to_onnx(model, onnx_path, dummy_input, input_names, output_names)
     if to_caffe:
-        onnx_to_caffe(onnx_path)
+        onnx_to_caffe(onnx_path, check_consistency)
