@@ -209,7 +209,7 @@ c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
 c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
 c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
 
-c.reduce_instances(cut_val=False)
+# c.reduce_instances(cut_val=False)
 c.show_class_histplot()
 
-c.export("/home/sh/Datasets/coc-n")
+c.export("/home/sh/Datasets/coc-f")
