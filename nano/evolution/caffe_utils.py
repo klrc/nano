@@ -102,6 +102,12 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
             buffered_params[(node_name, 0)] = input_tensors[weight_name]
             if bias:
                 buffered_params[(node_name, 1)] = input_tensors[str(node.input[2])]
+            # XNNC do not support group convolution layer except depth-wise convolution
+            # so we check the groups here
+            if groups > 1:
+                assert (
+                    groups == out_channels == blob_channels[input_names[0]]
+                ), f"group conv not supported as in_channels={blob_channels[input_names[0]]}, groups={groups}, out_channels={out_channels}"
             # append layer
             caffe_layers.append(
                 operators.conv2d(
