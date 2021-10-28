@@ -44,15 +44,15 @@ class DecoupledHead(nn.Module):
         # (128 3x3-> 128)*2 -> 5
         self.squeeze = convpack_1x1(in_channels, hidden_channels)
         self.branch_1 = nn.Sequential(
-            convpack_3x3_1x(hidden_channels, hidden_channels),
+            convpack_3x3_1x(hidden_channels),
             convpack_1x1(hidden_channels, hidden_channels),
-            convpack_3x3_1x(hidden_channels, hidden_channels),
+            convpack_3x3_1x(hidden_channels),
             convpack_1x1(hidden_channels, num_classes, 'linear'),
         )
         self.branch_2 = nn.Sequential(
-            convpack_3x3_1x(hidden_channels, hidden_channels),
+            convpack_3x3_1x(hidden_channels),
             convpack_1x1(hidden_channels, hidden_channels),
-            convpack_3x3_1x(hidden_channels, hidden_channels),
+            convpack_3x3_1x(hidden_channels),
             convpack_1x1(hidden_channels, 5, 'linear'),
         )
 
@@ -140,16 +140,12 @@ def convpack_1x1(in_channels, out_channels, activation="relu"):
     return ConvPack(in_channels, out_channels, 1, 1, 0, 1, activation)
 
 
-def convpack_3x3_1x(in_channels, out_channels):
-    groups = min(in_channels, out_channels)
-    assert in_channels % groups == 0 and out_channels % groups == 0
-    return ConvPack(in_channels, out_channels, 3, 1, 1, groups, "relu")
+def convpack_3x3_1x(in_channels):
+    return ConvPack(in_channels, in_channels, 3, 1, 1, in_channels, "relu")
 
 
-def convpack_3x3_2x(in_channels, out_channels):
-    groups = min(in_channels, out_channels)
-    assert in_channels % groups == 0 and out_channels % groups == 0
-    return ConvPack(in_channels, out_channels, 3, 2, 1, groups, "relu")
+def convpack_3x3_2x(in_channels):
+    return ConvPack(in_channels, in_channels, 3, 2, 1, in_channels, "relu")
 
 
 def convpack_3x3_2x_dense(in_channels, out_channels):
@@ -180,16 +176,16 @@ class ShortcutBlock(nn.Module):
         return x + self.core(x)
 
 
-def reversed_bottleneck(c1, c2, c3, c4):
+def reversed_bottleneck(c1, c2, c3):
     return nn.Sequential(
         convpack_1x1(c1, c2),
-        convpack_3x3_1x(c2, c3),
-        convpack_1x1(c3, c4, "linear"),
+        convpack_3x3_1x(c2),
+        convpack_1x1(c2, c3, "linear"),
     )
 
 
-def residual_reversed_bottleneck(c1, c2, c3, c4):
-    return ShortcutBlock(reversed_bottleneck(c1, c2, c3, c4))
+def residual_reversed_bottleneck(c1, c2, c3):
+    return ShortcutBlock(reversed_bottleneck(c1, c2, c3))
 
 
 class CSPMobileNetV2(nn.Module):
@@ -197,51 +193,51 @@ class CSPMobileNetV2(nn.Module):
         super().__init__()
         self.conv_dense = convpack_3x3_2x_dense(3, 32)
         self.block_1 = CSPBlock(
-            convpack_3x3_1x(32, 16),
-            reversed_bottleneck(32, 32, 32, 16),
-            convpack_1x1(32, 48),  # 16 + 16 = 32 -> 48
+            convpack_3x3_1x(32),
+            reversed_bottleneck(32, 64, 16),
+            convpack_1x1(48, 48),  # 32 + 16 = 48 -> 48
         )
         self.block_2 = CSPBlock(
-            convpack_3x3_2x(48, 48),
+            convpack_3x3_2x(48),
             nn.Sequential(
-                convpack_3x3_2x(48, 96),
-                convpack_1x1(96, 24, "linear"),
-                residual_reversed_bottleneck(24, 72, 144, 24),
+                convpack_3x3_2x(48),
+                convpack_1x1(48, 24, "linear"),
+                residual_reversed_bottleneck(24, 96, 24),
             ),
             convpack_1x1(72, 72),  # 48 + 24 = 72 -> 72
         )
         self.block_3 = CSPBlock(
-            convpack_3x3_2x(72, 72),
+            convpack_3x3_2x(72),
             nn.Sequential(
-                convpack_3x3_2x(72, 144),
-                convpack_1x1(144, 32, "linear"),
-                residual_reversed_bottleneck(32, 96, 192, 32),
-                residual_reversed_bottleneck(32, 96, 192, 32),
-                reversed_bottleneck(32, 96, 192, 64),
-                residual_reversed_bottleneck(64, 192, 384, 64),
-                residual_reversed_bottleneck(64, 192, 384, 64),
-                residual_reversed_bottleneck(64, 192, 384, 64),
+                convpack_3x3_2x(72),
+                convpack_1x1(72, 32, "linear"),
+                residual_reversed_bottleneck(32, 128, 32),
+                residual_reversed_bottleneck(32, 128, 32),
+                reversed_bottleneck(32, 128, 64),
+                residual_reversed_bottleneck(64, 256, 64),
+                residual_reversed_bottleneck(64, 256, 64),
+                residual_reversed_bottleneck(64, 256, 64),
             ),
             convpack_1x1(136, 192),  # 72 + 64 = 136 -> 192
         )
         self.block_4 = CSPBlock(
-            convpack_3x3_2x(192, 192),
+            convpack_3x3_2x(192),
             nn.Sequential(
-                convpack_3x3_2x(192, 384),
-                convpack_1x1(384, 96, "linear"),
-                residual_reversed_bottleneck(96, 288, 576, 96),
-                residual_reversed_bottleneck(96, 288, 576, 96),
+                convpack_3x3_2x(192),
+                convpack_1x1(192, 96, "linear"),
+                residual_reversed_bottleneck(96, 384, 96),
+                residual_reversed_bottleneck(96, 384, 96),
             ),
             convpack_1x1(288, 288),  # 192 + 96 = 288 -> 288
         )
         self.block_5 = CSPBlock(
-            convpack_3x3_2x(288, 288),
+            convpack_3x3_2x(288),
             nn.Sequential(
-                convpack_3x3_2x(288, 576),
-                convpack_1x1(576, 160, "linear"),
-                residual_reversed_bottleneck(160, 480, 960, 160),
-                residual_reversed_bottleneck(160, 480, 960, 160),
-                reversed_bottleneck(160, 480, 960, 320),
+                convpack_3x3_2x(288),
+                convpack_1x1(288, 160, "linear"),
+                residual_reversed_bottleneck(160, 640, 160),
+                residual_reversed_bottleneck(160, 640, 160),
+                reversed_bottleneck(160, 640, 320),
             ),
             convpack_1x1(608, 640),  # 288+ 320 = 608 -> 640
         )
