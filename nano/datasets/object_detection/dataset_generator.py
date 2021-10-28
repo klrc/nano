@@ -1,10 +1,11 @@
 import os
+import random
+import shutil
+
+import matplotlib.pyplot as plt
+import seaborn as sns
 from pycocotools.coco import COCO
 from tqdm import tqdm
-import shutil
-import seaborn as sns
-import matplotlib.pyplot as plt
-import random
 
 sns.set()
 
@@ -204,12 +205,12 @@ class DatasetContainer:
 
 c = DatasetContainer()
 c.load_dataset("/home/sh/Datasets/VOC", "train2012", "train")
-c.load_dataset("/home/sh/Datasets/VOC", "test2007", "train")
+# c.load_dataset("/home/sh/Datasets/VOC", "test2007", "train")
 c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
-c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
-c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
+# c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
+# c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
 
-c.reduce_instances(cut_val=False)
+c.reduce_instances(cut_val=True)
 c.show_class_histplot()
 
-# c.export("/home/sh/Datasets/coc-s")
+c.export("/home/sh/Datasets/coc-m")

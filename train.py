@@ -7,7 +7,7 @@ trainer = nano.datasets.object_detection.trainer
 
 trainer.run(
     model,
-    data="nano/datasets/object_detection/configs/coc-s.yaml",
+    data="nano/datasets/object_detection/configs/coc-m.yaml",
     hyp="nano/datasets/object_detection/configs/hyps/hyp.scratch.yaml",
     epochs=1000,
     imgsz=416,
