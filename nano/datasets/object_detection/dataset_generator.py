@@ -147,7 +147,7 @@ class DatasetContainer:
                     if bbox.name not in custom_cids:
                         continue
                     line = [custom_cids[bbox.name], bbox.x, bbox.y, bbox.w, bbox.h]
-                    f.write(" ".join([str(x) for x in line]) + "\n")
+                    f.write(" ".join([str(x) for x in line]))
         # finish exporting, return with root path
         return root
 
@@ -205,12 +205,12 @@ class DatasetContainer:
 
 c = DatasetContainer()
 c.load_dataset("/home/sh/Datasets/VOC", "train2012", "train")
-# c.load_dataset("/home/sh/Datasets/VOC", "test2007", "train")
+c.load_dataset("/home/sh/Datasets/VOC", "test2007", "train")
 c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
-# c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
-# c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
+c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
+c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
 
 c.reduce_instances(cut_val=True)
 c.show_class_histplot()
 
-c.export("/home/sh/Datasets/coc-m")
+c.export("/home/sh/Datasets/coc-s")
