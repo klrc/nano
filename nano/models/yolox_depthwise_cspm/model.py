@@ -316,11 +316,11 @@ class YoloCSPMobilenetV2(nn.Module):
         return self
 
 
-def yolox_cspm(num_classes=3):
+def yolox_depthwise_cspm(num_classes=3):
     return YoloCSPMobilenetV2(num_classes)
 
 
 if __name__ == "__main__":
-    model = yolox_cspm()
+    model = yolox_depthwise_cspm()
     for y in model(torch.rand(4, 3, 224, 416)):
         print(y.shape)
