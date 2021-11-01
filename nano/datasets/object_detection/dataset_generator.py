@@ -146,8 +146,8 @@ class DatasetContainer:
                     bbox: Bbox
                     if bbox.name not in custom_cids:
                         continue
-                    line = [custom_cids[bbox.name], bbox.x, bbox.y, bbox.w, bbox.h]
-                    f.write(" ".join([str(x) for x in line]))
+                    line = [custom_cids[bbox.name], float(bbox.x), float(bbox.y), float(bbox.w), float(bbox.h)]
+                    f.write(" ".join([str(x) for x in line]) + "\n")
         # finish exporting, return with root path
         return root
 
@@ -171,11 +171,7 @@ class DatasetContainer:
                 instances_all += 1
                 reduced_annotations.append(b)
             D.annotations = reduced_annotations
-            if instances_vehicle == 0:  # reduce non-vehicle images
-                # if instances_person == 0 and random.random() < 0.5:  # keep 1/2 negativa samples
-                #     pass
-                # else:
-                #     continue
+            if instances_vehicle == 0 and random.random() < 0.95:  # reduce 95% of non-vehicle images
                 continue
             reduced.append(D)
         print("len(reduced):", len(reduced))
@@ -210,7 +206,7 @@ c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
 c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
 c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
 
-c.reduce_instances(cut_val=True)
+c.reduce_instances(cut_val=False)
 c.show_class_histplot()
 
 c.export("/home/sh/Datasets/coc-s")
