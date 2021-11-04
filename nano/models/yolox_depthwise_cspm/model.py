@@ -45,8 +45,8 @@ class DetectHead(nn.Module):
         self.register_buffer("anchor_grid", a.clone().view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
 
         # 128 -> 85 * 3
-        # self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
-        self.m = nn.ModuleList(DecoupledHead(x, num_classes) for x in ch)  # output conv
+        self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
+        # self.m = nn.ModuleList(DecoupledHead(x, num_classes) for x in ch)  # output conv
 
     @staticmethod
     def _make_grid(nx=20, ny=20):
@@ -245,14 +245,34 @@ class PathAggregationPyramid(nn.Module):
         return outs
 
 
+class TestBackbone(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.base = nn.Sequential(
+            nn.Conv2d(3, 1, 3),
+            nn.Conv2d(1, 1, 3, 2, 1),
+            nn.Conv2d(1, 1, 3, 2, 1),
+            nn.Conv2d(1, 192, 3, 2, 1),
+        )
+        self.s1 = nn.Conv2d(192, 288, 3, 2, 1)
+        self.s2 = nn.Conv2d(288, 640, 3, 2, 1)
+    
+    def forward(self, x):
+        x1 = self.base(x)
+        x2 = self.s1(x1)
+        x3 = self.s2(x2)
+        return [x1, x2, x3]
+
 class YoloCSPMobilenetV2(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
-        self.backbone = CSPMobileNetV2()
+        # self.backbone = CSPMobileNetV2()
+        self.backbone = TestBackbone()
         self.pan = PathAggregationPyramid([192, 288, 640], [128, 128, 128])
         self.detect = DetectHead(
             num_classes=num_classes,
-            anchors=([11, 14], [30, 46], [143, 130]),
+            # anchors=([11, 14], [30, 46], [143, 130]),
+            anchors=([10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]),
             ch=(128, 128, 128),
         )
         for m in self.modules():
@@ -290,5 +310,6 @@ def yolox_depthwise_cspm(num_classes=3):
 
 if __name__ == "__main__":
     model = yolox_depthwise_cspm()
+    # model.load_state_dict(torch.load("./best.pt", map_location="cpu")["state_dict"])
     for y in model(torch.rand(4, 3, 224, 416)):
         print(y.shape)
