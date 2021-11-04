@@ -114,43 +114,6 @@ class DatasetContainer:
         print("len(data):", len(self.data))
         print(self.data[-1])
 
-    def export(self, root):
-        # clean target root
-        if os.path.exists(root):
-            shutil.rmtree(root)
-        # load true cid mapping
-        custom_cids = {
-            "person": 0,
-            "bicycle": 1,
-            "motorcycle": 1,
-            "car": 2,
-            "bus": 2,
-            "truck": 2,
-        }
-        # build new dataset
-        os.makedirs(f"{root}/images/train")
-        os.makedirs(f"{root}/labels/train")
-        os.makedirs(f"{root}/images/val")
-        os.makedirs(f"{root}/labels/val")
-        for D in tqdm(self.data):
-            D: DataProto
-            dataset = D.dataset
-            image_path = D.image_path
-            image_filename = image_path.split("/")[-1]
-            label_filename = image_filename.split(".")[0] + ".txt"
-            shutil.copy(image_path, f"{root}/images/{dataset}/{image_filename}")
-            with open(f"{root}/{dataset}.txt", "a") as f:
-                f.write(f"./images/{dataset}/{image_filename}\n")
-            with open(f"{root}/labels/{dataset}/{label_filename}", "w") as f:
-                for bbox in D.annotations:
-                    bbox: Bbox
-                    if bbox.name not in custom_cids:
-                        continue
-                    line = [custom_cids[bbox.name], float(bbox.x), float(bbox.y), float(bbox.w), float(bbox.h)]
-                    f.write(" ".join([str(x) for x in line]) + "\n")
-        # finish exporting, return with root path
-        return root
-
     def reduce_instances(self, cut_val, remove_small_objects=True, balance_percent=0.95):
         reduced = []
         for D in self.data:
@@ -199,6 +162,43 @@ class DatasetContainer:
         sns.histplot(plot_data, kde=True)
         plt.savefig("runs/misc/class_histplot.png")
 
+    def export(self, root):
+        # clean target root
+        if os.path.exists(root):
+            shutil.rmtree(root)
+        # load true cid mapping
+        custom_cids = {
+            "person": 0,
+            "bicycle": 1,
+            "motorcycle": 1,
+            "car": 2,
+            "bus": 2,
+            "truck": 2,
+        }
+        # build new dataset
+        os.makedirs(f"{root}/images/train")
+        os.makedirs(f"{root}/labels/train")
+        os.makedirs(f"{root}/images/val")
+        os.makedirs(f"{root}/labels/val")
+        for D in tqdm(self.data):
+            D: DataProto
+            dataset = D.dataset
+            image_path = D.image_path
+            image_filename = image_path.split("/")[-1]
+            label_filename = image_filename.split(".")[0] + ".txt"
+            shutil.copy(image_path, f"{root}/images/{dataset}/{image_filename}")
+            with open(f"{root}/{dataset}.txt", "a") as f:
+                f.write(f"./images/{dataset}/{image_filename}\n")
+            with open(f"{root}/labels/{dataset}/{label_filename}", "w") as f:
+                for bbox in D.annotations:
+                    bbox: Bbox
+                    if bbox.name not in custom_cids:
+                        continue
+                    line = [custom_cids[bbox.name], float(bbox.x), float(bbox.y), float(bbox.w), float(bbox.h)]
+                    f.write(" ".join([str(x) for x in line]) + "\n")
+        # finish exporting, return with root path
+        return root
+
 
 c = DatasetContainer()
 c.load_dataset("/home/sh/Datasets/VOC", "train2012", "train")
@@ -208,6 +208,6 @@ c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
 c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
 
 # # coc-s ------------------------------------
-c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.8)
+c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.5)
 c.show_class_histplot()
-c.export("/home/sh/Datasets/coc-m")
+c.export("/home/sh/Datasets/coc-l")
