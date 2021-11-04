@@ -151,7 +151,7 @@ class DatasetContainer:
         # finish exporting, return with root path
         return root
 
-    def reduce_instances(self, cut_val=True):
+    def reduce_instances(self, cut_val, remove_small_objects=True, balance_percent=0.95):
         reduced = []
         for D in self.data:
             if not cut_val and D.dataset == "val":  # skip val dataset
@@ -162,8 +162,9 @@ class DatasetContainer:
             instances_all = 0
             reduced_annotations = []
             for b in D.annotations:
-                if float(b.x) * 416 <= 3 or float(b.y) * 416 <= 3:  # reduce extremely small objects
-                    continue
+                if remove_small_objects:
+                    if float(b.x) * 416 <= 3 or float(b.y) * 416 <= 3:  # reduce extremely small objects
+                        continue
                 if b.name == "person":
                     instances_person += 1
                 if b.name in ["bicycle", "motorcycle", "car", "bus", "truck"]:
@@ -171,7 +172,7 @@ class DatasetContainer:
                 instances_all += 1
                 reduced_annotations.append(b)
             D.annotations = reduced_annotations
-            if instances_vehicle == 0 and random.random() < 0.95:  # reduce 95% of non-vehicle images
+            if instances_vehicle == 0 and random.random() < balance_percent:  # reduce 95% of non-vehicle images
                 continue
             reduced.append(D)
         print("len(reduced):", len(reduced))
@@ -206,7 +207,7 @@ c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
 c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
 c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
 
-c.reduce_instances(cut_val=False)
+# # coc-s ------------------------------------
+c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.8)
 c.show_class_histplot()
-
-c.export("/home/sh/Datasets/coc-s")
+c.export("/home/sh/Datasets/coc-m")

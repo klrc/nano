@@ -3,39 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def kaiming_init(module, a=0, mode="fan_out", nonlinearity="relu", bias=0, distribution="normal"):
-    assert distribution in ["uniform", "normal"]
-    if distribution == "uniform":
-        nn.init.kaiming_uniform_(module.weight, a=a, mode=mode, nonlinearity=nonlinearity)
-    else:
-        nn.init.kaiming_normal_(module.weight, a=a, mode=mode, nonlinearity=nonlinearity)
-    if hasattr(module, "bias") and module.bias is not None:
-        nn.init.constant_(module.bias, bias)
-
-
-def xavier_init(module, gain=1, bias=0, distribution="normal"):
-    assert distribution in ["uniform", "normal"]
-    if distribution == "uniform":
-        nn.init.xavier_uniform_(module.weight, gain=gain)
-    else:
-        nn.init.xavier_normal_(module.weight, gain=gain)
-    if hasattr(module, "bias") and module.bias is not None:
-        nn.init.constant_(module.bias, bias)
-
-
-def normal_init(module, mean=0, std=1, bias=0):
-    nn.init.normal_(module.weight, mean, std)
-    if hasattr(module, "bias") and module.bias is not None:
-        nn.init.constant_(module.bias, bias)
-
-
-def constant_init(module, val, bias=0):
-    if hasattr(module, "weight") and module.weight is not None:
-        nn.init.constant_(module.weight, val)
-    if hasattr(module, "bias") and module.bias is not None:
-        nn.init.constant_(module.bias, bias)
-
-
 class DecoupledHead(nn.Module):
     def __init__(self, in_channels, num_classes, hidden_channels=128):
         super().__init__()
@@ -47,13 +14,13 @@ class DecoupledHead(nn.Module):
             convpack_3x3_1x(hidden_channels),
             convpack_1x1(hidden_channels, hidden_channels),
             convpack_3x3_1x(hidden_channels),
-            convpack_1x1(hidden_channels, num_classes, 'linear'),
+            convpack_1x1(hidden_channels, num_classes, 'linear', disable_norm=True),
         )
         self.branch_2 = nn.Sequential(
             convpack_3x3_1x(hidden_channels),
             convpack_1x1(hidden_channels, hidden_channels),
             convpack_3x3_1x(hidden_channels),
-            convpack_1x1(hidden_channels, 5, 'linear'),
+            convpack_1x1(hidden_channels, 5, 'linear', disable_norm=True),
         )
 
     def forward(self, x):
@@ -123,11 +90,12 @@ class DetectHead(nn.Module):
 
 
 class ConvPack(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, groups, activation):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, groups, activation, disable_norm=False):
         super().__init__()
         layers = []
         layers.append(nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, groups=groups, bias=False))
-        layers.append(nn.BatchNorm2d(out_channels))
+        if not disable_norm:
+            layers.append(nn.BatchNorm2d(out_channels))
         if activation == "relu":
             layers.append(nn.ReLU())
         self.core = nn.Sequential(*layers)
@@ -136,8 +104,8 @@ class ConvPack(nn.Module):
         return self.core(x)
 
 
-def convpack_1x1(in_channels, out_channels, activation="relu"):
-    return ConvPack(in_channels, out_channels, 1, 1, 0, 1, activation)
+def convpack_1x1(in_channels, out_channels, activation="relu", disable_norm=False):
+    return ConvPack(in_channels, out_channels, 1, 1, 0, 1, activation, disable_norm)
 
 
 def convpack_3x3_1x(in_channels):
@@ -284,7 +252,7 @@ class YoloCSPMobilenetV2(nn.Module):
         self.pan = PathAggregationPyramid([192, 288, 640], [128, 128, 128])
         self.detect = DetectHead(
             num_classes=num_classes,
-            anchors=([11, 13], [25, 41], [104, 108]),
+            anchors=([11, 14], [30, 46], [143, 130]),
             ch=(128, 128, 128),
         )
         for m in self.modules():
