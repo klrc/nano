@@ -1,1 +1,1 @@
-from . import object_detection
+from . import coco_detection

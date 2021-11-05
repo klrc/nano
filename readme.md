@@ -25,8 +25,8 @@
 - model_sheet.md
 
 ## Current TODO
-- add release model sample (yolox_cspm_depthwise_test)
 - add wandb support
+- add caffe evaluator / inference wrapper
 
 ## -
 

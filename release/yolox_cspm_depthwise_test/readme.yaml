@@ -1,0 +1,8 @@
+# sample release documentation as yolox_cspm_depthwise_test model
+# a readme.yaml should include:
+#   1. some description in comment
+#   2. training/eval metrics
+#   3. anchors (for FCOS detection model)
+
+metrics: []
+anchors: [10.875, 14.921875, 31.1875, 53.28125, 143.0, 157.5]
