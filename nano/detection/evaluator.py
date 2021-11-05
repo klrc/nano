@@ -92,10 +92,12 @@ def eval(model, opt, device):
     niou = iouv.numel()
 
     # Evaluator
+    if batch_size == 1:  # for batch_size will be divided by 2
+        batch_size = 2
     if not training:
         val_path = data_dict["val"]
         dataloader = create_dataloader(
-            val_path, imgsz, batch_size // 2, gs, single_cls, rect=True, rank=-1, pad=0.5, prefix=colorstr("val: ")
+            val_path, imgsz, batch_size // 2, gs, single_cls, rect=True, rank=-1, pad=0, prefix=colorstr("val: ")
         )[0]
 
     seen = 0
@@ -182,7 +184,10 @@ def eval(model, opt, device):
     # Print speeds
     t = tuple(x / seen * 1e3 for x in dt)  # speeds per image
     if not training:
-        shape = (batch_size, 3, imgsz, imgsz)
+        if isinstance(imgsz, tuple) or isinstance(imgsz, list):
+            shape = (batch_size, 3, imgsz[0], imgsz[1])
+        else:
+            shape = (batch_size, 3, imgsz, imgsz)
         print(f"Speed: %.1fms pre-process, %.1fms inference, %.1fms NMS per image at shape {shape}" % t)
 
     # Return results

@@ -409,6 +409,10 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         pad=0.0,
         prefix="",
     ):
+        self.forced_shape = None
+        if isinstance(img_size, tuple) or isinstance(img_size, list):
+            self.forced_shape = img_size
+            img_size = max(img_size)
         self.img_size = img_size
         self.augment = augment
         self.hyp = hyp
@@ -579,9 +583,11 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         else:
             # Load image
             img, (h0, w0), (h, w) = load_image(self, index)
-
             # Letterbox
             shape = self.batch_shapes[self.batch[index]] if self.rect else self.img_size  # final letterboxed shape
+            if self.forced_shape is not None:
+                shape = self.forced_shape
+            
             img, ratio, pad = letterbox(img, shape, auto=False, scaleup=self.augment)
             shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
 
