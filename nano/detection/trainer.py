@@ -176,7 +176,7 @@ def train(model, hyp, opt, device, logger):
         rect=True,
         rank=-1,
         workers=workers,
-        pad=0.5,
+        pad=0,
         prefix=colorstr("val: "),
     )[0]
 
