@@ -194,7 +194,13 @@ class DatasetContainer:
                     bbox: Bbox
                     if bbox.name not in custom_cids:
                         continue
-                    line = [custom_cids[bbox.name], float(bbox.x), float(bbox.y), float(bbox.w), float(bbox.h)]
+                    line = [
+                        custom_cids[bbox.name],
+                        float(bbox.x),
+                        float(bbox.y),
+                        float(bbox.w),
+                        float(bbox.h),
+                    ]
                     f.write(" ".join([str(x) for x in line]) + "\n")
         # finish exporting, return with root path
         return root
