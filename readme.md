@@ -15,7 +15,7 @@
     - *-custom.caffemodel (optional)
     - *.prototxt
     - *-custom.prototxt
-    - readme.txt (containing anchors,metrics and description)
+    - readme.yaml (containing anchors,metrics and description)
 - configs: including preset yaml configurations.
 - ~~runs: running logs~~ (not sync to git)
 - detect.py

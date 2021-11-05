@@ -56,7 +56,7 @@ RANK = int(os.getenv("RANK", -1))
 WORLD_SIZE = int(os.getenv("WORLD_SIZE", 1))
 
 
-def train(model, hyp, opt, device):
+def train(model, hyp, opt, device, logger):
     save_dir, epochs, batch_size, single_cls, evolve, data, resume, noval, nosave, workers = (
         Path(opt.save_dir),
         opt.epochs,
@@ -290,6 +290,7 @@ def train(model, hyp, opt, device):
                     ("%10s" * 2 + "%10.4g" * 5)
                     % (f"{epoch}/{epochs - 1}", mem, *mloss, targets.shape[0], imgs.shape[-1])
                 )
+
             # end batch ------------------------------------------------------------------------------------------------
 
         # Scheduler
@@ -301,7 +302,7 @@ def train(model, hyp, opt, device):
             ema.update_attr(model, include=["yaml", "nc", "hyp", "names", "stride", "class_weights"])
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
             if not noval or final_epoch:  # Calculate mAP
-                results, maps, _ = evaluator.run(
+                results, val_loss, maps, _ = evaluator.run(
                     model=ema.ema,
                     dataloader=val_loader,
                     save_dir=save_dir,
@@ -316,7 +317,24 @@ def train(model, hyp, opt, device):
             fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
             if fi > best_fitness:
                 best_fitness = fi
-            log_vals = list(mloss) + list(results) + lr
+
+            # Upload logger
+            log_vals = {
+                "precision": results[0].item(),
+                "recall": results[1].item(),
+                "map@.5": results[2].item(),
+                "mAP@.5-.95": results[3].item(),
+                "train_loss_box": mloss[0].item(),
+                "train_loss_obj": mloss[1].item(),
+                "train_loss_cls": mloss[2].item(),
+                "train_loss": mloss.sum().item(),
+                "val_loss_box": val_loss[0].item(),
+                "val_loss_obj": val_loss[1].item(),
+                "val_loss_cls": val_loss[2].item(),
+                "val_loss": val_loss.sum().item(),
+            }
+            if logger is not None:
+                logger.log(log_vals)
 
             # Save model
             if (not nosave) or (final_epoch and not evolve):  # if save
@@ -386,7 +404,7 @@ def parse_opt(known=False):
     return opt
 
 
-def main(model, opt):
+def main(model, opt, logger):
     # Checks
     set_logging(RANK)
     if RANK in [-1, 0]:
@@ -402,12 +420,12 @@ def main(model, opt):
     # Train
     device = select_device(opt.device, batch_size=opt.batch_size)
     model.to(device)
-    train(model, opt.hyp, opt, device)
+    train(model, opt.hyp, opt, device, logger)
 
 
-def run(model, **kwargs):
+def run(model, logger=None, **kwargs):
     # Usage: import train; train.run(model, data='coco128.yaml', imgsz=320)
     opt = parse_opt(True)
     for k, v in kwargs.items():
         setattr(opt, k, v)
-    main(model, opt)
+    main(model, opt, logger)
