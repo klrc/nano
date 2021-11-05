@@ -6,3 +6,5 @@
 
 metrics: []
 anchors: [10.875, 14.921875, 31.1875, 53.28125, 143.0, 157.5]
+output_names: ["output.1", "output.2", "output.3"]
+class_names: ["person", "two-wheeler", "car"]

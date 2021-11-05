@@ -21,12 +21,13 @@
 - detect.py
 - export.py
 - train.py
+- test.py
 - readme.md
 - model_sheet.md
 
 ## Current TODO
-- add wandb support
-- add caffe evaluator / inference wrapper
+- add xnnc support
+- add model_sheet.md
 
 ## -
 
