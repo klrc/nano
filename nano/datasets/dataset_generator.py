@@ -55,6 +55,13 @@ class DatasetContainer:
             h = bbox[3] / height
             annotations.append(Bbox(name, x, y, w, h))
         return filename, annotations
+    
+    def _nsup_loader(self, root, target_dataset):
+        for filename in tqdm(os.listdir(root)):
+            image_path = f"{root}/{filename}"
+            annotations = []
+            D = DataProto(image_path, annotations, target_dataset)
+            self.data.append(D)
 
     def _coco_loader(self, root, dataset, target_dataset):
         coco = COCO(f"{root}/annotations/instances_{dataset}.json")
@@ -111,6 +118,11 @@ class DatasetContainer:
             self._coco_loader(root, dataset, target_dataset)
         elif root.endswith("VOC"):
             self._voc_loader(root, dataset, target_dataset)
+        print("len(data):", len(self.data))
+        print(self.data[-1])
+
+    def load_negative_samples(self, root, target_dataset):
+        self._nsup_loader(root, target_dataset)
         print("len(data):", len(self.data))
         print(self.data[-1])
 
@@ -205,7 +217,6 @@ class DatasetContainer:
         # finish exporting, return with root path
         return root
 
-
 c = DatasetContainer()
 c.load_dataset("/home/sh/Datasets/VOC", "train2012", "train")
 c.load_dataset("/home/sh/Datasets/VOC", "test2007", "train")
@@ -213,7 +224,8 @@ c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
 c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
 c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
 
-# # coc-s ------------------------------------
-c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.5)
+# fine-tuning settings ------------------------------------
+c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.95)
+c.load_negative_samples('/home/sh/Datasets/coc-sup', 'train')
 c.show_class_histplot()
-c.export("/home/sh/Datasets/coc-l")
+c.export("/home/sh/Datasets/coc-finetune-a")
