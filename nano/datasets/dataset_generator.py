@@ -223,9 +223,10 @@ c.load_dataset("/home/sh/Datasets/VOC", "test2007", "train")
 c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
 c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
 c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
+c.load_negative_samples('/home/sh/Datasets/coc-sup', 'train')
+c.load_negative_samples('/home/sh/Datasets/coc-sup', 'val')
 
 # fine-tuning settings ------------------------------------
-c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.95)
-c.load_negative_samples('/home/sh/Datasets/coc-sup', 'train')
+c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.25)
 c.show_class_histplot()
-c.export("/home/sh/Datasets/coc-finetune-a")
+c.export("/home/sh/Datasets/coc-x")

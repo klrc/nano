@@ -3,3 +3,4 @@
 .vscode
 __pycache__
 runs
+nano/_utils/xnnc
