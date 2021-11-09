@@ -26,14 +26,16 @@ class DockerShell:
         return self
 
     def exec_run(self, cmd, stream=False):
+        print('>', cmd)
         exit_code, output = self.container.exec_run(cmd=cmd, stream=stream)
         if stream is True:
             for data in output:
-                print(data.decode(), end='')
+                print(data.decode(), end="")
             print()
         else:
             print(output.decode())
-        print(f"-------- exit_code=<{exit_code}>")
+        if not stream:
+            print(f"exit_code={exit_code}\n")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         print("=========== stop and removing container ..", end="")
@@ -48,8 +50,50 @@ def docker_shell(image="xnnc-docker", root="xnnc/Example/cadenceNet"):
 
 def demo_cadencenet_test():
     with docker_shell("xnnc-docker", "/xnnc/Example/cadenceNet") as s:
-        s.exec_run("python3 ../../Scripts/xnnc.py --config_file cadenceNet.cfg", stream=True)
+        s.exec_run("python3 ../../Scripts/xnnc.py --keep --config_file cadenceNet.cfg", stream=True)
+
+
+def demo_resnet50_test():
+    with docker_shell("xnnc-docker", "/xnnc/Example/Resnet50") as s:
+        s.exec_run("python3 ../../Scripts/xnnc.py --config_file CF_ResNet_V1_50.cfg", stream=True)
+
+
+def demo_fasterrcnn_test():
+    pass
+    # the following codes fail, considered as corrupted source.
+    # with docker_shell("xnnc-docker", "/xnnc/Example/faster-R-CNN") as s:
+    #     s.exec_run("make", stream=True)
+
+
+def yolov5_test():
+    ''' XNNC custom layer ----------
+    layer {
+        name: "detection_out"
+        type: "CppCustom"
+        bottom: "conv_blob72"
+        bottom: "conv_blob73"
+        bottom: "conv_blob74"
+        top: "detection_out"
+        cpp_custom_param {
+            module: "XnncMobiYoloOutputLayer"
+            param_map_str: "num_classes:81 share_location:1 background_label_id:0 nms_threshold:0.35 top_k:400 keep_top_k:200 confidence_threshold:0.5"
+        }
+    }
+    '''
+    with docker_shell("xnnc-docker:1.1", "/xnnc/Example/yolov5shufflenet") as s:
+        s.exec_run("rm layers/MobYolo_output/CMakeCache.txt", stream=True)
+        s.exec_run("rm -r layers/MobYolo_output/CMakeFiles", stream=True)
+        s.exec_run("rm layers/MobYolo_output/Makefile", stream=True)
+        s.exec_run("rm ./libXnncMobiYoloOutputLayer.so", stream=True)
+        s.exec_run("rm layers/MobYolo_output/libXnncMobiYoloOutputLayer.so", stream=True)
+        s.exec_run("rm layers/MobYolo_output/cmake_install.cmake", stream=True)
+        s.exec_run("cmake layers/MobYolo_output/CMakeLists.txt", stream=True)
+        s.exec_run("make -C layers/MobYolo_output", stream=True)
+        s.exec_run('cp layers/MobYolo_output/libXnncMobiYoloOutputLayer.so ./', stream=True)
+        s.exec_run("make install -C layers/MobYolo_output", stream=True)
+        s.exec_run("python3 ../../Scripts/xnnc.py --config_file cfg/MobileYolo.cfg", stream=True)
 
 
 if __name__ == "__main__":
-    demo_cadencenet_test()
+    # yolov5_test()
+    demo_resnet50_test()
