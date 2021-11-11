@@ -1,1 +1,1 @@
-from .yolox_cspm_depthwise_test import yolox_cspm_depthwise_test
+from .yolox_cspm_depthwise_3m import yolox_cspm_depthwise

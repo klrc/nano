@@ -95,5 +95,5 @@ def yolov5_test():
 
 
 if __name__ == "__main__":
-    # yolov5_test()
-    demo_resnet50_test()
+    yolov5_test()
+    # demo_resnet50_test()

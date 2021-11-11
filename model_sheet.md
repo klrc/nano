@@ -12,7 +12,7 @@
 | Model | Release date  | Size (.onnx)  | FLOPs | bandwidth | Speed | mAP@.5    | mAP@.95   |
 | ---   | ------------  | ------------- | ----  | --------  | ---   | -------   | -------   |
 | yolox_cspm | - | 8.8M | - | - | - | 0.82 | - |
-| yolox_depthwise_cspm | - | 6.5M | - | - | - | 0.781* | 0.475* |
+| yolox_depthwise_cspm | - | 6.5M/4M | - | - | - | 0.793 | 0.499 |
 
 _*: still training_
 
@@ -38,4 +38,4 @@ _*: adding negative samples_
 ## yolov3 series
 | Model | Release date  | Size (caffemodel) | FLOPs | bandwidth | Speed | mAP@.5    | mAP@.95   |
 | ---   | ------------  | ----------------- | ----  | --------  | ---   | -------   | -------   |
-| yolov3_Tiny | - | 11.52M | - | - | - | 0.6802 | - |
+| yolov3_Tiny | - | 11.52M/2.9M | - | - | - | 0.6802 | - |
