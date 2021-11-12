@@ -57,10 +57,11 @@ WORLD_SIZE = int(os.getenv("WORLD_SIZE", 1))
 
 
 def train(model, hyp, opt, device, logger):
-    save_dir, epochs, batch_size, single_cls, evolve, data, resume, noval, nosave, workers = (
+    save_dir, epochs, batch_size, eval_batch_size, single_cls, evolve, data, resume, noval, nosave, workers = (
         Path(opt.save_dir),
         opt.epochs,
         opt.batch_size,
+        opt.eval_batch_size,
         opt.single_cls,
         opt.evolve,
         opt.data,
@@ -294,7 +295,7 @@ def train(model, hyp, opt, device, logger):
             # end batch ------------------------------------------------------------------------------------------------
 
         # Scheduler
-        lr = [x["lr"] for x in optimizer.param_groups]  # for loggers
+        # lr = [x["lr"] for x in optimizer.param_groups]  # for loggers
         scheduler.step()
 
         if RANK in [-1, 0]:
@@ -308,7 +309,7 @@ def train(model, hyp, opt, device, logger):
                     save_dir=save_dir,
                     compute_loss=compute_loss,
                     data=data,
-                    batch_size=batch_size // WORLD_SIZE * 2,
+                    batch_size=eval_batch_size,
                     imgsz=imgsz,
                     single_cls=single_cls,
                 )
@@ -371,6 +372,7 @@ def parse_opt(known=False):
     parser.add_argument("--hyp", type=str, default=ROOT / "configs/hyps/hyp.scratch.yaml", help="hyperparameters path")
     parser.add_argument("--epochs", type=int, default=300)
     parser.add_argument("--batch-size", type=int, default=16, help="total batch size for all GPUs")
+    parser.add_argument("--eval-batch-size", type=int, default=16, help="total batch size for all GPUs (evaluator)")
     parser.add_argument("--imgsz", "--img", "--img-size", type=int, default=640, help="train, val image size (pixels)")
     parser.add_argument("--rect", action="store_true", help="rectangular training")
     parser.add_argument("--resume", nargs="?", const=True, default=False, help="resume most recent training")

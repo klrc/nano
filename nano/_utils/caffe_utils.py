@@ -65,6 +65,13 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
     caffe_layers = net.layer
     buffered_params = {}
     blob_channels = {}
+    # register constants
+    constants = {}
+    for node in graph.node:
+        if node.op_type == 'Constant':
+            output = str(node.output[0])
+            attrs = Attributes.from_onnx(node.attribute)
+            constants[output]=attrs['value']
     # register inputs
     for node in graph.input:
         node_name = node.name
@@ -137,6 +144,22 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
                     inplace,
                 )._to_proto()
             )
+        elif node.op_type == "LeakyRelu":
+            node_name = node.name
+            input_names = [str(node.input[0])]
+            output_names = [str(node.output[0])]
+            alpha = attrs['alpha']
+            inplace = input_names[0] == output_names[0]
+            blob_channels[output_names[0]] = blob_channels[input_names[0]]
+            caffe_layers.append(
+                operators.leaky_relu(
+                    node_name,
+                    input_names,
+                    output_names,
+                    inplace,
+                    alpha,
+                )._to_proto()
+            )
         elif node.op_type == "Concat":
             node_name = node.name
             input_names = [str(x) for x in node.input]
@@ -153,11 +176,14 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
             )
         elif node.op_type == "MaxPool":
             node_name = node.name
-            input_names = str(node.input[0])
-            output_names = str(node.output[0])
+            input_names = [str(node.input[0])]
+            output_names = [str(node.output[0])]
             kernel_size = attrs["kernel_shape"]
             stride = attrs.get("strides", [1, 1])
             padding = attrs.get("pads", [0, 0, 0, 0])
+            ceil_mode= attrs.get('ceil_mode')
+            if ceil_mode == 0:
+                padding = [x-1 for x in padding]
             blob_channels[output_names[0]] = blob_channels[input_names[0]]
             caffe_layers.append(
                 operators.maxpool2d(
@@ -171,11 +197,16 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
             )
         elif node.op_type == "AveragePool":
             node_name = node.name
-            input_names = str(node.input[0])
-            output_names = str(node.output[0])
+            input_names = [str(node.input[0])]
+            output_names = [str(node.output[0])]
             kernel_size = attrs["kernel_shape"]
             stride = attrs.get("strides", [1, 1])
             padding = attrs.get("pads", [0, 0, 0, 0])
+            ceil_mode= attrs.get('ceil_mode')
+            if ceil_mode == 0:
+                # to fix issue about caffe ceil_mode=True by default
+                # about ceil_mode: https://www.cnblogs.com/xxxxxxxxx/p/11529343.html
+                padding = [x-1 for x in padding]
             blob_channels[output_names[0]] = blob_channels[input_names[0]]
             caffe_layers.append(
                 operators.avgpool2d(
@@ -266,9 +297,33 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
                 )
             else:
                 raise NotImplementedError
-        else:
-            # print(f'warning: ignored {node.op_type} node {node.name}')
+        elif node.op_type == "_Slice":
+            node_name = node.name
+            input_names = [str(node.input[0])]
+            output_names = [str(x) for x in node.output]
+            axis = attrs["axes"]
+            axis = constants[str(int(axis))][0]
+            slice_points = attrs["slice_points"]
+            slice_points = [constants[str(int(x))][0] for x in slice_points]
+            for i, output_name in enumerate(output_names):
+                fsp = [0,] + slice_points + [blob_channels[input_names[0]],]
+                output_channels = fsp[i+1] - fsp[i]
+                blob_channels[output_name] = output_channels
+            print(len(output_names), len(slice_points))
+            caffe_layers.append(
+                operators.slice(
+                    node_name,
+                    input_names,
+                    output_names,
+                    axis,
+                    slice_points,
+                )._to_proto()
+            )
+        elif node.op_type == "Constant":
             pass
+        else:
+            print(f"warning: ignored {node.op_type} node {node.name}")
+            raise NotImplementedError
 
     with open(prototxt_path, "w") as f:
         f.write(str(net))
@@ -281,10 +336,49 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
     return
 
 
+def slice_killer(graph):
+    # get slice layers with same input data
+    slice_groups = {}
+    for node in graph.node:
+        if node.op_type == "Slice":
+            data = str(node.input[0])
+            if data not in slice_groups:
+                slice_groups[data] = []
+            slice_groups[data].append(node)
+    for data, layers in slice_groups.items():
+        # generate a caffe slice layer
+        axes = layers[0].input[3]  # axes
+        inputs = [str(layers[0].input[0])]  # input blobs
+        outputs = [str(x.output[0]) for x in layers]  # output blobs
+        slice_points = [x.input[2] for x in layers]  # ends
+        slice_points = slice_points[:-1]  # remove last end
+        slice_layer = onnx.helper.make_node(
+            "_Slice",
+            inputs=inputs,
+            outputs=outputs,
+            axes=axes,
+            slice_points=slice_points,
+        )
+
+        # kill all slice layers
+        first_occur = None
+        for i, node in enumerate(graph.node):
+            if node.name == layers[0].name:
+                first_occur = i
+        assert first_occur is not None
+        for layer in layers:
+            graph.node.remove(layer)
+        # insert layer at the first occurred position
+        graph.node.insert(first_occur, slice_layer)
+    return graph
+
+
+
 def onnx_to_caffe(onnx_path, check_consistency):
     prototxt_path = onnx_path.replace(".onnx", ".prototxt")
     caffemodel_path = onnx_path.replace(".onnx", ".caffemodel")
     graph = get_graph(onnx_path)
+    graph = slice_killer(graph)
     convert_to_caffe(graph, prototxt_path, caffemodel_path)
     if check_consistency:
         compare_onnx_and_caffe(onnx_path, prototxt_path, caffemodel_path)

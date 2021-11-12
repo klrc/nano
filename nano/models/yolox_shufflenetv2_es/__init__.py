@@ -1,0 +1,1 @@
+from .model import yolox_shufflenetv2_es

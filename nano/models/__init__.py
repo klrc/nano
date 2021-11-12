@@ -1,1 +1,1 @@
-from .yolox_cspm_depthwise_3m import yolox_cspm_depthwise
+from .yolox_shufflenetv2_es import yolox_shufflenetv2_es

@@ -150,6 +150,19 @@ def relu(node_name, input_names, output_names, inplace=False):
     return Function("ReLU", node_name, input_names, output_names, in_place=inplace)
 
 
+def leaky_relu(node_name, input_names, output_names, inplace, alpha):
+    return Function(
+        "ReLU",
+        node_name,
+        input_names,
+        output_names,
+        in_place=inplace,
+        relu_param=dict(
+            negative_slope=alpha,
+        ),
+    )
+
+
 def concat(node_name, input_names, output_names, axis):
     return Function("Concat", node_name, input_names, output_names, axis=axis)
 
@@ -211,6 +224,20 @@ def flatten(node_name, input_names, output_names):
     )
 
 
+def slice(node_name, input_names, output_names, axis, slice_points):
+    print(output_names, slice_points)
+    return Function(
+        "Slice",
+        node_name,
+        input_names,
+        output_names,
+        slice_param=dict(
+            axis=axis,
+            slice_point=slice_points,
+        ),
+    )
+
+
 def bias(node_name, input_names, output_names, axis):
     return Function(
         "Bias",
@@ -226,8 +253,8 @@ def upsample_bilinear2d(node_name, input_names, output_names, in_channels, scale
     kernel_w = int(2 * scale_factor[1] - scale_factor[1] % 2)
     stride_h = int(scale_factor[0])
     stride_w = int(scale_factor[1])
-    pad_h = int(math.ceil((scale_factor[0]-1)/2.))
-    pad_w = int(math.ceil((scale_factor[1]-1)/2.))
+    pad_h = int(math.ceil((scale_factor[0] - 1) / 2.0))
+    pad_w = int(math.ceil((scale_factor[1] - 1) / 2.0))
     return Function(
         "Deconvolution",
         node_name,
