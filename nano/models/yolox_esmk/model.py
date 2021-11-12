@@ -57,56 +57,24 @@ def depthwise_conv(in_channels, kernel_size, stride, norm=__default_norm, act=__
     )
 
 
-# group=2 channel shuffle solution for onnx
-# channel shuffle: https://blog.csdn.net/ding_programmer/article/details/104544579
-# def channel_shuffle(x, group, chunk_size_1_4):
-#     assert group == 2
-#     a1 = x[:, :chunk_size_1_4, ...]
-#     a2 = x[:, chunk_size_1_4: chunk_size_1_4 * 2, ...]
-#     b1 = x[:, chunk_size_1_4 * 2: chunk_size_1_4 * 3, ...]
-#     b2 = x[:, chunk_size_1_4 * 3:, ...]
-#     # a1, a2, b1, b2 = torch.chunk(x, 4, 1)
-#     x = torch.cat([a1, b1, a2, b2], dim=1)
-#     return x
-
-
-# Darknet residual bottleneck module
-# reference: https://github.com/PaddlePaddle/PaddleDetection/blob/d9187ad5d054bc8a4333b9a8ba686569be91a8c6/ppdet/modeling/necks/csp_pan.py#L115
-class DarknetBottleneck(nn.Module):
-    def __init__(self, in_channels, out_channels):
+# Inverted Residual module
+# from mobilenetv2
+# reference: https://blog.csdn.net/flyfish1986/article/details/97017017
+class InvertedResidual(nn.Module):
+    def __init__(self, in_channels, mid_channels, out_channels=None):
         super().__init__()
-        self.conv1 = pointwise_conv(in_channels, in_channels // 2)
-        self.conv2 = depthwise_conv(in_channels // 2, 5, 1)
-        self.conv3 = pointwise_conv(in_channels // 2, out_channels)
+        if out_channels is None:
+            out_channels = in_channels
+        self.conv1 = pointwise_conv(in_channels, mid_channels)
+        self.conv2 = depthwise_conv(mid_channels, 5, 1)
+        self.conv3 = pointwise_conv(mid_channels, out_channels, act=None)
 
     def forward(self, x):
+        identity = x
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.conv3(x)
-        return x
-
-
-# Cross Stage Partial Network block
-# fusion-first mode
-# CVF: https://openaccess.thecvf.com/content_CVPRW_2020/papers/w28/Wang_CSPNet_A_New_Backbone_That_Can_Enhance_Learning_Capability_of_CVPRW_2020_paper.pdf
-class CSPBlock(nn.Module):
-    def __init__(self, in_channels, out_channels):
-        super().__init__()
-        self.short_conv = pointwise_conv(in_channels // 2, in_channels // 2)
-        self.main_conv = pointwise_conv(in_channels // 2, in_channels // 2)
-        self.dense_block = DarknetBottleneck(in_channels // 2, in_channels // 2)
-        self.post_transition = pointwise_conv(in_channels, out_channels)
-        self._splitter = in_channels // 2
-
-    def forward(self, x):
-        x1 = x[:, : self._splitter, ...]
-        x2 = x[:, self._splitter:, ...]
-        x1 = self.short_conv(x1)
-        x2 = self.main_conv(x2)
-        x2 = self.dense_block(x2)
-        x = torch.cat((x1, x2), dim=1)
-        x = self.post_transition(x)
-        return x
+        return x + identity
 
 
 # Enhanced ShuffleNet block with stride=2
@@ -136,30 +104,24 @@ class ESBlockS2(nn.Module):
         return x
 
 
-# Enhanced ShuffleNet block with stride=1
-# Arxiv: https://arxiv.org/pdf/2111.00902.pdf
-class ESBlockS1(nn.Module):
-    def __init__(self, in_channels, mid_channels, out_channels):
+# Cross Stage Partial Network block
+# fusion-first mode
+# CVF: https://openaccess.thecvf.com/content_CVPRW_2020/papers/w28/Wang_CSPNet_A_New_Backbone_That_Can_Enhance_Learning_Capability_of_CVPRW_2020_paper.pdf
+class CSPBlock(nn.Module):
+    def __init__(self, in_channels, out_channels):
         super().__init__()
-        self.pw1 = pointwise_conv(in_channels // 2, mid_channels // 2)
-        self.dw = depthwise_conv(mid_channels // 2, 3, 1, act=None)
-        self.pw2 = pointwise_conv(mid_channels, out_channels // 2)
-        self._splitter = in_channels // 2
-        self.channel_shuffle = nn.ChannelShuffle(2)
-        # self._chunk_size = out_channels // 4
+        self.short_conv = pointwise_conv(in_channels, in_channels // 2)
+        self.main_conv = pointwise_conv(in_channels, in_channels // 2)
+        self.dense_block = InvertedResidual(in_channels // 2, in_channels, in_channels // 2)
+        self.post_transition = pointwise_conv(in_channels, out_channels)
 
     def forward(self, x):
-        x1 = x[:, : self._splitter, ...]
-        x2 = x[:, self._splitter:, ...]
-        x1_1 = self.pw1(x1)
-        x1_2 = self.dw(x1_1)
-        x1 = torch.cat([x1_1, x1_2], dim=1)
-        # skip se module here
-        x1 = self.pw2(x1)
-        out = torch.cat([x1, x2], dim=1)
-        out = self.channel_shuffle(out)
-        # out = channel_shuffle(out, 2, chunk_size_1_4=self._chunk_size)
-        return out
+        x1 = self.short_conv(x)
+        x2 = self.main_conv(x)
+        x2 = self.dense_block(x2)
+        x = torch.cat((x1, x2), dim=1)
+        x = self.post_transition(x)
+        return x
 
 
 # Enhanced Shufflenetv2 for backbone
@@ -171,23 +133,23 @@ class ShufflenetES(nn.Module):
         self.stem_conv_3x3 = _conv_norm_act(3, 24, 3, 2, 1, 1)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.stage_1 = nn.Sequential(
-            ESBlockS2(24, int(96 * 0.875), 96),
-            ESBlockS1(96, int(96 * 0.5), 96),
-            ESBlockS1(96, int(96 * 0.5), 96),
+            ESBlockS2(24, int(32 * 0.875), 32),
+            InvertedResidual(32, 32 * 4),
+            InvertedResidual(32, 32 * 4),
         )
         self.stage_2 = nn.Sequential(
-            ESBlockS2(96, int(192 * 0.5), 192),
-            ESBlockS1(192, int(192 * 0.625), 192),
-            ESBlockS1(192, int(192 * 0.5), 192),
-            ESBlockS1(192, int(192 * 0.625), 192),
-            ESBlockS1(192, int(192 * 0.5), 192),
-            ESBlockS1(192, int(192 * 0.5), 192),
-            ESBlockS1(192, int(192 * 0.5), 192),
+            ESBlockS2(32, int(64 * 0.5), 64),
+            InvertedResidual(64, 64 * 4),
+            InvertedResidual(64, 64 * 4),
+            InvertedResidual(64, 64 * 4),
+            InvertedResidual(64, 64 * 4),
+            InvertedResidual(64, 64 * 4),
+            InvertedResidual(64, 64 * 4),
         )
         self.stage_3 = nn.Sequential(
-            ESBlockS2(192, int(384 * 0.5), 384),
-            ESBlockS1(384, int(384 * 0.5), 384),
-            ESBlockS1(384, int(384 * 0.5), 384),
+            ESBlockS2(64, int(128 * 0.5), 128),
+            InvertedResidual(128, 128 * 4),
+            InvertedResidual(128, 128 * 4),
         )
 
     def forward(self, x):
@@ -321,8 +283,8 @@ class YoloxShuffleNetES(nn.Module):
     def __init__(self, num_classes, anchors):
         super().__init__()
         self.backbone = ShufflenetES()
-        self.neck = CSPPAN([96, 192, 384], 96)
-        self.head = DetectHead(96, 96, num_classes, anchors)
+        self.neck = CSPPAN([32, 64, 128], 64)
+        self.head = DetectHead(64, 64, num_classes, anchors)
 
     def forward(self, x):
         x = self.backbone(x)
@@ -337,7 +299,7 @@ class YoloxShuffleNetES(nn.Module):
         return x
 
 
-def yolox_shufflenetv2_es(num_classes):
+def yolox_esmk_shrink(num_classes):
     model = YoloxShuffleNetES(
         num_classes=num_classes,
         anchors=([11, 14], [30, 46], [143, 130]),
@@ -357,7 +319,7 @@ def yolox_shufflenetv2_es(num_classes):
 
 
 if __name__ == "__main__":
-    model = yolox_shufflenetv2_es(num_classes=3)
+    model = yolox_esmk_shrink(num_classes=3)
     # model.load_state_dict(torch.load("./best.pt", map_location="cpu")["state_dict"])
     for y in model(torch.rand(4, 3, 224, 416)):
         print(y.shape)

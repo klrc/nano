@@ -68,10 +68,10 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
     # register constants
     constants = {}
     for node in graph.node:
-        if node.op_type == 'Constant':
+        if node.op_type == "Constant":
             output = str(node.output[0])
             attrs = Attributes.from_onnx(node.attribute)
-            constants[output]=attrs['value']
+            constants[output] = attrs["value"]
     # register inputs
     for node in graph.input:
         node_name = node.name
@@ -148,7 +148,7 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
             node_name = node.name
             input_names = [str(node.input[0])]
             output_names = [str(node.output[0])]
-            alpha = attrs['alpha']
+            alpha = attrs["alpha"]
             inplace = input_names[0] == output_names[0]
             blob_channels[output_names[0]] = blob_channels[input_names[0]]
             caffe_layers.append(
@@ -181,9 +181,9 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
             kernel_size = attrs["kernel_shape"]
             stride = attrs.get("strides", [1, 1])
             padding = attrs.get("pads", [0, 0, 0, 0])
-            ceil_mode= attrs.get('ceil_mode')
+            ceil_mode = attrs.get("ceil_mode")
             if ceil_mode == 0:
-                padding = [x-1 for x in padding]
+                padding = [x - 1 for x in padding]
             blob_channels[output_names[0]] = blob_channels[input_names[0]]
             caffe_layers.append(
                 operators.maxpool2d(
@@ -202,11 +202,11 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
             kernel_size = attrs["kernel_shape"]
             stride = attrs.get("strides", [1, 1])
             padding = attrs.get("pads", [0, 0, 0, 0])
-            ceil_mode= attrs.get('ceil_mode')
+            ceil_mode = attrs.get("ceil_mode")
             if ceil_mode == 0:
                 # to fix issue about caffe ceil_mode=True by default
                 # about ceil_mode: https://www.cnblogs.com/xxxxxxxxx/p/11529343.html
-                padding = [x-1 for x in padding]
+                padding = [x - 1 for x in padding]
             blob_channels[output_names[0]] = blob_channels[input_names[0]]
             caffe_layers.append(
                 operators.avgpool2d(
@@ -298,6 +298,9 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
             else:
                 raise NotImplementedError
         elif node.op_type == "_Slice":
+            raise NotImplementedError(
+                "op type Slice not supported in XNNC, for more information, check nano/_utils/xnnc/Xtensa_NN_Compiler_UserGuide.pdf"
+            )
             node_name = node.name
             input_names = [str(node.input[0])]
             output_names = [str(x) for x in node.output]
@@ -306,8 +309,16 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
             slice_points = attrs["slice_points"]
             slice_points = [constants[str(int(x))][0] for x in slice_points]
             for i, output_name in enumerate(output_names):
-                fsp = [0,] + slice_points + [blob_channels[input_names[0]],]
-                output_channels = fsp[i+1] - fsp[i]
+                fsp = (
+                    [
+                        0,
+                    ]
+                    + slice_points
+                    + [
+                        blob_channels[input_names[0]],
+                    ]
+                )
+                output_channels = fsp[i + 1] - fsp[i]
                 blob_channels[output_name] = output_channels
             print(len(output_names), len(slice_points))
             caffe_layers.append(
@@ -371,7 +382,6 @@ def slice_killer(graph):
         # insert layer at the first occurred position
         graph.node.insert(first_occur, slice_layer)
     return graph
-
 
 
 def onnx_to_caffe(onnx_path, check_consistency):
