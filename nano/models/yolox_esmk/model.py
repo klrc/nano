@@ -212,15 +212,27 @@ class DecoupledHead(nn.Module):
         self.branch_cls = nn.Sequential(
             depthwise_conv(mid_channels, 5, 1),
             depthwise_conv(mid_channels, 5, 1),
-            pointwise_conv(mid_channels, num_classes, None, None),
+            pointwise_conv(mid_channels, num_classes-1, None, None),
         )
 
-    def forward(self, x):
+    def forward(self, x, misc_bias):
+        x = self.squeeze(x)
+        x1 = self.branch_box(x)
+        x2 = self.branch_cls(x)
+        misc = misc_bias.expand(x.size(0), 1, x.size(2), x.size(3))
+        x = torch.cat((x1, x2, misc), dim=1)  # bboxes + classes + misc class
+        return x
+
+    def dforward(self, x):
         x = self.squeeze(x)
         x1 = self.branch_box(x)
         x2 = self.branch_cls(x)
         x = torch.cat((x1, x2), dim=1)  # bboxes + classes
         return x
+
+    def dsp(self):
+        self.forward = self.dforward
+        return self
 
 
 # Detection Head modified from yolov5 series
@@ -238,6 +250,9 @@ class DetectHead(nn.Module):
         self.register_buffer("anchors", a)  # shape(nl,na,2)
         self.register_buffer("anchor_grid", a.clone().view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
         self.mode = "normal"
+        # http://www.elecfans.com/d/802612.html
+        # learning a logit
+        self.misc_bias = nn.Parameter(torch.zeros(1, 1, 1, 1), requires_grad=True)
         self.m = nn.ModuleList(
             DecoupledHead(in_channels, mid_channels, num_classes) for _ in range(self.nl)
         )  # output conv
@@ -249,20 +264,15 @@ class DetectHead(nn.Module):
 
     def forward(self, x):
         for i in range(self.nl):
-            x[i] = self.m[i](x[i])
+            x[i] = self.m[i](x[i], self.misc_bias)
             bs, _, ny, nx = x[i].shape
             x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
-        return x
-
-    def dforward(self, x):
-        for i in range(self.nl):
-            x[i] = self.m[i](x[i])
         return x
 
     def inference(self, x):
         z = []
         for i in range(self.nl):
-            x[i] = self.m[i](x[i])
+            x[i] = self.m[i](x[i], self.misc_bias)
             bs, _, ny, nx = x[i].shape
             x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
             if self.grid[i].shape[2:4] != x[i].shape[2:4]:
@@ -273,10 +283,18 @@ class DetectHead(nn.Module):
             z.append(y.view(bs, -1, self.no))
         return torch.cat(z, 1), x
 
-    def dsp(self):
-        self.forward = self.dforward
-        return self
+    def dforward(self, x):
+        for i in range(self.nl):
+            x[i] = self.m[i](x[i])
+        return x
 
+    def dsp(self):
+        for m in self.m:
+            m.dsp()
+        self.forward = self.dforward
+        self.no -= 1  # remove the extra background trainer
+        self.nc -= 1
+        return self
 
 # Full detection model
 class YoloxShuffleNetES(nn.Module):
@@ -298,8 +316,12 @@ class YoloxShuffleNetES(nn.Module):
         x = self.head.inference(x)
         return x
 
+    def dsp(self):
+        self.head.dsp()
+        return self
 
-def yolox_esmk_shrink(num_classes):
+
+def yolox_esmk_shrink_misc(num_classes):
     model = YoloxShuffleNetES(
         num_classes=num_classes,
         anchors=([11, 14], [30, 46], [143, 130]),
@@ -319,7 +341,11 @@ def yolox_esmk_shrink(num_classes):
 
 
 if __name__ == "__main__":
-    model = yolox_esmk_shrink(num_classes=3)
+    model = yolox_esmk_shrink_misc(num_classes=4)
     # model.load_state_dict(torch.load("./best.pt", map_location="cpu")["state_dict"])
+    for y in model(torch.rand(4, 3, 224, 416)):
+        print(y.shape)
+    
+    model.dsp()
     for y in model(torch.rand(4, 3, 224, 416)):
         print(y.shape)

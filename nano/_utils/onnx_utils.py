@@ -17,7 +17,6 @@ def to_onnx(
     # load model
     device = "cpu"
     model = model.to(device).eval()
-    model.head.dsp()
     dummy_input = torch.rand(*dummy_input).to(device)
     model.forward(dummy_input)  # dry run
 

@@ -34,7 +34,7 @@ def detection_nms(preds, conf_thres, iou_thres, max_nms=30000):
         obj_conf = pred[4]
         cls_conf, cls_id = pred[5:].max(dim=0, keepdim=True)  # Confidence calculation
         conf = obj_conf * cls_conf
-        if obj_conf < conf_thres:  # Select candidates
+        if conf < conf_thres:  # Select candidates
             continue
         x1 = pred[0] - pred[2] / 2.0  # Box (center x, center y, width, height) to (x1, y1, x2, y2)
         y1 = pred[1] - pred[3] / 2.0
@@ -203,9 +203,10 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
 if __name__ == "__main__":
 
     def acquire_model():
-        model = nano.models.yolox_esmk_shrink(num_classes=4)
-        model.load_state_dict(torch.load("runs/train/exp130/weights/last.pt", map_location="cpu")["state_dict"])
-        model.head.dsp()
+        model = nano.models.yolox_esmk_shrink_misc(num_classes=4)
+        model.load_state_dict(torch.load("runs/train/exp133/weights/last.pt", map_location="cpu")["state_dict"])
+        model.dsp()
+        print(model.head.misc_bias)
         return model
 
     test_front_camera(

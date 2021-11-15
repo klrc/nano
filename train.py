@@ -4,8 +4,9 @@ import wandb
 
 wandb.init(project="nano", dir="./runs")
 
-model = nano.models.yolox_esmk_shrink(num_classes=4)
-model.load_state_dict(torch.load("runs/train/exp130/weights/last.pt", map_location="cpu")["state_dict"])
+model = nano.models.yolox_esmk_shrink_misc(num_classes=4)
+state_dict = torch.load("runs/train/exp128/weights/last.pt", map_location="cpu")["state_dict"]
+model.load_state_dict(state_dict, strict=False)
 trainer = nano.detection.trainer
 
 trainer.run(
