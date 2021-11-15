@@ -4,7 +4,7 @@ from nano.detection import CaffeWrapper, evaluator
 
 # load from pytorch
 model = nano.models.yolox_cspm_depthwise(num_classes=4)
-model.load_state_dict(torch.load("runs/train/exp101/weights/last.pt", map_location="cpu")["state_dict"])
+model.load_state_dict(torch.load("runs/train/exp130/weights/last.pt", map_location="cpu")["state_dict"])
 model.names = ["person", "bike", "car", "misc"]
 imgsz = 416
 
@@ -22,7 +22,7 @@ imgsz = 416
 evaluator = nano.detection.evaluator
 evaluator.run(
     model,
-    data="configs/coc-s.yaml",
+    data="configs/coc-misc-s.yaml",
     batch_size=1,
     imgsz=imgsz,
     device="cpu",

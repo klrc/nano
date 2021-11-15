@@ -3,7 +3,7 @@ from nano._utils import freeze
 import torch
 
 model = nano.models.yolox_esmk_shrink(num_classes=4)
-model.load_state_dict(torch.load("runs/train/exp129/weights/best.pt", map_location="cpu")["state_dict"])
+model.load_state_dict(torch.load("runs/train/exp130/weights/best.pt", map_location="cpu")["state_dict"])
 output_names = ["output_1", "output_2", "output_3"]
 
 freeze(

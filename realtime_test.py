@@ -203,12 +203,12 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
 if __name__ == "__main__":
 
     def acquire_model():
-        model = nano.models.yolox_esmk_shrink(num_classes=3)
-        model.load_state_dict(torch.load("runs/train/exp128/weights/last.pt", map_location="cpu")["state_dict"])
+        model = nano.models.yolox_esmk_shrink(num_classes=4)
+        model.load_state_dict(torch.load("runs/train/exp130/weights/last.pt", map_location="cpu")["state_dict"])
         model.head.dsp()
         return model
 
-    test_screenshot(
+    test_front_camera(
         conf_thres=0.2,
         iou_thres=0.45,
         class_names=["person", "bike", "car", "misc"],
