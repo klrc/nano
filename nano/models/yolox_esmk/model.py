@@ -212,7 +212,7 @@ class DecoupledHead(nn.Module):
         self.branch_cls = nn.Sequential(
             depthwise_conv(mid_channels, 5, 1),
             depthwise_conv(mid_channels, 5, 1),
-            pointwise_conv(mid_channels, num_classes-1, None, None),
+            pointwise_conv(mid_channels, num_classes - 1, None, None),
         )
 
     def forward(self, x, misc_bias):
@@ -296,6 +296,7 @@ class DetectHead(nn.Module):
         self.nc -= 1
         return self
 
+
 # Full detection model
 class YoloxShuffleNetES(nn.Module):
     def __init__(self, num_classes, anchors):
@@ -343,9 +344,5 @@ def yolox_esmk_shrink_misc(num_classes):
 if __name__ == "__main__":
     model = yolox_esmk_shrink_misc(num_classes=4)
     # model.load_state_dict(torch.load("./best.pt", map_location="cpu")["state_dict"])
-    for y in model(torch.rand(4, 3, 224, 416)):
-        print(y.shape)
-    
-    model.dsp()
     for y in model(torch.rand(4, 3, 224, 416)):
         print(y.shape)

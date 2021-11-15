@@ -113,6 +113,8 @@ def train(model, hyp, opt, device, logger):
             g0.append(v.weight)
         elif hasattr(v, "weight") and isinstance(v.weight, nn.Parameter):  # weight (with decay)
             g1.append(v.weight)
+        elif hasattr(v, 'misc_bias') and isinstance(v.misc_bias, nn.Parameter):
+            g2.append(v.misc_bias)
 
     if opt.adam:
         optimizer = Adam(g0, lr=hyp["lr0"], betas=(hyp["momentum"], 0.999))  # adjust beta1 to momentum
