@@ -138,18 +138,18 @@ class ShufflenetES(nn.Module):
             InvertedResidual(32, 32 * 4),
         )
         self.stage_2 = nn.Sequential(
-            ESBlockS2(32, int(64 * 0.5), 64),
-            InvertedResidual(64, 64 * 4),
-            InvertedResidual(64, 64 * 4),
-            InvertedResidual(64, 64 * 4),
-            InvertedResidual(64, 64 * 4),
-            InvertedResidual(64, 64 * 4),
-            InvertedResidual(64, 64 * 4),
+            ESBlockS2(32, int(48 * 0.5), 48),
+            InvertedResidual(48, 48 * 4),
+            InvertedResidual(48, 48 * 4),
+            InvertedResidual(48, 48 * 4),
+            InvertedResidual(48, 48 * 4),
+            InvertedResidual(48, 48 * 4),
+            InvertedResidual(48, 48 * 4),
         )
         self.stage_3 = nn.Sequential(
-            ESBlockS2(64, int(128 * 0.5), 128),
-            InvertedResidual(128, 128 * 4),
-            InvertedResidual(128, 128 * 4),
+            ESBlockS2(48, int(96 * 0.5), 96),
+            InvertedResidual(96, 96 * 4),
+            InvertedResidual(96, 96 * 4),
         )
 
     def forward(self, x):
@@ -283,8 +283,8 @@ class YoloxShuffleNetES(nn.Module):
     def __init__(self, num_classes, anchors):
         super().__init__()
         self.backbone = ShufflenetES()
-        self.neck = CSPPAN([32, 64, 128], 64)
-        self.head = DetectHead(64, 64, num_classes, anchors)
+        self.neck = CSPPAN([32, 48, 96], 48)
+        self.head = DetectHead(48, 48, num_classes, anchors)
 
     def forward(self, x):
         x = self.backbone(x)

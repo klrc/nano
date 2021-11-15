@@ -1,7 +1,7 @@
 import nano
 import torch
 
-model = nano.models.yolox_esmk_shrink(num_classes=3)
+model = nano.models.yolox_esmk_shrink(num_classes=4)
 # model.load_state_dict(torch.load("runs/train/exp112/weights/best.pt", map_location="cpu")["state_dict"])
 detector = nano.detection.detector
 

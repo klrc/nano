@@ -7,6 +7,7 @@
 ## nanodet series
 | Model | Release date  | Size (.onnx)  | FLOPs | bandwidth | Speed | mAP@.5    | mAP@.95   |
 | ---   | ------------  | ------------- | ----  | --------  | ---   | -------   | -------   |
+| yolox_esmk | - | 2.0M | - | - | - | 0.634 | 0.3293 |
 
 ## yolox series
 | Model | Release date  | Size (.onnx)  | FLOPs | bandwidth | Speed | mAP@.5    | mAP@.95   |

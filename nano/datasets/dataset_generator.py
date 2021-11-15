@@ -55,7 +55,7 @@ class DatasetContainer:
             h = bbox[3] / height
             annotations.append(Bbox(name, x, y, w, h))
         return filename, annotations
-    
+
     def _nsup_loader(self, root, target_dataset):
         for filename in tqdm(os.listdir(root)):
             image_path = f"{root}/{filename}"
@@ -186,6 +186,7 @@ class DatasetContainer:
             "car": 2,
             "bus": 2,
             "truck": 2,
+            "misc": 3,
         }
         # build new dataset
         os.makedirs(f"{root}/images/train")
@@ -205,7 +206,7 @@ class DatasetContainer:
                 for bbox in D.annotations:
                     bbox: Bbox
                     if bbox.name not in custom_cids:
-                        continue
+                        bbox.name = "misc"
                     line = [
                         custom_cids[bbox.name],
                         float(bbox.x),
@@ -217,16 +218,21 @@ class DatasetContainer:
         # finish exporting, return with root path
         return root
 
+
 c = DatasetContainer()
 c.load_dataset("/home/sh/Datasets/VOC", "train2012", "train")
 c.load_dataset("/home/sh/Datasets/VOC", "test2007", "train")
 c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
 c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
 c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
-c.load_negative_samples('/home/sh/Datasets/coc-sup', 'train')
-c.load_negative_samples('/home/sh/Datasets/coc-sup', 'val')
+c.load_negative_samples("/home/sh/Datasets/coc-sup", "train")
+c.load_negative_samples("/home/sh/Datasets/coc-sup", "val")
 
 # fine-tuning settings ------------------------------------
-c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.25)
+# c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.95)
+# c.show_class_histplot()
+# c.export("/home/sh/Datasets/coc-misc-s")
+
+c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.95)
 c.show_class_histplot()
-c.export("/home/sh/Datasets/coc-x")
+c.export("/home/sh/Datasets/coc-misc-s")

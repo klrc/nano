@@ -3,9 +3,9 @@ import nano
 from nano.detection import CaffeWrapper, evaluator
 
 # load from pytorch
-model = nano.models.yolox_cspm_depthwise(num_classes=3)
+model = nano.models.yolox_cspm_depthwise(num_classes=4)
 model.load_state_dict(torch.load("runs/train/exp101/weights/last.pt", map_location="cpu")["state_dict"])
-model.names = ["person", "two-wheeler", "car"]
+model.names = ["person", "bike", "car", "misc"]
 imgsz = 416
 
 # load from caffe
