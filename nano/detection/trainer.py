@@ -335,6 +335,7 @@ def train(model, hyp, opt, device, logger):
                 "val_loss_obj": val_loss[1].item(),
                 "val_loss_cls": val_loss[2].item(),
                 "val_loss": val_loss.sum().item(),
+                "misc_bias": model.head.misc_bias.view(1).item(),
             }
             if logger is not None:
                 logger.log(log_vals)

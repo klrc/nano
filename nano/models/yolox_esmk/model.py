@@ -220,7 +220,7 @@ class DecoupledHead(nn.Module):
         x1 = self.branch_box(x)
         x2 = self.branch_cls(x)
         misc = misc_bias.expand(x.size(0), 1, x.size(2), x.size(3))
-        x = torch.cat((x1, x2, misc), dim=1)  # bboxes + classes + misc class
+        x = torch.cat((x1, x2, misc), dim=1)  # bboxes + classes + misc_class
         return x
 
     def dforward(self, x):
