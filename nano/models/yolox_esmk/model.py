@@ -205,9 +205,9 @@ class DecoupledHead(nn.Module):
         super().__init__()
         self.squeeze = pointwise_conv(in_channels, mid_channels)
         self.branch_box = nn.Sequential(
-            depthwise_conv(mid_channels, 3, 1),
+            depthwise_conv(mid_channels, 5, 1),
             pointwise_conv(mid_channels, mid_channels),
-            depthwise_conv(mid_channels, 3, 1),
+            depthwise_conv(mid_channels, 5, 1),
             pointwise_conv(mid_channels, 4, None, None),
         )
         self.branch_cls = nn.Sequential(
