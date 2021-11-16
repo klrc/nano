@@ -3,9 +3,10 @@ import nano
 from nano.detection import CaffeWrapper, evaluator
 
 # load from pytorch
-model = nano.models.yolox_esmk_shrink_misc(num_classes=4)
-model.load_state_dict(torch.load("runs/train/exp130/weights/last.pt", map_location="cpu")["state_dict"])
-model.names = ["person", "bike", "car", "misc"]
+# model = nano.models.yolox_esmk_shrink_misc(num_classes=4)
+# model.load_state_dict(torch.load("runs/train/exp130/weights/last.pt", map_location="cpu")["state_dict"])
+model = ...
+model.names = ["person", "bike", "car"]
 imgsz = 416
 
 # load from caffe

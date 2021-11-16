@@ -203,8 +203,9 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
 if __name__ == "__main__":
 
     def acquire_model():
-        model = nano.models.yolox_esmk_shrink_misc(num_classes=4)
-        model.load_state_dict(torch.load("runs/train/exp139/weights/last.pt", map_location="cpu")["state_dict"])
+        # model = nano.models.yolox_esmk_shrink_misc(num_classes=4)
+        # model.load_state_dict(torch.load("runs/train/exp139/weights/last.pt", map_location="cpu")["state_dict"])
+        model = ...
         model.dsp()
         return model
 
