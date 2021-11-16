@@ -1,1 +1,1 @@
-from .model import yolox_esmk_shrink_misc
+from .model import yolox_esmk_shrink
