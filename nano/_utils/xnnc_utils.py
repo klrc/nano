@@ -104,6 +104,24 @@ def yolov5_test():
         s.exec_run("python3 ../../Scripts/xnnc.py --config_file cfg/MobileYolo.cfg", stream=True)
 
 
+def custom_layer_test():
+    raise NotImplementedError
+    # with docker_shell("xnnc-docker:1.1", "/xnnc/Example/yolov5shufflenet") as s:
+        # s.exec_run("rm layers/MobYolo_output/CMakeCache.txt", stream=True)
+        # s.exec_run("rm -r layers/MobYolo_output/CMakeFiles", stream=True)
+        # s.exec_run("rm layers/MobYolo_output/Makefile", stream=True)
+        # s.exec_run("rm ./libXnncMobiYoloOutputLayer.so", stream=True)
+        # s.exec_run("rm layers/MobYolo_output/libXnncMobiYoloOutputLayer.so", stream=True)
+        # s.exec_run("rm layers/MobYolo_output/cmake_install.cmake", stream=True)
+        # s.exec_run("cmake layers/MobYolo_output/CMakeLists.txt", stream=True)
+        # s.exec_run("make -C layers/MobYolo_output", stream=True)
+        # s.exec_run('cp layers/MobYolo_output/libXnncMobiYoloOutputLayer.so ./', stream=True)
+        # s.exec_run("make install -C layers/MobYolo_output", stream=True)
+        # s.exec_run("python3 ../../Scripts/xnnc.py --config_file cfg/MobileYolo.cfg", stream=True)
+
+
 if __name__ == "__main__":
-    yolov5_test()
+    demo_cadencenet_test()
     # demo_resnet50_test()
+    # yolov5_test()
+    # custom_layer_test()

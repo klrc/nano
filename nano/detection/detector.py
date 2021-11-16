@@ -98,7 +98,7 @@ def detect(model, opt, device):
 
     # Load model
     stride = 32
-    names = ["person", "bike", "car", "misc"]
+    names = ["person", "bike", "car"]
     model.eval()
     # [f'class{i}' for i in range(1000)]  # assign defaults
     imgsz = check_img_size(imgsz, s=stride)  # check image size

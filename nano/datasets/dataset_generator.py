@@ -186,7 +186,6 @@ class DatasetContainer:
             "car": 2,
             "bus": 2,
             "truck": 2,
-            "misc": 3,
         }
         # build new dataset
         os.makedirs(f"{root}/images/train")
@@ -206,7 +205,7 @@ class DatasetContainer:
                 for bbox in D.annotations:
                     bbox: Bbox
                     if bbox.name not in custom_cids:
-                        bbox.name = "misc"
+                        continue
                     line = [
                         custom_cids[bbox.name],
                         float(bbox.x),
@@ -218,21 +217,25 @@ class DatasetContainer:
         # finish exporting, return with root path
         return root
 
+if __name__ == '__main__':
+    # 读取local dataset，支持VOC/MSCOCO/自定义数据集
+    c = DatasetContainer()
+    c.load_dataset("/home/sh/Datasets/VOC", "train2012", "train")
+    c.load_dataset("/home/sh/Datasets/VOC", "test2007", "train")
+    c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
+    c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
+    c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
+    c.load_negative_samples("/home/sh/Datasets/coc-sup", "train")
+    c.load_negative_samples("/home/sh/Datasets/coc-sup", "val")
 
-c = DatasetContainer()
-c.load_dataset("/home/sh/Datasets/VOC", "train2012", "train")
-c.load_dataset("/home/sh/Datasets/VOC", "test2007", "train")
-c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
-c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
-c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
-c.load_negative_samples("/home/sh/Datasets/coc-sup", "train")
-c.load_negative_samples("/home/sh/Datasets/coc-sup", "val")
+    # fine-tuning settings ------------------------------------
+    # c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.95)
+    # c.show_class_histplot()
+    # c.export("/home/sh/Datasets/coc-misc-s")
 
-# fine-tuning settings ------------------------------------
-# c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.95)
-# c.show_class_histplot()
-# c.export("/home/sh/Datasets/coc-misc-s")
+    # 调整数据集&分布可视化（optional）
+    c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.95)
+    c.show_class_histplot()
 
-c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.95)
-c.show_class_histplot()
-c.export("/home/sh/Datasets/coc-misc-s")
+    # 导出数据集
+    c.export("/home/sh/Datasets/coc-misc-s")
