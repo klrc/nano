@@ -129,7 +129,7 @@ if __name__ == "__main__":
     # model setup
     model = nano.models.yolox_esmk_shrink(num_classes=3).dsp()
     model.load_state_dict(torch.load("runs/train/exp147/weights/best.pt", map_location="cpu")["state_dict"])
-    model_stamp = "yolox-esmk-1.17"
+    model_stamp = "yolox-esmk-2.17"
     output_names = ["output_1", "output_2", "output_3"]
     class_names = ["person", "bike", "car"]
 
