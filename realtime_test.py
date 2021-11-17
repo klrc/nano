@@ -203,13 +203,13 @@ if __name__ == "__main__":
 
     def acquire_model():
         model = nano.models.yolox_esmk_shrink(num_classes=3)
-        model.load_state_dict(torch.load("runs/train/exp145/weights/last.pt", map_location="cpu")["state_dict"])
+        model.load_state_dict(torch.load("runs/train/exp147/weights/best.pt", map_location="cpu")["state_dict"])
         model.dsp()
         return model
 
     test_front_camera(
-        conf_thres=0.2,
-        iou_thres=0.45,
+        conf_thres=0.15,
+        iou_thres=0.6,
         class_names=["person", "bike", "car"],
         device="cpu",
     )

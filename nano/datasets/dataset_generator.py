@@ -220,22 +220,17 @@ class DatasetContainer:
 if __name__ == '__main__':
     # 读取local dataset，支持VOC/MSCOCO/自定义数据集
     c = DatasetContainer()
-    c.load_dataset("/home/sh/Datasets/VOC", "train2012", "train")
-    c.load_dataset("/home/sh/Datasets/VOC", "test2007", "train")
-    c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
-    c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
-    c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
-    c.load_negative_samples("/home/sh/Datasets/coc-sup", "train")
-    c.load_negative_samples("/home/sh/Datasets/coc-sup", "val")
-
-    # fine-tuning settings ------------------------------------
-    # c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.95)
-    # c.show_class_histplot()
-    # c.export("/home/sh/Datasets/coc-misc-s")
+    # c.load_dataset("/home/sh/Datasets/VOC", "train2012", "train")
+    # c.load_dataset("/home/sh/Datasets/VOC", "test2007", "train")
+    # c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
+    # c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
+    c.load_dataset("/home/sh/Datasets/coco", "val2017", "val")
+    # c.load_negative_samples("/home/sh/Datasets/coc-sup", "train")
+    # c.load_negative_samples("/home/sh/Datasets/coc-sup", "val")
 
     # 调整数据集&分布可视化（optional）
-    c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.95)
-    c.show_class_histplot()
+    # c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.95)
+    # c.show_class_histplot()
 
     # 导出数据集
-    c.export("/home/sh/Datasets/coc-misc-s")
+    c.export("/home/sh/Datasets/coco-val")

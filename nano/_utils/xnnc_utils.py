@@ -105,7 +105,8 @@ def yolov5_test():
 
 
 def custom_layer_test():
-    raise NotImplementedError
+    with docker_shell("xnnc-docker", "/xnnc/Example/custom-cadenceNet") as s:
+        s.exec_run("python3 ../../Scripts/xnnc.py --keep --config_file cadenceNet.cfg", stream=True)
     # with docker_shell("xnnc-docker:1.1", "/xnnc/Example/yolov5shufflenet") as s:
         # s.exec_run("rm layers/MobYolo_output/CMakeCache.txt", stream=True)
         # s.exec_run("rm -r layers/MobYolo_output/CMakeFiles", stream=True)
@@ -121,7 +122,7 @@ def custom_layer_test():
 
 
 if __name__ == "__main__":
-    demo_cadencenet_test()
+    # demo_cadencenet_test()
     # demo_resnet50_test()
     # yolov5_test()
-    # custom_layer_test()
+    custom_layer_test()
