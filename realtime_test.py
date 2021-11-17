@@ -203,7 +203,7 @@ if __name__ == "__main__":
 
     def acquire_model():
         model = nano.models.yolox_esmk_shrink(num_classes=3)
-        model.load_state_dict(torch.load("runs/train/exp147/weights/best.pt", map_location="cpu")["state_dict"])
+        model.load_state_dict(torch.load("release/yolox-esmk-2.17/yolox-esmk.pt", map_location="cpu"))
         model.dsp()
         return model
 
