@@ -1,3 +1,12 @@
+# caffe test @ MSCOCO -------------------------------------
+# val: Scanning '../datasets/coco-val/val.cache' images and labels... 4952 found, 0 missing, 1984 empty, 0 corrupted: 100%|█| 4952/4952 [0
+#                Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100%|███████| 4952/4952 [06:14<00:00, 13.23it/s]
+#                  all       4952      14323      0.503      0.273      0.282      0.117
+#               person       4952      11004      0.588      0.308      0.344      0.131
+#                 bike       4952        687      0.375      0.266      0.247      0.106
+#                  car       4952       2632      0.546      0.244      0.254      0.113
+# Speed: 0.3ms pre-process, 60.0ms inference, 0.7ms NMS per image at shape (2, 3, 224, 416)
+
 class_names: ['person', 'bike', 'car']
 output_names: ['output_1', 'output_2', 'output_3']
 anchors: [11.3359375, 13.6875, 30.359375, 46.34375, 143.0, 129.5]
