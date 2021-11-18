@@ -30,7 +30,7 @@
 - add model_sheet.md
 
 ## -
-http://ftp.gnu.org/gnu/libc/glibc-2.29.tar.gz
+
 ---
 
 ![](nano.jpg)

@@ -8,7 +8,9 @@
 | Model | Release date  | Size (.onnx)  | FLOPs | bandwidth | Speed | mAP@.5    | mAP@.95   |
 | ---   | ------------  | ------------- | ----  | --------  | ---   | -------   | -------   |
 | yolox_esmk | - | 2.0M | - | - | - | 0.634 | 0.3293 |
-| yolox_esmk_misc | - | - | - | - | - | - | - |
+| yolox_esmk_misc | - | - | - | - | - | 0.490 | 0.257 |
+| yolox_esmk_v2 | - | 1.83M | - | - | - | 0.648 | 0.354 |
+
 
 ## yolox series
 | Model | Release date  | Size (.onnx)  | FLOPs | bandwidth | Speed | mAP@.5    | mAP@.95   |
