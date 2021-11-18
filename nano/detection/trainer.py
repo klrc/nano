@@ -137,7 +137,7 @@ def train(model, hyp, opt, device, logger):
     ema = ModelEMA(model) if RANK in [-1, 0] else None
 
     # Resume
-    start_epoch, best_fitness = 0, 0.0
+    start_epoch, best_fitness = opt.start_epoch, 0.0
 
     # Image sizes
     gs = 32  # grid size (max stride)
@@ -321,6 +321,7 @@ def train(model, hyp, opt, device, logger):
 
             # Upload logger
             log_vals = {
+                "epoch": epoch,
                 "precision": results[0].item(),
                 "recall": results[1].item(),
                 "map@.5": results[2].item(),
@@ -371,6 +372,7 @@ def parse_opt(known=False):
     parser.add_argument("--data", type=str, default=ROOT / "configs/coco128.yaml", help="dataset.yaml path")
     parser.add_argument("--hyp", type=str, default=ROOT / "configs/hyps/hyp.scratch.yaml", help="hyperparameters path")
     parser.add_argument("--epochs", type=int, default=300)
+    parser.add_argument("--start-epoch", type=int, default=0)
     parser.add_argument("--batch-size", type=int, default=16, help="total batch size for all GPUs")
     parser.add_argument("--eval-batch-size", type=int, default=16, help="total batch size for all GPUs (evaluator)")
     parser.add_argument("--imgsz", "--img", "--img-size", type=int, default=640, help="train, val image size (pixels)")

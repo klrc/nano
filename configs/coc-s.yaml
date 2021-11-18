@@ -14,7 +14,7 @@ val: val.txt  # train images (relative to 'path') 5000 images
 
 # Classes
 nc: 3  # number of classes
-names: [ 'person', 'two-wheeler', 'car' ]  # class names
+names: [ 'person', 'bike', 'car' ]  # class names
 
 
 # Download script/URL (optional)

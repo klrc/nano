@@ -1,1 +1,1 @@
-from .yolox_shufflenetv2_es import yolox_shufflenetv2_es
+from .yolox import yolox_esmk_shrink
