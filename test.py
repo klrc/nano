@@ -10,19 +10,20 @@ from nano.detection import CaffeWrapper, evaluator
 # imgsz = 416
 
 # load from caffe
-root = "release/yolox-esmk-2.17"
+root = "release/yolox-esmk-2.18"
 model_stamp = root.split("/")[-1]
 model_name = "-".join(model_stamp.split("-")[:-1])
 with open(f'{root}/readme.yaml', 'r') as f:
     for line in f.readlines():
-        for k, v in yaml.load(line).items():
-            if k == 'output_names':
-                output_names = v
-            elif k == 'class_names':
-                class_names = v
-            elif k == 'anchors':
-                anchors = v
-                anchors = torch.tensor(anchors).reshape(-1, 2).numpy()
+        if not line.strip().startswith('#') and ':' in line:
+            for k, v in yaml.load(line).items():
+                if k == 'output_names':
+                    output_names = v
+                elif k == 'class_names':
+                    class_names = v
+                elif k == 'anchors':
+                    anchors = v
+                    anchors = torch.tensor(anchors).reshape(-1, 2).numpy()
 
 model = CaffeWrapper(
     caffemodel_path=f"{root}/{model_name}.caffemodel",
@@ -36,7 +37,7 @@ imgsz = [224, 416]
 evaluator = nano.detection.evaluator
 evaluator.run(
     model,
-    data="configs/coco-val.yaml",
+    data="configs/coc-l.yaml",
     batch_size=1,
     imgsz=imgsz,
     device="cpu",
