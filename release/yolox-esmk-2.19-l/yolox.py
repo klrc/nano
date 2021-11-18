@@ -143,28 +143,29 @@ class CSPBlock(nn.Module):
 # Arxiv: https://arxiv.org/pdf/2111.00902.pdf
 class ShufflenetES(nn.Module):
     # channel_ratio: [0.875, 0.5, 0.5, 0.5, 0.625, 0.5, 0.625, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-    def __init__(self):
+    def __init__(self, layer_size):
         super().__init__()
-        self.stem_conv_3x3 = _conv_norm_act(3, 24, 3, 2, 1, 1)
+        s0, s1, s2, s3 = layer_size
+        self.stem_conv_3x3 = _conv_norm_act(3, s0, 3, 2, 1, 1)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.stage_1 = nn.Sequential(
-            ESBlockS2(24, int(32 * 0.875), 32),
-            InvertedResidual(32, 32 * 4),
-            InvertedResidual(32, 32 * 4),
+            ESBlockS2(s0, int(s1 * 0.875), s1),
+            InvertedResidual(s1, s1 * 4),
+            InvertedResidual(s1, s1 * 4),
         )
         self.stage_2 = nn.Sequential(
-            ESBlockS2(32, int(48 * 0.5), 48),
-            InvertedResidual(48, 48 * 4),
-            InvertedResidual(48, 48 * 4),
-            InvertedResidual(48, 48 * 4),
-            InvertedResidual(48, 48 * 4),
-            InvertedResidual(48, 48 * 4),
-            InvertedResidual(48, 48 * 4),
+            ESBlockS2(s1, int(s2 * 0.5), s2),
+            InvertedResidual(s2, s2 * 4),
+            InvertedResidual(s2, s2 * 4),
+            InvertedResidual(s2, s2 * 4),
+            InvertedResidual(s2, s2 * 4),
+            InvertedResidual(s2, s2 * 4),
+            InvertedResidual(s2, s2 * 4),
         )
         self.stage_3 = nn.Sequential(
-            ESBlockS2(48, int(96 * 0.5), 96),
-            InvertedResidual(96, 96 * 4),
-            InvertedResidual(96, 96 * 4),
+            ESBlockS2(s2, int(s3 * 0.5), s3),
+            InvertedResidual(s3, s3 * 4),
+            InvertedResidual(s3, s3 * 4),
         )
 
     def forward(self, x):
@@ -297,11 +298,11 @@ class DetectHead(nn.Module):
 
 # Full detection model
 class YoloxShuffleNetES(nn.Module):
-    def __init__(self, num_classes, anchors):
+    def __init__(self, num_classes, layer_size, anchors):
         super().__init__()
-        self.backbone = ShufflenetES()
-        self.neck = CSPPAN([32, 48, 96], 48)
-        self.head = DetectHead(48, 48, num_classes, anchors)
+        self.backbone = ShufflenetES(layer_size=layer_size[:-1])
+        self.neck = CSPPAN(layer_size[1:-1], layer_size[-1])
+        self.head = DetectHead(layer_size[-1], layer_size[-1], num_classes, anchors)
 
     def forward(self, x):
         x = self.backbone(x)
@@ -323,14 +324,26 @@ class YoloxShuffleNetES(nn.Module):
 def yolox_esmk_shrink(num_classes):
     model = YoloxShuffleNetES(
         num_classes=num_classes,
+        layer_size=[24, 32, 48, 96, 48],
         anchors=([11, 14], [30, 46], [143, 130]),
     )
     init_parameters(model)
     return model
 
 
+def yolox_esmk_shrink_l(num_classes):
+    model = YoloxShuffleNetES(
+        num_classes=num_classes,
+        layer_size=[24, 32, 64, 96, 96],
+        anchors=([11, 14], [30, 46], [143, 130]),
+    )
+    init_parameters(model)
+    return model
+
+
+
 if __name__ == "__main__":
-    model = yolox_esmk_shrink(num_classes=3)
+    model = yolox_esmk_shrink_l(num_classes=3)
     # model.load_state_dict(torch.load("./best.pt", map_location="cpu")["state_dict"])
     for y in model(torch.rand(4, 3, 224, 416)):
         print(y.shape)

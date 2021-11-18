@@ -59,37 +59,13 @@ def demo_resnet50_test():
 
 
 def demo_fasterrcnn_test():
-    pass
+    raise NotImplementedError
     # the following codes fail, considered as corrupted source.
-    # with docker_shell("xnnc-docker", "/xnnc/Example/faster-R-CNN") as s:
-    #     s.exec_run("make", stream=True)
+    with docker_shell("xnnc-docker", "/xnnc/Example/faster-R-CNN") as s:
+        s.exec_run("make", stream=True)
 
 
 def yolov5_test():
-    ''' XNNC custom layer ----------
-    layer {
-        name: "detection_out"
-        type: "CppCustom"
-        bottom: "conv_blob72"
-        bottom: "conv_blob73"
-        bottom: "conv_blob74"
-        top: "detection_out"
-        cpp_custom_param {
-            module: "XnncMobiYoloOutputLayer"
-            param_map_str: "num_classes:81 share_location:1 background_label_id:0 nms_threshold:0.35 top_k:400 keep_top_k:200 confidence_threshold:0.5"
-        }
-    }
-    layer {
-        name: "_Resize_455"
-        type: "CppCustom"
-        bottom: "1084"
-        top: "1089"
-        cpp_custom_param {
-            module: "mResize"
-            param_map_str: "scaleX:2 scaleY:2 align_corners:1"
-        }
-    }
-    '''
     with docker_shell("xnnc-docker:1.1", "/xnnc/Example/yolov5shufflenet") as s:
         s.exec_run("rm layers/MobYolo_output/CMakeCache.txt", stream=True)
         s.exec_run("rm -r layers/MobYolo_output/CMakeFiles", stream=True)

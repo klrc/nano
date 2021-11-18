@@ -1,1 +1,1 @@
-from .yolox import yolox_esmk_shrink
+from .yolox import yolox_esmk_shrink, yolox_esmk_shrink_l

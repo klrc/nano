@@ -127,9 +127,9 @@ def export(
 
 if __name__ == "__main__":
     # model setup
-    model = nano.models.yolox_esmk_shrink(num_classes=3).dsp()
-    model.load_state_dict(torch.load("runs/train/exp150/weights/best.pt", map_location="cpu")["state_dict"])
-    model_stamp = "yolox-esmk-2.18"
+    model = nano.models.yolox_esmk_shrink_l(num_classes=3).dsp()
+    # model.load_state_dict(torch.load("runs/train/exp150/weights/best.pt", map_location="cpu")["state_dict"])
+    model_stamp = "yolox-esmk-2.19-l"
     output_names = ["output_1", "output_2", "output_3"]
     class_names = ["person", "bike", "car"]
 
@@ -138,5 +138,5 @@ if __name__ == "__main__":
         model_stamp=model_stamp,
         output_names=output_names,
         class_names=class_names,
-        # force=True,
+        force=True,
     )
