@@ -9,25 +9,26 @@
     - nano.models: models (under development)
     - nano._utils: xnnc porting & log utils
 - release: released models, each released model includes the following items:
-    - *.pt
-    - *.onnx (optional)
-    - *.caffemodel
-    - *-custom.caffemodel (optional)
-    - *.prototxt
-    - *-custom.prototxt
     - readme.yaml (containing anchors,metrics and description)
+    - *-custom.prototxt
+    - *-custom.caffemodel (optional)
+    - *.caffemodel
+    - *.onnx (optional)
+    - *.prototxt
+    - *.pt
+    - *.py definition
 - configs: including preset yaml configurations.
 - ~~runs: running logs~~ (not sync to git)
 - detect.py
 - export.py
 - train.py
 - test.py
+- realtime_test.py
 - readme.md
 - model_sheet.md
 
 ## Current TODO
-- add xnnc support
-- add model_sheet.md
+- custom layer demo
 
 ## -
 
