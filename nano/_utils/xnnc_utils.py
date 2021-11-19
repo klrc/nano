@@ -82,6 +82,18 @@ def yolov5_test():
 
 def custom_layer_test():
     with docker_shell("xnnc-docker", "/xnnc/Example/custom-cadenceNet") as s:
+        for custom_layer in ['mish',]:
+            s.exec_run(f"rm layers/{custom_layer}/CMakeCache.txt", stream=True)
+            s.exec_run(f"rm -r layers/{custom_layer}/CMakeFiles", stream=True)
+            s.exec_run(f"rm layers/{custom_layer}/Makefile", stream=True)
+            s.exec_run(f"rm layers/{custom_layer}/lib{custom_layer}.so", stream=True)
+            s.exec_run(f"rm layers/{custom_layer}/cmake_install.cmake", stream=True)
+            s.exec_run(f"rm layers/{custom_layer}/install_manifest.txt", stream=True)
+            s.exec_run(f"rm ./lib{custom_layer}.so", stream=True)
+            s.exec_run(f"cmake layers/{custom_layer}/CMakeLists.txt", stream=True)
+            s.exec_run(f"make -C layers/{custom_layer}", stream=True)
+            s.exec_run(f'cp layers/{custom_layer}/lib{custom_layer}.so ./', stream=True)
+            s.exec_run(f"make install -C layers/{custom_layer}", stream=True)
         s.exec_run("python3 ../../Scripts/xnnc.py --keep --config_file cadenceNet.cfg", stream=True)
     # with docker_shell("xnnc-docker:1.1", "/xnnc/Example/yolov5shufflenet") as s:
         # s.exec_run("rm layers/MobYolo_output/CMakeCache.txt", stream=True)
