@@ -22,9 +22,9 @@ import sys
 
 os.environ["GLOG_minloglevel"] = "2"
 
-import torch
-import nano
-from nano._utils import freeze
+import torch  # noqa: E402
+import nano  # noqa: E402
+from nano._utils import freeze  # noqa: E402
 
 
 # replace Deconv layer with XNNC mResize layer, add final output layer
