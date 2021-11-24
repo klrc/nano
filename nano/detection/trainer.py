@@ -377,7 +377,7 @@ def train(model, ckpt, hyp, opt, device, logger):
         LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}")
 
     torch.cuda.empty_cache()
-    return results
+    return best
 
 
 def parse_opt(known=False):
@@ -441,7 +441,8 @@ def main(model, opt, logger):
 
     # Train
     model.to(device)
-    train(model, ckpt, opt.hyp, opt, device, logger)
+    best = train(model, ckpt, opt.hyp, opt, device, logger)
+    return best
 
 
 def run(model, logger=None, **kwargs):
@@ -449,4 +450,4 @@ def run(model, logger=None, **kwargs):
     opt = parse_opt(True)
     for k, v in kwargs.items():
         setattr(opt, k, v)
-    main(model, opt, logger)
+    return main(model, opt, logger)
