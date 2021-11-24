@@ -12,7 +12,7 @@ import sys
 import time
 from copy import deepcopy
 from pathlib import Path
-
+import wandb
 import numpy as np
 import torch
 import torch.nn as nn
@@ -80,6 +80,7 @@ def train(model, ckpt, hyp, opt, device, logger):
     if isinstance(hyp, str):
         with open(hyp) as f:
             hyp = yaml.safe_load(f)  # load hyps dict
+            wandb.config.update(hyp)
 
     # Save run settings
     with open(save_dir / "hyp.yaml", "w") as f:
@@ -139,16 +140,14 @@ def train(model, ckpt, hyp, opt, device, logger):
     # Resume
     start_epoch, best_fitness = 0, 0.0
     if ckpt is not None:
-        if 'state_dict' in ckpt:
-            model.load_state_dict(ckpt.pop('state_dict'))
-        if 'optimizer' in ckpt:
-            optimizer_state_dict = ckpt.pop('optimizer')
+        if "state_dict" in ckpt:
+            model.load_state_dict(ckpt.pop("state_dict"))
+        if "optimizer" in ckpt:
+            optimizer_state_dict = ckpt.pop("optimizer")
             if opt.load_optimizer:
                 optimizer.load_state_dict(optimizer_state_dict)
-        if 'best_fitness' in ckpt:
-            best_fitness = ckpt.pop('best_fitness')
-        if 'epoch' in ckpt:
-            start_epoch = ckpt['epoch']
+        if "epoch" in ckpt:
+            start_epoch = ckpt["epoch"]
         if logger is not None:
             logger.log(ckpt)
 
@@ -354,7 +353,6 @@ def train(model, ckpt, hyp, opt, device, logger):
             # Save model
             if (not nosave) or (final_epoch and not evolve):  # if save
                 ckpt = {
-                    "best_fitness": best_fitness,
                     "state_dict": deepcopy(model).half().state_dict(),
                     "optimizer": optimizer.state_dict(),
                 }
@@ -427,6 +425,7 @@ def main(model, opt, logger):
     set_logging(RANK)
     if RANK in [-1, 0]:
         print_args(FILE.stem, opt)
+    wandb.config.update({k: getattr(opt, k) for k in vars(opt)})
     opt.data, opt.hyp, opt.project = check_file(opt.data), check_yaml(opt.hyp), str(opt.project)  # checks
     if opt.evolve:
         opt.project = str("runs/evolve")
@@ -445,9 +444,9 @@ def main(model, opt, logger):
     return best
 
 
-def run(model, logger=None, **kwargs):
-    # Usage: import train; train.run(model, data='coco128.yaml', imgsz=320)
+def run(model, **kwargs):
     opt = parse_opt(True)
     for k, v in kwargs.items():
         setattr(opt, k, v)
+    logger = wandb.init(project="nano", dir="./runs")
     return main(model, opt, logger)

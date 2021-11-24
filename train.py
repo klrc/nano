@@ -1,5 +1,4 @@
 import nano
-import wandb
 
 
 # model setup
@@ -11,10 +10,9 @@ ckpt = trainer.run(
     model=model,
     data="configs/coc-s.yaml",
     hyp="configs/hyp.finetune-nomixup.yaml",
-    logger=wandb.init(project="nano", dir="./runs"),
+    adam=True,
     patience=32,
     imgsz=416,
-    adam=True,
 )
 
 # finetune phase 1
@@ -24,7 +22,6 @@ ckpt = trainer.run(
     ckpt=ckpt,
     load_optimizer=False,
     hyp="configs/hyp.finetune-nomixup.yaml",
-    logger=wandb.init(project="nano", dir="./runs"),
     patience=16,
     imgsz=416,
 )
@@ -36,7 +33,6 @@ ckpt = trainer.run(
     ckpt=ckpt,
     load_optimizer=False,
     hyp="configs/hyp.finetune-nomixup.yaml",
-    logger=wandb.init(project="nano", dir="./runs"),
     patience=16,
     imgsz=416,
 )
@@ -48,7 +44,6 @@ ckpt = trainer.run(
     ckpt=ckpt,
     load_optimizer=False,
     hyp="configs/hyp.finetune-nomosaic.yaml",
-    logger=wandb.init(project="nano", dir="./runs"),
     patience=16,
     imgsz=416,
 )
