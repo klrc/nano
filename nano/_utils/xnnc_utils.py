@@ -16,6 +16,10 @@ class DockerShell:
                 "/home/sh/Projects/klrc/nano/nano/_utils/xnnc": {
                     "bind": "/xnnc",
                     "mode": "rw",
+                },
+                "/home/sh/Projects/tensilica/xtensa/XtDevTools": {
+                    "bind": "/home/sh/Projects/tensilica/xtensa/XtDevTools",
+                    "mode": "rw",
                 }
             },
             working_dir=self.root,
@@ -101,5 +105,5 @@ def custom_layer_test():
 if __name__ == "__main__":
     # demo_cadencenet_test()
     # demo_resnet50_test()
-    # yolov5_test()
-    custom_layer_test()
+    yolov5_test()
+    # custom_layer_test()

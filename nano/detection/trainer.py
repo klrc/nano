@@ -56,7 +56,7 @@ RANK = int(os.getenv("RANK", -1))
 WORLD_SIZE = int(os.getenv("WORLD_SIZE", 1))
 
 
-def train(model, hyp, opt, device, logger):
+def train(model, ckpt, hyp, opt, device, logger):
     save_dir, epochs, batch_size, eval_batch_size, single_cls, evolve, data, resume, noval, nosave, workers = (
         Path(opt.save_dir),
         opt.epochs,
@@ -137,7 +137,20 @@ def train(model, hyp, opt, device, logger):
     ema = ModelEMA(model) if RANK in [-1, 0] else None
 
     # Resume
-    start_epoch, best_fitness = opt.start_epoch, 0.0
+    start_epoch, best_fitness = 0, 0.0
+    if ckpt is not None:
+        if 'state_dict' in ckpt:
+            model.load_state_dict(ckpt.pop('state_dict'))
+        if 'optimizer' in ckpt:
+            optimizer_state_dict = ckpt.pop('optimizer')
+            if opt.load_optimizer:
+                optimizer.load_state_dict(optimizer_state_dict)
+        if 'best_fitness' in ckpt:
+            best_fitness = ckpt.pop('best_fitness')
+        if 'epoch' in ckpt:
+            start_epoch = ckpt['epoch']
+        if logger is not None:
+            logger.log(ckpt)
 
     # Image sizes
     gs = 32  # grid size (max stride)
@@ -341,11 +354,11 @@ def train(model, hyp, opt, device, logger):
             # Save model
             if (not nosave) or (final_epoch and not evolve):  # if save
                 ckpt = {
-                    "epoch": epoch,
                     "best_fitness": best_fitness,
                     "state_dict": deepcopy(model).half().state_dict(),
                     "optimizer": optimizer.state_dict(),
                 }
+                ckpt.update(log_vals)
 
                 # Save last, best and delete
                 torch.save(ckpt, last)
@@ -371,10 +384,11 @@ def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", type=str, default=ROOT / "configs/coco128.yaml", help="dataset.yaml path")
     parser.add_argument("--hyp", type=str, default=ROOT / "configs/hyps/hyp.scratch.yaml", help="hyperparameters path")
-    parser.add_argument("--epochs", type=int, default=300)
-    parser.add_argument("--start-epoch", type=int, default=0)
-    parser.add_argument("--batch-size", type=int, default=16, help="total batch size for all GPUs")
-    parser.add_argument("--eval-batch-size", type=int, default=16, help="total batch size for all GPUs (evaluator)")
+    parser.add_argument("--epochs", type=int, default=1000)
+    parser.add_argument("--ckpt", type=str, default="", help="checkpoint file path")
+    parser.add_argument("--load-optimizer", action="store_true", help="load optimizer.state_dict from ckpt if true")
+    parser.add_argument("--batch-size", type=int, default=32, help="total batch size for all GPUs")
+    parser.add_argument("--eval-batch-size", type=int, default=32, help="total batch size for all GPUs (evaluator)")
     parser.add_argument("--imgsz", "--img", "--img-size", type=int, default=640, help="train, val image size (pixels)")
     parser.add_argument("--rect", action="store_true", help="rectangular training")
     parser.add_argument("--resume", nargs="?", const=True, default=False, help="resume most recent training")
@@ -397,7 +411,7 @@ def parse_opt(known=False):
     parser.add_argument("--exist-ok", action="store_true", help="existing project/name ok, do not increment")
     parser.add_argument("--quad", action="store_true", help="quad dataloader")
     parser.add_argument("--linear-lr", action="store_true", help="linear LR")
-    parser.add_argument("--label-smoothing", type=float, default=0.0, help="Label smoothing epsilon")
+    parser.add_argument("--label-smoothing", type=float, default=0.1, help="Label smoothing epsilon")
     parser.add_argument("--upload_dataset", action="store_true", help="Upload dataset as W&B artifact table")
     parser.add_argument("--bbox_interval", type=int, default=-1, help="Set bounding-box image logging interval for W&B")
     parser.add_argument("--save_period", type=int, default=-1, help='Log model after every "save_period" epoch')
@@ -413,18 +427,21 @@ def main(model, opt, logger):
     set_logging(RANK)
     if RANK in [-1, 0]:
         print_args(FILE.stem, opt)
-
-    # Resume
     opt.data, opt.hyp, opt.project = check_file(opt.data), check_yaml(opt.hyp), str(opt.project)  # checks
     if opt.evolve:
         opt.project = str("runs/evolve")
         opt.exist_ok, opt.resume = opt.resume, False  # pass resume to exist_ok and disable resume
     opt.save_dir = str(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))
+    device = select_device(opt.device, batch_size=opt.batch_size)
+
+    # Resume
+    ckpt = None
+    if opt.ckpt != "":
+        ckpt = torch.load(opt.ckpt, map_location=device)
 
     # Train
-    device = select_device(opt.device, batch_size=opt.batch_size)
     model.to(device)
-    train(model, opt.hyp, opt, device, logger)
+    train(model, ckpt, opt.hyp, opt, device, logger)
 
 
 def run(model, logger=None, **kwargs):
