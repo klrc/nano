@@ -42,11 +42,11 @@ class CaffeWrapper(nn.Module):
     def eval(self):
         # exported caffe model should always work in eval mode.
         return
-    
+
     def to(self, device):
         # cpu only for caffe.
         return
-    
+
     def cuda(self):
         # cpu only for caffe.
         return
@@ -58,17 +58,16 @@ class CaffeWrapper(nn.Module):
         self.model.blobs["input"].data[...] = img  # images, data
         out = self.model.forward()
         x = [out[output_name] for output_name in self.output_names]
-        x = [torch.tensor(xi) for xi in x]
-
-        z = []  # inference output
-        for i in range(self.nl):
-            bs, _, ny, nx = x[i].shape  # x(bs,255,20,20) to x(bs,3,20,20,85)
-            x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
-            if self.grid[i].shape[2:4] != x[i].shape[2:4]:
-                self.grid[i] = self._make_grid(nx, ny).to(x[i].device)
-            y = x[i].sigmoid()
-            y[..., 0:2] = (y[..., 0:2] * 2.0 - 0.5 + self.grid[i]) * self.stride[i]  # xy
-            y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+        preds = [torch.tensor(xi) for xi in x]
+        z = []
+        for i, pred in enumerate(preds):  # predictions with different scales
+            y = pred.sigmoid()
+            # y = y.permute(0, 2, 3, 1)
+            bs, ny, nx, _ = pred.shape
+            yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
+            grid = torch.stack((xv, yv), 2).view((1, ny, nx, 2)).float()
+            y[..., 0:2] = (y[..., 0:2] * 2.0 - 0.5 + grid) * self.stride[i]  # x, y
+            y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # w, h
             z.append(y.view(bs, -1, self.no))
         return torch.cat(z, 1), x
 

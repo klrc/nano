@@ -11,7 +11,7 @@ ckpt = trainer.run(
     data="configs/coc-s.yaml",
     hyp="configs/hyp.finetune-nomixup.yaml",
     adam=True,
-    patience=32,
+    patience=16,
     imgsz=416,
 )
 
@@ -22,7 +22,7 @@ ckpt = trainer.run(
     ckpt=ckpt,
     load_optimizer=False,
     hyp="configs/hyp.finetune-nomixup.yaml",
-    patience=16,
+    patience=8,
     imgsz=416,
 )
 
@@ -33,7 +33,7 @@ ckpt = trainer.run(
     ckpt=ckpt,
     load_optimizer=False,
     hyp="configs/hyp.finetune-nomixup.yaml",
-    patience=16,
+    patience=8,
     imgsz=416,
 )
 
@@ -44,6 +44,6 @@ ckpt = trainer.run(
     ckpt=ckpt,
     load_optimizer=False,
     hyp="configs/hyp.finetune-nomosaic.yaml",
-    patience=16,
+    patience=8,
     imgsz=416,
 )

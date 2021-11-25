@@ -225,7 +225,6 @@ def flatten(node_name, input_names, output_names):
 
 
 def slice(node_name, input_names, output_names, axis, slice_points):
-    print(output_names, slice_points)
     return Function(
         "Slice",
         node_name,
@@ -234,6 +233,18 @@ def slice(node_name, input_names, output_names, axis, slice_points):
         slice_param=dict(
             axis=axis,
             slice_point=slice_points,
+        ),
+    )
+
+
+def permute(node_name, input_names, output_names, orders):
+    return Function(
+        "Permute",
+        node_name,
+        input_names,
+        output_names,
+        permute_param=dict(
+            order=orders,
         ),
     )
 

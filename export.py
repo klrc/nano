@@ -59,10 +59,8 @@ def switch_to_xnnc_layer(proto_path, output_names):
         layer.append(f'  bottom: "{output_name}"\n')
     layer.append('  top: "detection_out"\n')
     layer.append("  cpp_custom_param {\n")
-    layer.append('    module: "XnncMobiYoloOutputLayer"\n')
-    layer.append(
-        '    param_map_str: "num_classes:3 share_location:1 background_label_id:0 nms_threshold:0.45 top_k:400 keep_top_k:200 confidence_threshold:0.25"\n'
-    )
+    layer.append('    module: "yoloxpp"\n')
+    layer.append('    param_map_str: ""\n')
     layer.append("  }\n")
     layer.append("}\n")
     layers.append(layer)
@@ -127,9 +125,9 @@ def export(
 
 if __name__ == "__main__":
     # model setup
-    model = nano.models.yolox_esmk_shrink_l(num_classes=3).dsp()
-    model.load_state_dict(torch.load("runs/train/exp159/weights/best.pt", map_location="cpu")["state_dict"])
-    model_stamp = "yolox-esmk-2.23-l"
+    model = nano.models.yolox_esmk_shrink(num_classes=3).dsp()
+    model.load_state_dict(torch.load("runs/train/exp161/weights/best.pt", map_location="cpu")["state_dict"])
+    model_stamp = "yolox-esmk-2.25"
     output_names = ["output_1", "output_2", "output_3"]
     class_names = ["person", "bike", "car"]
 

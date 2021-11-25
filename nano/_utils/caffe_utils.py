@@ -263,6 +263,20 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
                         output_names,
                     )._to_proto()
                 )
+        elif node.op_type == "Transpose":
+            node_name = node.name
+            input_names = [str(node.input[0])]
+            output_names = [str(node.output[0])]
+            blob_channels[output_names[0]] = blob_channels[input_names[0]]
+            perm = attrs["perm"]
+            caffe_layers.append(
+                operators.permute(
+                    node_name,
+                    input_names,
+                    output_names,
+                    perm,
+                )._to_proto()
+            )
         elif node.op_type == "Resize":
             node_name = node.name
             input_names = [str(node.input[0])]

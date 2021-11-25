@@ -69,8 +69,8 @@ def detection_post_process(preds, anchors, strides, num_classes, conf_thres, iou
     anchors = torch.tensor(anchors).view(len(strides), 1, 1, 1, 2)
     for i, pred in enumerate(preds):  # predictions with different scales
         y = pred.sigmoid()
-        y = y.permute(0, 2, 3, 1)
-        bs, _, ny, nx = pred.shape
+        # y = y.permute(0, 2, 3, 1)
+        bs, ny, nx, _ = pred.shape
         yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
         grid = torch.stack((xv, yv), 2).view((1, ny, nx, 2)).float()
         y[..., 0:2] = (y[..., 0:2] * 2.0 - 0.5 + grid) * strides[i]  # x, y
@@ -202,8 +202,8 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
 if __name__ == "__main__":
 
     def acquire_model():
-        model = nano.models.yolox_esmk_shrink_l(num_classes=3)
-        model.load_state_dict(torch.load("release/yolox-esmk-2.23-l/yolox-esmk-2.23.pt", map_location="cpu"))
+        model = nano.models.yolox_esmk_shrink(num_classes=3)
+        model.load_state_dict(torch.load("release/yolox-esmk-2.25/yolox-esmk.pt", map_location="cpu"))
         model.dsp()
         return model
 

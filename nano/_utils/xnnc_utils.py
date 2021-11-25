@@ -101,9 +101,26 @@ def custom_layer_test():
         s.exec_run("python3 ../../Scripts/xnnc.py --keep --config_file cadenceNet.cfg", stream=True)
 
 
+def yolox_test():
+    with docker_shell(root="/xnnc/Example/yolox-series") as s:
+        for custom_layer in ['yoloxpp',]:
+            s.exec_run(f"rm layers/{custom_layer}/CMakeCache.txt", stream=True)
+            s.exec_run(f"rm -r layers/{custom_layer}/CMakeFiles", stream=True)
+            s.exec_run(f"rm layers/{custom_layer}/Makefile", stream=True)
+            s.exec_run(f"rm layers/{custom_layer}/lib{custom_layer}.so", stream=True)
+            s.exec_run(f"rm layers/{custom_layer}/cmake_install.cmake", stream=True)
+            s.exec_run(f"rm layers/{custom_layer}/install_manifest.txt", stream=True)
+            s.exec_run(f"rm ./lib{custom_layer}.so", stream=True)
+            s.exec_run(f"cmake layers/{custom_layer}/CMakeLists.txt", stream=True)
+            s.exec_run(f"make -C layers/{custom_layer}", stream=True)
+            s.exec_run(f'cp layers/{custom_layer}/lib{custom_layer}.so ./', stream=True)
+            s.exec_run(f"make install -C layers/{custom_layer}", stream=True)
+        s.exec_run("python3 ../../Scripts/xnnc.py --keep --config_file yolox.cfg", stream=True)
+
 
 if __name__ == "__main__":
     # demo_cadencenet_test()
     # demo_resnet50_test()
-    yolov5_test()
+    # yolov5_test()
     # custom_layer_test()
+    yolox_test()
