@@ -4,6 +4,6 @@
 __pycache__
 runs
 nano/_utils/xnnc
-!.nano/_utils/xnnc/Example/yolox-series/layers
-!.nano/_utils/xnnc/Example/yolox-series/yolox.cfg
-!.nano/_utils/xnnc/Example/yolox-series/model
+!nano/_utils/xnnc/Example/yolox-series/layers
+!nano/_utils/xnnc/Example/yolox-series/yolox.cfg
+!nano/_utils/xnnc/Example/yolox-series/model
