@@ -1,5 +1,6 @@
 # YOLOv5 dataset utils and dataloaders
 
+from enum import auto
 import glob
 import hashlib
 import json
@@ -247,7 +248,7 @@ class LoadImages:  # for inference
             print(f"image {self.count}/{self.nf} {path}: ", end="")
 
         # Padded resize
-        img = letterbox(img0, self.img_size, stride=self.stride)[0]
+        img = letterbox(img0, self.img_size, stride=self.stride, auto=False)[0]
 
         # Convert
         img = img.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
