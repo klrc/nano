@@ -127,7 +127,7 @@ if __name__ == "__main__":
     # model setup
     model = nano.models.yolox_esmk_shrink(num_classes=3).dsp()
     model.load_state_dict(torch.load("runs/train/exp161/weights/best.pt", map_location="cpu")["state_dict"])
-    model_stamp = "yolox-esmk-2.25"
+    model_stamp = "yolox-esmk-2.26"
     output_names = ["output_1", "output_2", "output_3"]
     class_names = ["person", "bike", "car"]
 
@@ -138,3 +138,9 @@ if __name__ == "__main__":
         class_names=class_names,
         force=True,
     )
+
+    # optional
+    os.system("rm nano/_utils/xnnc/Example/yolox-series/model/*.prototxt")
+    os.system("rm nano/_utils/xnnc/Example/yolox-series/model/*.caffemodel")
+    os.system(f"cp release/{model_stamp}/*-custom.prototxt nano/_utils/xnnc/Example/yolox-series/model/")
+    os.system(f"cp release/{model_stamp}/*.caffemodel nano/_utils/xnnc/Example/yolox-series/model/")

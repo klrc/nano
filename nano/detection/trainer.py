@@ -230,7 +230,8 @@ def train(model, ckpt, hyp, opt, device, logger):
         f"Logging results to {colorstr('bold', save_dir)}\n"
         f"Starting training for {epochs} epochs..."
     )
-    for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
+
+    for epoch in range(start_epoch, start_epoch + epochs):  # epoch ------------------------------------------------------------------
         model.train()
 
         # Update image weights (optional, single-GPU only)
@@ -301,7 +302,7 @@ def train(model, ckpt, hyp, opt, device, logger):
                 mem = f"{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G"  # (GB)
                 pbar.set_description(
                     ("%10s" * 2 + "%10.4g" * 5)
-                    % (f"{epoch}/{epochs - 1}", mem, *mloss, targets.shape[0], imgs.shape[-1])
+                    % (f"{epoch}/{start_epoch + epochs - 1}", mem, *mloss, targets.shape[0], imgs.shape[-1])
                 )
 
             # end batch ------------------------------------------------------------------------------------------------
@@ -313,7 +314,7 @@ def train(model, ckpt, hyp, opt, device, logger):
         if RANK in [-1, 0]:
             # mAP
             ema.update_attr(model, include=["yaml", "nc", "hyp", "names", "stride", "class_weights"])
-            final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
+            final_epoch = (epoch + 1 == start_epoch + epochs) or stopper.possible_stop
             if not noval or final_epoch:  # Calculate mAP
                 results, val_loss, maps, _ = evaluator.run(
                     model=ema.ema,
@@ -382,7 +383,7 @@ def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", type=str, default=ROOT / "configs/coco128.yaml", help="dataset.yaml path")
     parser.add_argument("--hyp", type=str, default=ROOT / "configs/hyps/hyp.scratch.yaml", help="hyperparameters path")
-    parser.add_argument("--epochs", type=int, default=1000)
+    parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--ckpt", type=str, default="", help="checkpoint file path")
     parser.add_argument("--load-optimizer", action="store_true", help="load optimizer.state_dict from ckpt if true")
     parser.add_argument("--batch-size", type=int, default=32, help="total batch size for all GPUs")
