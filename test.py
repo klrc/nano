@@ -3,13 +3,13 @@ import nano
 import yaml
 from nano.detection import CaffeWrapper, evaluator
 
-# load from pytorch
+# load from pytorch -----------------------------
 # model = nano.models.yolox_esmk_shrink(num_classes=3)
 # model.load_state_dict(torch.load("release/yolox-esmk-2.17-test/yolox-esmk.pt", map_location="cpu"))
 # model.names = ["person", "bike", "car"]
 # imgsz = 416
 
-# load from caffe
+# load from caffe -----------------------------
 root = "release/yolox-esmk-2.26"
 model_stamp = root.split("/")[-1]
 model_name = "-".join(model_stamp.split("-")[:-1])

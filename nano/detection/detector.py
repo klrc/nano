@@ -134,7 +134,7 @@ def detect(model, opt, device):
 
             # Inference
             # visualize = increment_path(save_dir / Path(path).stem, mkdir=True) if visualize else False
-            pred = model.inference(img)[0]
+            pred = model(img)[0]
 
             t3 = time_sync()
             dt[1] += t3 - t2

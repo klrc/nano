@@ -119,7 +119,7 @@ def eval(model, opt, device):
         dt[0] += t2 - t1
 
         # Run model
-        out, train_out = model.inference(img)  # inference and training outputs
+        out, train_out = model(img)  # inference and training outputs
         dt[1] += time_sync() - t2
 
         # Compute loss

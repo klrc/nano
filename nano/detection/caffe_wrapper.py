@@ -39,10 +39,6 @@ class CaffeWrapper(nn.Module):
         print("Warning: caffe model does not support weight casting, ignored.")
         return
 
-    def eval(self):
-        # exported caffe model should always work in eval mode.
-        return
-
     def to(self, device):
         # cpu only for caffe.
         return
@@ -51,25 +47,34 @@ class CaffeWrapper(nn.Module):
         # cpu only for caffe.
         return
 
-    def inference(self, img):
+    def forward(self, img):
         # inference with yolov5-formatted output
         # input: processed image as shape (n, c, h, w)
         # returns: out, training_out
         self.model.blobs["input"].data[...] = img  # images, data
         out = self.model.forward()
         x = [out[output_name] for output_name in self.output_names]
-        preds = [torch.tensor(xi) for xi in x]
         z = []
-        for i, pred in enumerate(preds):  # predictions with different scales
-            y = pred.sigmoid()
-            # y = y.permute(0, 2, 3, 1)
-            bs, ny, nx, _ = pred.shape
-            yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
-            grid = torch.stack((xv, yv), 2).view((1, ny, nx, 2)).float()
-            y[..., 0:2] = (y[..., 0:2] * 2.0 - 0.5 + grid) * self.stride[i]  # x, y
-            y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # w, h
-            z.append(y.view(bs, -1, self.no))
-        return torch.cat(z, 1), x
+        for i in range(self.nl):
+            # reshape
+            bs, _, ny, nx = x[i].shape
+            x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+            if not self.training:
+                # make grid
+                if self.grid[i].shape[2:4] != x[i].shape[2:4]:
+                    yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
+                    self.grid[i] = torch.stack((xv, yv), 2).view((1, 1, ny, nx, 2)).float().to(x[i].device)
+                # normalize and get xywh
+                y = x[i].sigmoid()
+                y[..., 0:2] = (y[..., 0:2] * 2.0 - 0.5 + self.grid[i]) * self.stride[i]  # xy
+                y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+                z.append(y.view(bs, -1, self.no))
+        if self.training:
+            return x
+        else:
+            return torch.cat(z, 1), x
+
+
 
 
 if __name__ == "__main__":
@@ -82,7 +87,7 @@ if __name__ == "__main__":
         anchors=[[10.875, 14.921875], [31.1875, 53.28125], [143.0, 157.5]],
     )
     x = torch.rand(1, 3, 224, 416)
-    out, train_out = model.inference(x)
+    out, train_out = model(x)
     print(out.shape)
     for p in train_out:
         print(p.shape)

@@ -255,46 +255,33 @@ class DetectHead(nn.Module):
         a = torch.tensor(anchors).float().view(self.nl, -1, 2)
         self.register_buffer("anchors", a)  # shape(nl,na,2)
         self.register_buffer("anchor_grid", a.clone().view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
-        self.mode = "normal"
+        self.mode_dsp_off = True
         self.m = nn.ModuleList(
             DecoupledHead(in_channels, mid_channels, num_classes) for _ in range(self.nl)
         )  # output conv
 
-    @staticmethod
-    def _make_grid(nx, ny):
-        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
-        return torch.stack((xv, yv), 2).view((1, 1, ny, nx, 2)).float()
-
     def forward(self, x):
-        for i in range(self.nl):
-            x[i] = self.m[i](x[i])
-            bs, _, ny, nx = x[i].shape
-            x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
-        return x
-
-    def inference(self, x):
         z = []
         for i in range(self.nl):
             x[i] = self.m[i](x[i])
-            bs, _, ny, nx = x[i].shape
-            x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
-            if self.grid[i].shape[2:4] != x[i].shape[2:4]:
-                self.grid[i] = self._make_grid(nx, ny).to(x[i].device)
-            y = x[i].sigmoid()
-            y[..., 0:2] = (y[..., 0:2] * 2.0 - 0.5 + self.grid[i]) * self.stride[i]  # xy
-            y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
-            z.append(y.view(bs, -1, self.no))
-        return torch.cat(z, 1), x
-
-    def dforward(self, x):
-        for i in range(self.nl):
-            x[i] = self.m[i](x[i])
-            x[i] = x[i].permute(0, 2, 3, 1).contiguous()
-        return x
-
-    def dsp(self):
-        self.forward = self.dforward
-        return self
+            if self.mode_dsp_off:
+                # reshape
+                bs, _, ny, nx = x[i].shape
+                x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+                if not self.training:
+                    # make grid
+                    if self.grid[i].shape[2:4] != x[i].shape[2:4]:
+                        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
+                        self.grid[i] = torch.stack((xv, yv), 2).view((1, 1, ny, nx, 2)).float().to(x[i].device)
+                    # normalize and get xywh
+                    y = x[i].sigmoid()
+                    y[..., 0:2] = (y[..., 0:2] * 2.0 - 0.5 + self.grid[i]) * self.stride[i]  # xy
+                    y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+                    z.append(y.view(bs, -1, self.no))
+        if self.training:
+            return x
+        else:
+            return torch.cat(z, 1), x
 
 
 # Full detection model
@@ -310,16 +297,6 @@ class YoloxShuffleNetES(nn.Module):
         x = self.neck(x)
         x = self.head(x)
         return x
-
-    def inference(self, x):
-        x = self.backbone(x)
-        x = self.neck(x)
-        x = self.head.inference(x)
-        return x
-
-    def dsp(self):
-        self.head.dsp()
-        return self
 
 
 def yolox_esmk_shrink(num_classes):
@@ -345,6 +322,5 @@ def yolox_esmk_shrink_l(num_classes):
 if __name__ == "__main__":
     model = yolox_esmk_shrink_l(num_classes=3)
     # model.load_state_dict(torch.load("./best.pt", map_location="cpu")["state_dict"])
-    model.dsp()
     for y in model(torch.rand(4, 3, 224, 416)):
         print(y.shape)

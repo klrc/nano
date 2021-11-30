@@ -63,41 +63,18 @@ def detection_nms(preds, conf_thres, iou_thres, max_nms=30000):
     return [results[i] for i in keeped_targets]
 
 
-def detection_post_process(preds, anchors, strides, num_classes, conf_thres, iou_thres):
-    # reshape outputs
-    results = []
-    anchors = torch.tensor(anchors).view(len(strides), 1, 1, 1, 2)
-    for i, pred in enumerate(preds):  # predictions with different scales
-        y = pred.sigmoid()
-        # y = y.permute(0, 2, 3, 1)
-        bs, ny, nx, _ = pred.shape
-        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
-        grid = torch.stack((xv, yv), 2).view((1, ny, nx, 2)).float()
-        y[..., 0:2] = (y[..., 0:2] * 2.0 - 0.5 + grid) * strides[i]  # x, y
-        y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * anchors[i]  # w, h
-        results.append(y.view(bs, -1, num_classes + 5))
-    results = torch.cat(results, 1)
-    results = results.squeeze(0)
-    results = detection_nms(results, conf_thres, iou_thres)
-    return results
-
-
 def detection(conf_thres, iou_thres, device, capture_queue, bbox_queue):
     model = acquire_model()
     model.eval().to(device)
     print("> model online.")
-    anchors = list(model.head.anchor_grid.flatten().numpy())
-    strides = list(model.head.stride.numpy())
-    num_classes = model.head.nc
     transforms = T.Compose([T.ToPILImage(), T.Resize((224, 416)), T.ToTensor()])
     while True:
         if not capture_queue.empty():
             frame = capture_queue.get()
             # process image
             x = transforms(frame)
-            results = model(x.unsqueeze(0).to(device))
-            results = [x.cpu() for x in results]
-            results = detection_post_process(results, anchors, strides, num_classes, conf_thres, iou_thres)
+            results = model(x.unsqueeze(0).to(device))[0].squeeze(0)
+            results = detection_nms(results, conf_thres, iou_thres)
             results = [[float(xi) for xi in x] for x in results]
             bbox_queue.put(results)
             # print(f'\r> {len(results)} objects detected.', end='')
@@ -204,7 +181,6 @@ if __name__ == "__main__":
     def acquire_model():
         model = nano.models.yolox_esmk_shrink(num_classes=3)
         model.load_state_dict(torch.load("release/yolox-esmk-2.25/yolox-esmk.pt", map_location="cpu"))
-        model.dsp()
         return model
 
     test_front_camera(
