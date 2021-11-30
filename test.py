@@ -36,6 +36,7 @@ from nano.detection import CaffeWrapper, evaluator
 # imgsz = 416
 
 model = ...
+imgsz = ...
 
 evaluator = nano.detection.evaluator
 evaluator.run(
