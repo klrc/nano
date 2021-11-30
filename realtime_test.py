@@ -179,9 +179,7 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
 if __name__ == "__main__":
 
     def acquire_model():
-        model = nano.models.yolox_esmk_shrink(num_classes=3)
-        model.load_state_dict(torch.load("release/yolox-esmk-2.25/yolox-esmk.pt", map_location="cpu"))
-        return model
+        return ...
 
     test_front_camera(
         conf_thres=0.15,
