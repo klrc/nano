@@ -126,7 +126,7 @@ def export(
 if __name__ == "__main__":
     # model setup
     model = ...
-    model_stamp = "yolox-esmk-2.26"
+    model_stamp = "yolov5-mv2-1.30"
     output_names = ["output_1", "output_2", "output_3"]
     class_names = ["person", "bike", "car"]
 
