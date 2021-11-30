@@ -1,1 +1,1 @@
-from .yolox import yolox_esmk_shrink, yolox_esmk_shrink_l
+from .yolomk import mobilenet_v2_cspp_yolov5

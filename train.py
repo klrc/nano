@@ -2,7 +2,7 @@ import nano
 
 
 # model setup
-model = ...
+model = nano.models.mobilenet_v2_cspp_yolov5(num_classes=3)
 trainer = nano.detection.trainer
 
 # speed-run
@@ -34,6 +34,6 @@ ckpt = trainer.run(
     ckpt=ckpt,
     load_optimizer=False,
     hyp="configs/hyp.finetune-nomosaic.yaml",
-    patience=8,
+    patience=4,
     imgsz=416,
 )

@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 __default_norm = nn.BatchNorm2d
-__default_activation = nn.LeakyReLU
+__default_activation = nn.ReLU6
 
 
 # initialize parameters
@@ -70,6 +70,80 @@ def depthwise_conv(in_channels, kernel_size, stride, norm=__default_norm, act=__
         norm=norm,
         act=act,
     )
+
+
+# MobileNetv2 Implementation ------------------------
+# https://zhuanlan.zhihu.com/p/98874284
+
+
+class Mv2Type1(nn.Module):
+    def __init__(self, in_channels, out_channels, expand_ratio):
+        super().__init__()
+        self.pw_1 = pointwise_conv(in_channels, in_channels * expand_ratio)
+        self.dw = depthwise_conv(in_channels * expand_ratio, 3, 1)
+        self.pw_2 = pointwise_conv(in_channels * expand_ratio, out_channels, act=None)
+        self.use_res_connect = in_channels == out_channels
+
+    def forward(self, x):
+        identity = x
+        x = self.pw_1(x)
+        x = self.dw(x)
+        x = self.pw_2(x)
+        if self.use_res_connect:
+            x += identity
+        return x
+
+
+class Mv2Type2(nn.Module):
+    def __init__(self, in_channels, out_channels, expand_ratio):
+        super().__init__()
+        self.pw_1 = pointwise_conv(in_channels, in_channels * expand_ratio)
+        self.dw = depthwise_conv(in_channels * expand_ratio, 3, 2)
+        self.pw_2 = pointwise_conv(in_channels * expand_ratio, out_channels, act=None)
+
+    def forward(self, x):
+        x = self.pw_1(x)
+        x = self.dw(x)
+        x = self.pw_2(x)
+        return x
+
+
+class MobileNetv2(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.feature_s1 = nn.Sequential(
+            nn.Sequential(nn.Conv2d(3, 16, 3, 2, bias=False), nn.BatchNorm2d(16), nn.ReLU6()),
+            Mv2Type1(16, 16, 1),  # -
+            Mv2Type2(16, 24, 6),  # -
+            Mv2Type1(24, 24, 6),
+            Mv2Type2(24, 40, 6),  # -
+            Mv2Type1(40, 40, 6),
+            Mv2Type1(40, 40, 6),
+        )
+        self.feature_s2 = nn.Sequential(
+            Mv2Type2(40, 64, 6),  # -
+            Mv2Type1(64, 64, 6),
+            Mv2Type1(64, 64, 6),
+            Mv2Type1(64, 64, 6),
+            Mv2Type1(64, 80, 6),  # -
+            Mv2Type1(80, 80, 6),
+            Mv2Type1(80, 80, 6),
+        )
+        self.feature_s3 = nn.Sequential(
+            Mv2Type2(80, 160, 6),  # -
+            Mv2Type1(160, 160, 6),
+            Mv2Type1(160, 160, 6),
+            Mv2Type1(160, 160, 6),  # -
+        )
+
+    def forward(self, x):
+        fs1 = self.feature_s1(x)
+        fs2 = self.feature_s2(fs1)
+        fs3 = self.feature_s3(fs2)
+        return [fs1, fs2, fs3]
+
+
+# ---------------------------------------------------
 
 
 # Inverted Residual module
@@ -139,44 +213,6 @@ class CSPBlock(nn.Module):
         return x
 
 
-# Enhanced Shufflenetv2 for backbone
-# Arxiv: https://arxiv.org/pdf/2111.00902.pdf
-class ShufflenetES(nn.Module):
-    # channel_ratio: [0.875, 0.5, 0.5, 0.5, 0.625, 0.5, 0.625, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-    def __init__(self, layer_size):
-        super().__init__()
-        s0, s1, s2, s3 = layer_size
-        self.stem_conv_3x3 = _conv_norm_act(3, s0, 3, 2, 1, 1)
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.stage_1 = nn.Sequential(
-            ESBlockS2(s0, int(s1 * 0.875), s1),
-            InvertedResidual(s1, s1 * 4),
-            InvertedResidual(s1, s1 * 4),
-        )
-        self.stage_2 = nn.Sequential(
-            ESBlockS2(s1, int(s2 * 0.5), s2),
-            InvertedResidual(s2, s2 * 4),
-            InvertedResidual(s2, s2 * 4),
-            InvertedResidual(s2, s2 * 4),
-            InvertedResidual(s2, s2 * 4),
-            InvertedResidual(s2, s2 * 4),
-            InvertedResidual(s2, s2 * 4),
-        )
-        self.stage_3 = nn.Sequential(
-            ESBlockS2(s2, int(s3 * 0.5), s3),
-            InvertedResidual(s3, s3 * 4),
-            InvertedResidual(s3, s3 * 4),
-        )
-
-    def forward(self, x):
-        x = self.stem_conv_3x3(x)
-        x = self.maxpool(x)
-        c3 = self.stage_1(x)
-        c4 = self.stage_2(c3)
-        c5 = self.stage_3(c4)
-        return [c3, c4, c5]
-
-
 # CSPPAN from NanoDet series
 # reference: https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.3/ppdet/modeling/heads/pico_head.py
 class CSPPAN(nn.Module):
@@ -215,36 +251,10 @@ class CSPPAN(nn.Module):
         return [c3, c4, c5]
 
 
-# Decoupled Head from YOLOX
-class DecoupledHead(nn.Module):
-    def __init__(self, in_channels, mid_channels, num_classes):
-        super().__init__()
-        self.squeeze = pointwise_conv(in_channels, mid_channels)
-        self.branch_box = nn.Sequential(
-            depthwise_conv(mid_channels, 5, 1),
-            pointwise_conv(mid_channels, mid_channels),
-            depthwise_conv(mid_channels, 5, 1),
-            pointwise_conv(mid_channels, 4, None, None),
-        )
-        self.branch_cls = nn.Sequential(
-            depthwise_conv(mid_channels, 3, 1),
-            pointwise_conv(mid_channels, mid_channels),
-            depthwise_conv(mid_channels, 3, 1),
-            pointwise_conv(mid_channels, num_classes + 1, None, None),
-        )
-
-    def forward(self, x):
-        x = self.squeeze(x)
-        x1 = self.branch_box(x)
-        x2 = self.branch_cls(x)
-        x = torch.cat((x1, x2), dim=1)  # bbox + (obj + cls)
-        return x
-
-
 # Detection Head modified from yolov5 series
 # Ultralytics version
 class DetectHead(nn.Module):
-    def __init__(self, in_channels, mid_channels, num_classes, anchors):  # detection layer
+    def __init__(self, in_channels, num_classes, anchors):  # detection layer
         super().__init__()
         self.nc = num_classes  # number of classes
         self.no = num_classes + 5  # number of outputs per anchor
@@ -256,9 +266,7 @@ class DetectHead(nn.Module):
         self.register_buffer("anchors", a)  # shape(nl,na,2)
         self.register_buffer("anchor_grid", a.clone().view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
         self.mode_dsp_off = True
-        self.m = nn.ModuleList(
-            DecoupledHead(in_channels, mid_channels, num_classes) for _ in range(self.nl)
-        )  # output conv
+        self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in in_channels)  # output conv
 
     def forward(self, x):
         z = []
@@ -285,12 +293,12 @@ class DetectHead(nn.Module):
 
 
 # Full detection model
-class YoloxShuffleNetES(nn.Module):
-    def __init__(self, num_classes, layer_size, anchors):
+class M2yolov5(nn.Module):
+    def __init__(self, num_classes, anchors):
         super().__init__()
-        self.backbone = ShufflenetES(layer_size=layer_size[:-1])
-        self.neck = CSPPAN(layer_size[1:-1], layer_size[-1])
-        self.head = DetectHead(layer_size[-1], layer_size[-1], num_classes, anchors)
+        self.backbone = MobileNetv2()
+        self.neck = CSPPAN([40, 80, 160], 80)
+        self.head = DetectHead([80, 80, 80], num_classes, anchors)
 
     def forward(self, x):
         x = self.backbone(x)
@@ -299,28 +307,18 @@ class YoloxShuffleNetES(nn.Module):
         return x
 
 
-def yolox_esmk_shrink(num_classes):
-    model = YoloxShuffleNetES(
-        num_classes=num_classes,
-        layer_size=[24, 32, 48, 96, 48],
-        anchors=([11, 14], [30, 46], [143, 130]),
-    )
-    init_parameters(model)
-    return model
-
-
-def yolox_esmk_shrink_l(num_classes):
-    model = YoloxShuffleNetES(
-        num_classes=num_classes,
-        layer_size=[24, 32, 64, 96, 96],
-        anchors=([11, 14], [30, 46], [143, 130]),
-    )
-    init_parameters(model)
-    return model
+def mobilenet_v2_cspp_yolov5(
+    num_classes=3,
+    anchors=(
+        [5, 6, 10, 13, 16, 30, 33, 23],
+        [15, 30, 30, 61, 62, 45, 59, 119],
+        [58, 45, 116, 90, 156, 198, 373, 326],
+    ),
+):
+    return M2yolov5(num_classes=num_classes, anchors=anchors)
 
 
 if __name__ == "__main__":
-    model = yolox_esmk_shrink_l(num_classes=3)
-    # model.load_state_dict(torch.load("./best.pt", map_location="cpu")["state_dict"])
+    model = mobilenet_v2_cspp_yolov5()
     for y in model(torch.rand(4, 3, 224, 416)):
         print(y.shape)

@@ -231,7 +231,9 @@ def train(model, ckpt, hyp, opt, device, logger):
         f"Starting training for {epochs} epochs..."
     )
 
-    for epoch in range(start_epoch, start_epoch + epochs):  # epoch ------------------------------------------------------------------
+    for epoch in range(
+        start_epoch, start_epoch + epochs
+    ):  # epoch ------------------------------------------------------------------
         model.train()
 
         # Update image weights (optional, single-GPU only)
@@ -386,7 +388,7 @@ def parse_opt(known=False):
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--ckpt", type=str, default="", help="checkpoint file path")
     parser.add_argument("--load-optimizer", action="store_true", help="load optimizer.state_dict from ckpt if true")
-    parser.add_argument("--batch-size", type=int, default=32, help="total batch size for all GPUs")
+    parser.add_argument("--batch-size", type=int, default=16, help="total batch size for all GPUs")
     parser.add_argument("--eval-batch-size", type=int, default=32, help="total batch size for all GPUs (evaluator)")
     parser.add_argument("--imgsz", "--img", "--img-size", type=int, default=640, help="train, val image size (pixels)")
     parser.add_argument("--rect", action="store_true", help="rectangular training")
@@ -445,9 +447,11 @@ def main(model, opt, logger):
     return best
 
 
-def run(model, **kwargs):
+def run(model, logger=None, **kwargs):
     opt = parse_opt(True)
     for k, v in kwargs.items():
         setattr(opt, k, v)
     logger = wandb.init(project="nano", dir="./runs")
-    return main(model, opt, logger)
+    ret = main(model, opt, logger)
+    logger.finish()
+    return ret
