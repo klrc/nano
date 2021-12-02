@@ -30,10 +30,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_3_repflag_relu6"
+  name: "Clip_3"
   type: "ReLU"
   bottom: "1069"
   top: "603"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_4"
@@ -54,10 +57,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_7_repflag_relu6"
+  name: "Clip_7"
   type: "ReLU"
   bottom: "1072"
   top: "608"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_8"
@@ -78,10 +84,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_11_repflag_relu6"
+  name: "Clip_11"
   type: "ReLU"
   bottom: "1075"
   top: "613"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_12"
@@ -130,10 +139,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_17_repflag_relu6"
+  name: "Clip_17"
   type: "ReLU"
   bottom: "1081"
   top: "621"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_18"
@@ -154,10 +166,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_21_repflag_relu6"
+  name: "Clip_21"
   type: "ReLU"
   bottom: "1084"
   top: "626"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_22"
@@ -196,10 +211,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_26_repflag_relu6"
+  name: "Clip_26"
   type: "ReLU"
   bottom: "1090"
   top: "633"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_27"
@@ -220,10 +238,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_30_repflag_relu6"
+  name: "Clip_30"
   type: "ReLU"
   bottom: "1093"
   top: "638"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_31"
@@ -272,10 +293,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_36_repflag_relu6"
+  name: "Clip_36"
   type: "ReLU"
   bottom: "1099"
   top: "646"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_37"
@@ -296,10 +320,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_40_repflag_relu6"
+  name: "Clip_40"
   type: "ReLU"
   bottom: "1102"
   top: "651"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_41"
@@ -338,10 +365,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_45_repflag_relu6"
+  name: "Clip_45"
   type: "ReLU"
   bottom: "1108"
   top: "658"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_46"
@@ -362,10 +392,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_49_repflag_relu6"
+  name: "Clip_49"
   type: "ReLU"
   bottom: "1111"
   top: "663"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_50"
@@ -414,10 +447,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_55_repflag_relu6"
+  name: "Clip_55"
   type: "ReLU"
   bottom: "1117"
   top: "671"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_56"
@@ -438,10 +474,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_59_repflag_relu6"
+  name: "Clip_59"
   type: "ReLU"
   bottom: "1120"
   top: "676"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_60"
@@ -490,10 +529,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_65_repflag_relu6"
+  name: "Clip_65"
   type: "ReLU"
   bottom: "1126"
   top: "684"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_66"
@@ -514,10 +556,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_69_repflag_relu6"
+  name: "Clip_69"
   type: "ReLU"
   bottom: "1129"
   top: "689"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_70"
@@ -556,10 +601,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_74_repflag_relu6"
+  name: "Clip_74"
   type: "ReLU"
   bottom: "1135"
   top: "696"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_75"
@@ -580,10 +628,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_78_repflag_relu6"
+  name: "Clip_78"
   type: "ReLU"
   bottom: "1138"
   top: "701"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_79"
@@ -632,10 +683,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_84_repflag_relu6"
+  name: "Clip_84"
   type: "ReLU"
   bottom: "1144"
   top: "709"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_85"
@@ -656,10 +710,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_88_repflag_relu6"
+  name: "Clip_88"
   type: "ReLU"
   bottom: "1147"
   top: "714"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_89"
@@ -708,10 +765,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_94_repflag_relu6"
+  name: "Clip_94"
   type: "ReLU"
   bottom: "1153"
   top: "722"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_95"
@@ -732,10 +792,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_98_repflag_relu6"
+  name: "Clip_98"
   type: "ReLU"
   bottom: "1156"
   top: "727"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_99"
@@ -784,10 +847,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_104_repflag_relu6"
+  name: "Clip_104"
   type: "ReLU"
   bottom: "1162"
   top: "735"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_105"
@@ -808,10 +874,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_108_repflag_relu6"
+  name: "Clip_108"
   type: "ReLU"
   bottom: "1165"
   top: "740"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_109"
@@ -850,10 +919,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_113_repflag_relu6"
+  name: "Clip_113"
   type: "ReLU"
   bottom: "1171"
   top: "747"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_114"
@@ -874,10 +946,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_117_repflag_relu6"
+  name: "Clip_117"
   type: "ReLU"
   bottom: "1174"
   top: "752"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_118"
@@ -926,10 +1001,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_123_repflag_relu6"
+  name: "Clip_123"
   type: "ReLU"
   bottom: "1180"
   top: "760"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_124"
@@ -950,10 +1028,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_127_repflag_relu6"
+  name: "Clip_127"
   type: "ReLU"
   bottom: "1183"
   top: "765"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_128"
@@ -1002,10 +1083,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_133_repflag_relu6"
+  name: "Clip_133"
   type: "ReLU"
   bottom: "1189"
   top: "773"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_134"
@@ -1026,10 +1110,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_137_repflag_relu6"
+  name: "Clip_137"
   type: "ReLU"
   bottom: "1192"
   top: "778"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_138"
@@ -1068,10 +1155,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_142_repflag_relu6"
+  name: "Clip_142"
   type: "ReLU"
   bottom: "1198"
   top: "785"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_143"
@@ -1092,10 +1182,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_146_repflag_relu6"
+  name: "Clip_146"
   type: "ReLU"
   bottom: "1201"
   top: "790"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_147"
@@ -1144,10 +1237,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_152_repflag_relu6"
+  name: "Clip_152"
   type: "ReLU"
   bottom: "1207"
   top: "798"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_153"
@@ -1168,10 +1264,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_156_repflag_relu6"
+  name: "Clip_156"
   type: "ReLU"
   bottom: "1210"
   top: "803"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_157"
@@ -1220,10 +1319,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_162_repflag_relu6"
+  name: "Clip_162"
   type: "ReLU"
   bottom: "1216"
   top: "811"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_163"
@@ -1244,10 +1346,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_166_repflag_relu6"
+  name: "Clip_166"
   type: "ReLU"
   bottom: "1219"
   top: "816"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_167"
@@ -1296,10 +1401,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_172_repflag_relu6"
+  name: "Clip_172"
   type: "ReLU"
   bottom: "1225"
   top: "824"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_173"
@@ -1320,10 +1428,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_176_repflag_relu6"
+  name: "Clip_176"
   type: "ReLU"
   bottom: "1228"
   top: "829"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_177"
@@ -1344,10 +1455,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_180_repflag_relu6"
+  name: "Clip_180"
   type: "ReLU"
   bottom: "1231"
   top: "834"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_181"
@@ -1368,10 +1482,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_184_repflag_relu6"
+  name: "Clip_184"
   type: "ReLU"
   bottom: "1234"
   top: "839"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "_Resize_186"
@@ -1412,10 +1529,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_191_repflag_relu6"
+  name: "Clip_191"
   type: "ReLU"
   bottom: "1237"
   top: "850"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_192"
@@ -1436,10 +1556,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_195_repflag_relu6"
+  name: "Clip_195"
   type: "ReLU"
   bottom: "1240"
   top: "855"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_196"
@@ -1460,10 +1583,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_199_repflag_relu6"
+  name: "Clip_199"
   type: "ReLU"
   bottom: "1243"
   top: "860"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_200"
@@ -1484,10 +1610,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_203_repflag_relu6"
+  name: "Clip_203"
   type: "ReLU"
   bottom: "1246"
   top: "865"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_204"
@@ -1546,10 +1675,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_210_repflag_relu6"
+  name: "Clip_210"
   type: "ReLU"
   bottom: "1252"
   top: "874"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "_Resize_212"
@@ -1590,10 +1722,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_217_repflag_relu6"
+  name: "Clip_217"
   type: "ReLU"
   bottom: "1255"
   top: "885"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_218"
@@ -1614,10 +1749,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_221_repflag_relu6"
+  name: "Clip_221"
   type: "ReLU"
   bottom: "1258"
   top: "890"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_222"
@@ -1638,10 +1776,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_225_repflag_relu6"
+  name: "Clip_225"
   type: "ReLU"
   bottom: "1261"
   top: "895"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_226"
@@ -1662,10 +1803,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_229_repflag_relu6"
+  name: "Clip_229"
   type: "ReLU"
   bottom: "1264"
   top: "900"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_230"
@@ -1724,10 +1868,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_236_repflag_relu6"
+  name: "Clip_236"
   type: "ReLU"
   bottom: "1270"
   top: "909"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "_Resize_238"
@@ -1768,10 +1915,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_243_repflag_relu6"
+  name: "Clip_243"
   type: "ReLU"
   bottom: "1273"
   top: "920"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_244"
@@ -1792,10 +1942,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_247_repflag_relu6"
+  name: "Clip_247"
   type: "ReLU"
   bottom: "1276"
   top: "925"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_248"
@@ -1816,10 +1969,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_251_repflag_relu6"
+  name: "Clip_251"
   type: "ReLU"
   bottom: "1279"
   top: "930"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_252"
@@ -1840,10 +1996,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_255_repflag_relu6"
+  name: "Clip_255"
   type: "ReLU"
   bottom: "1282"
   top: "935"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_256"
@@ -1902,10 +2061,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_262_repflag_relu6"
+  name: "Clip_262"
   type: "ReLU"
   bottom: "1288"
   top: "944"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_263"
@@ -1926,10 +2088,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_266_repflag_relu6"
+  name: "Clip_266"
   type: "ReLU"
   bottom: "1291"
   top: "949"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_267"
@@ -1950,10 +2115,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_270_repflag_relu6"
+  name: "Clip_270"
   type: "ReLU"
   bottom: "1294"
   top: "954"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Concat_271"
@@ -1984,10 +2152,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_275_repflag_relu6"
+  name: "Clip_275"
   type: "ReLU"
   bottom: "1297"
   top: "960"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_276"
@@ -2008,10 +2179,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_279_repflag_relu6"
+  name: "Clip_279"
   type: "ReLU"
   bottom: "1300"
   top: "965"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_280"
@@ -2032,10 +2206,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_283_repflag_relu6"
+  name: "Clip_283"
   type: "ReLU"
   bottom: "1303"
   top: "970"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_284"
@@ -2056,10 +2233,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_287_repflag_relu6"
+  name: "Clip_287"
   type: "ReLU"
   bottom: "1306"
   top: "975"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_288"
@@ -2118,10 +2298,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_294_repflag_relu6"
+  name: "Clip_294"
   type: "ReLU"
   bottom: "1312"
   top: "984"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_295"
@@ -2142,10 +2325,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_298_repflag_relu6"
+  name: "Clip_298"
   type: "ReLU"
   bottom: "1315"
   top: "989"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_299"
@@ -2166,10 +2352,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_302_repflag_relu6"
+  name: "Clip_302"
   type: "ReLU"
   bottom: "1318"
   top: "994"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Concat_303"
@@ -2200,10 +2389,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_307_repflag_relu6"
+  name: "Clip_307"
   type: "ReLU"
   bottom: "1321"
   top: "1000"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_308"
@@ -2224,10 +2416,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_311_repflag_relu6"
+  name: "Clip_311"
   type: "ReLU"
   bottom: "1324"
   top: "1005"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_312"
@@ -2248,10 +2443,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_315_repflag_relu6"
+  name: "Clip_315"
   type: "ReLU"
   bottom: "1327"
   top: "1010"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_316"
@@ -2272,10 +2470,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_319_repflag_relu6"
+  name: "Clip_319"
   type: "ReLU"
   bottom: "1330"
   top: "1015"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_320"
@@ -2334,10 +2535,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_326_repflag_relu6"
+  name: "Clip_326"
   type: "ReLU"
   bottom: "1336"
   top: "1024"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_327"
@@ -2358,10 +2562,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_330_repflag_relu6"
+  name: "Clip_330"
   type: "ReLU"
   bottom: "1339"
   top: "1029"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_331"
@@ -2382,10 +2589,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_334_repflag_relu6"
+  name: "Clip_334"
   type: "ReLU"
   bottom: "1342"
   top: "1034"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Concat_335"
@@ -2416,10 +2626,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_339_repflag_relu6"
+  name: "Clip_339"
   type: "ReLU"
   bottom: "1345"
   top: "1040"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_340"
@@ -2440,10 +2653,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_343_repflag_relu6"
+  name: "Clip_343"
   type: "ReLU"
   bottom: "1348"
   top: "1045"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_344"
@@ -2464,10 +2680,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_347_repflag_relu6"
+  name: "Clip_347"
   type: "ReLU"
   bottom: "1351"
   top: "1050"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_348"
@@ -2488,10 +2707,13 @@ layer {
   }
 }
 layer {
-  name: "Clip_351_repflag_relu6"
+  name: "Clip_351"
   type: "ReLU"
   bottom: "1354"
   top: "1055"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_352"
@@ -2550,16 +2772,19 @@ layer {
   }
 }
 layer {
-  name: "Clip_358_repflag_relu6"
+  name: "Clip_358"
   type: "ReLU"
   bottom: "1360"
   top: "1064"
+  relu_param {
+    relu6_enable: 1
+  }
 }
 layer {
   name: "Conv_359"
   type: "Convolution"
   bottom: "944"
-  top: "output_1"
+  top: "fs0"
   convolution_param {
     num_output: 24
     bias_term: true
@@ -2577,7 +2802,7 @@ layer {
   name: "Conv_360"
   type: "Convolution"
   bottom: "984"
-  top: "output_2"
+  top: "fs1"
   convolution_param {
     num_output: 24
     bias_term: true
@@ -2595,7 +2820,7 @@ layer {
   name: "Conv_361"
   type: "Convolution"
   bottom: "1024"
-  top: "output_3"
+  top: "fs2"
   convolution_param {
     num_output: 24
     bias_term: true
@@ -2613,7 +2838,7 @@ layer {
   name: "Conv_362"
   type: "Convolution"
   bottom: "1064"
-  top: "1068"
+  top: "fs3"
   convolution_param {
     num_output: 24
     bias_term: true
@@ -2630,9 +2855,10 @@ layer {
 layer {
   name: "detection_out"
   type: "CppCustom"
-  bottom: "output_1"
-  bottom: "output_2"
-  bottom: "output_3"
+  bottom: "fs0"
+  bottom: "fs1"
+  bottom: "fs2"
+  bottom: "fs3"
   top: "detection_out"
   cpp_custom_param {
     module: "yoloxpp"

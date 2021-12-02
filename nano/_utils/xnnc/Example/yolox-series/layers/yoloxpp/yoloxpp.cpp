@@ -13,10 +13,16 @@ using namespace std;
 #define IOU_THRESH 0.45
 #define MAX_NMS 30000  // maximum number of boxes into torchvision.ops.nms()
 #define FEATURE_STAGES 4
+#define NUM_ANCHOR_TYPES 3
+#define NUM_CLASSES 3
 #define MAX_DETECTIONS 300
 #define INPUT_HEIGHT 224
 #define INPUT_WIDTH 416
-#define CURSOR(i, h, w, max_stack, k) hw*(max_stack * i + k)
+
+// find index in a tensor with (Anc, Attrs, H, W) shape
+// returns t * Attrs*H*W + k * H*W + h * W + w
+// also performs sigmoid() func on outputs
+#define SIGMOID_MEM(k) sigmoid(input_memory[((t * (5 + NUM_CLASSES) + k) * IN_H + h) * IN_W + w])
 
 typedef struct BoundingBox {
     float x1;
@@ -31,12 +37,6 @@ bool cmp_bbox(BoundingBox& a, BoundingBox& b) {
     return a.score > b.score;  // descending order
 }
 
-inline float clip(float x, float _min, float _max) {
-    if (x < _min) return _min;
-    if (x > _max) return _max;
-    return x;
-}
-
 inline float fast_exp(float x) {
     union Data {
         uint32_t i;
@@ -49,6 +49,12 @@ inline float fast_exp(float x) {
 
 inline float sigmoid(float x) {
     return 1.0f / (1.0f + fast_exp(-x));
+}
+
+inline float clip(float x, float _min, float _max) {
+    if (x < _min) return _min;
+    if (x > _max) return _max;
+    return x;
 }
 
 inline float detection_iou(const BoundingBox box1, const BoundingBox box2) {
@@ -96,34 +102,35 @@ void post_process(const std::vector<Tensor<float>*>& inputs, const std::vector<T
         const int IN_D = inputs[i]->getDepth();
         const int IN_H = inputs[i]->getHeight();
         const int IN_W = inputs[i]->getWidth();
-        const int MAX_STACK = IN_D / FEATURE_STAGES;
+        // for any anchor in data
         for (int h = 0; h < IN_H; h++) {
             for (int w = 0; w < IN_W; w++) {
-                // get object score & class score
-                cls_stack.clear();
-                for (int li = 5; li < MAX_STACK; li++) {
-                    int cursor = CURSOR(i, IN_H, IN_W, MAX_STACK, li);
-                    cls_stack.push_back(input_memory[li]);
-                }
-                int label = max_element(cls_stack.begin(), cls_stack.end()) - cls_stack.begin();  // 0, 1, 2, ...
-                float cls_score = sigmoid(cls_stack[label]);
-                float obj_score = sigmoid(input_memory[cursor + 4]);
-                if (obj_score * cls_score > CONFIDENCE_THRESH) {
-                    // get real-size x, y, w, h, class label, class score
-                    float _cx = (sigmoid(input_memory[cursor + 0]) * 2.0 - 0.5 + w) * strides[i];
-                    float _cy = (sigmoid(input_memory[cursor + 1]) * 2.0 - 0.5 + h) * strides[i];
-                    float _cw = pow(sigmoid(input_memory[cursor + 2]) * 2, 2) * anchors[2 * i];
-                    float _ch = pow(sigmoid(input_memory[cursor + 3]) * 2, 2) * anchors[2 * i + 1];
-                    // Box (center x, center y, width, height) to (x1, y1, x2, y2)
-                    BoundingBox obj;
-                    obj.x1 = clip((_cx - _cw / 2.0) / INPUT_WIDTH, 0, 1);
-                    obj.y1 = clip((_cy - _ch / 2.0) / INPUT_HEIGHT, 0, 1);
-                    obj.x2 = clip((_cx + _cw / 2.0) / INPUT_WIDTH, 0, 1);
-                    obj.y2 = clip((_cy + _ch / 2.0) / INPUT_HEIGHT, 0, 1);
-                    obj.score = obj_score;
-                    obj.label = label;
-                    results.push_back(obj);
-                    // printf("> %d, %f, %f, %f, %f, %f \n", obj.label, obj.x1, obj.y1, obj.x2, obj.y2, obj.score);
+                for (int t = 0; t < NUM_ANCHOR_TYPES; t++) {
+                    // get object score & class score
+                    cls_stack.clear();
+                    for (int li = 5; li < 5 + NUM_CLASSES; li++) {
+                        cls_stack.push_back(SIGMOID_MEM(li));
+                    }
+                    int label = max_element(cls_stack.begin(), cls_stack.end()) - cls_stack.begin();  // 0, 1, 2, ...
+                    float cls_score = cls_stack[label];
+                    float obj_score = SIGMOID_MEM(4);
+                    if (obj_score > CONFIDENCE_THRESH) {
+                        // get real-size x, y, w, h, class label, class score
+                        float _cx = (SIGMOID_MEM(0) * 2.0 - 0.5 + w) * strides[i];
+                        float _cy = (SIGMOID_MEM(1) * 2.0 - 0.5 + h) * strides[i];
+                        float _cw = pow(SIGMOID_MEM(2) * 2.0, 2) * anchors[(i * NUM_ANCHOR_TYPES + t) * 2];
+                        float _ch = pow(SIGMOID_MEM(3) * 2.0, 2) * anchors[(i * NUM_ANCHOR_TYPES + t) * 2 + 1];
+                        // Box (center x, center y, width, height) to (x1, y1, x2, y2)
+                        BoundingBox obj;
+                        obj.x1 = clip((_cx - _cw / 2.0) / INPUT_WIDTH, 0, 1);
+                        obj.y1 = clip((_cy - _ch / 2.0) / INPUT_HEIGHT, 0, 1);
+                        obj.x2 = clip((_cx + _cw / 2.0) / INPUT_WIDTH, 0, 1);
+                        obj.y2 = clip((_cy + _ch / 2.0) / INPUT_HEIGHT, 0, 1);
+                        obj.score = obj_score * cls_score;
+                        obj.label = label;
+                        results.push_back(obj);
+                        // printf("> %d, %f, %f, %f, %f, %f \n", obj.label, obj.x1, obj.y1, obj.x2, obj.y2, obj.score);
+                    }
                 }
             }
         }
@@ -178,6 +185,7 @@ class YOLOXPostProcessLayer : public CppCustomLayer {
 
     virtual void getCfunctionDescr(CFunctionDescr& descr) {
         descr.setName("xi_yoloxpp");
+        descr.addInputLayout(MEMORY_LAYOUT_XI_WHDN);
         descr.addInputLayout(MEMORY_LAYOUT_XI_WHDN);
         descr.addInputLayout(MEMORY_LAYOUT_XI_WHDN);
         descr.addInputLayout(MEMORY_LAYOUT_XI_WHDN);

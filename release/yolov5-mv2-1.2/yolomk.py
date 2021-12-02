@@ -340,6 +340,8 @@ def mobilenet_v2_cspp_yolov5(
 
 if __name__ == "__main__":
     model = mobilenet_v2_cspp_yolov5()
+    model.head.mode_dsp_off = False
     model.eval()
-    a, b = model(torch.rand(4, 3, 224, 416))
-    print(a.shape)
+    pred = model(torch.rand(4, 3, 224, 416))
+    for y in pred:
+        print(y.shape)

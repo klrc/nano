@@ -2589,7 +2589,7 @@ layer {
   name: "Conv_359"
   type: "Convolution"
   bottom: "944"
-  top: "output_1"
+  top: "fs0"
   convolution_param {
     num_output: 24
     bias_term: true
@@ -2607,7 +2607,7 @@ layer {
   name: "Conv_360"
   type: "Convolution"
   bottom: "984"
-  top: "output_2"
+  top: "fs1"
   convolution_param {
     num_output: 24
     bias_term: true
@@ -2625,7 +2625,7 @@ layer {
   name: "Conv_361"
   type: "Convolution"
   bottom: "1024"
-  top: "output_3"
+  top: "fs2"
   convolution_param {
     num_output: 24
     bias_term: true
@@ -2643,7 +2643,7 @@ layer {
   name: "Conv_362"
   type: "Convolution"
   bottom: "1064"
-  top: "1068"
+  top: "fs3"
   convolution_param {
     num_output: 24
     bias_term: true

@@ -40,9 +40,13 @@ def switch_to_xnnc_layer(proto_path, output_names):
             current_layer.append(line)
         layers.append(current_layer)
     for layer in layers:
-        if "_replaceflag_relu6" in layer[2]:
-            layer[2] = layer[2].replace("_replaceflag_relu6", "")
-            layer.append("relu6_enable: 1")
+        if "_repflag_relu6" in layer[1]:
+            layer[1] = layer[1].replace("_repflag_relu6", "")
+            end_closure = layer.pop(-1)
+            layer.append("  relu_param {\n")
+            layer.append("    relu6_enable: 1\n")
+            layer.append("  }\n")
+            layer.append(end_closure)
         elif "Deconvolution" in layer[2]:  # style
             layer[1] = layer[1].replace('name: "', 'name: "_')  # change name for param issue
             layer[2] = layer[2].replace("Deconvolution", "CppCustom")
@@ -129,10 +133,10 @@ def export(
 if __name__ == "__main__":
     # model setup
     model = nano.models.mobilenet_v2_cspp_yolov5()
-    model.load_state_dict(torch.load("runs/train/exp175/weights/best.pt", map_location="cpu")["state_dict"])
+    model.load_state_dict(torch.load("runs/train/exp177/weights/best.pt", map_location="cpu")["state_dict"])
     model.head.mode_dsp_off = False
     model_stamp = "yolov5-mv2-1.2"
-    output_names = ["output_1", "output_2", "output_3"]
+    output_names = ["fs0", "fs1", "fs2", "fs3"]
     class_names = ["person", "bike", "car"]
 
     export(
