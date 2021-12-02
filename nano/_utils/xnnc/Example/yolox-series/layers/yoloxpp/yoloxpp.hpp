@@ -1,5 +1,5 @@
-#ifndef XNNC_MISH_LAYER_HPP_
-#define XNNC_MISH_LAYER_HPP_
+#ifndef XNNC_YOLOXPP_HPP_
+#define XNNC_YOLOXPP_HPP_
 
 #include <cstddef>
 #include <string>
