@@ -111,11 +111,13 @@ class Mv2Type2(nn.Module):
 class MobileNetv2(nn.Module):
     def __init__(self):
         super().__init__()
-        self.feature_s1 = nn.Sequential(
+        self.feature_s0 = nn.Sequential(
             nn.Sequential(nn.Conv2d(3, 16, 3, 2, bias=False), nn.BatchNorm2d(16), nn.ReLU6()),
             Mv2Type1(16, 16, 1),  # -
             Mv2Type2(16, 24, 6),  # -
             Mv2Type1(24, 24, 6),
+        )
+        self.feature_s1 = nn.Sequential(
             Mv2Type2(24, 40, 6),  # -
             Mv2Type1(40, 40, 6),
             Mv2Type1(40, 40, 6),
@@ -137,10 +139,11 @@ class MobileNetv2(nn.Module):
         )
 
     def forward(self, x):
-        fs1 = self.feature_s1(x)
+        fs0 = self.feature_s0(x)
+        fs1 = self.feature_s1(fs0)
         fs2 = self.feature_s2(fs1)
         fs3 = self.feature_s3(fs2)
-        return [fs1, fs2, fs3]
+        return [fs0, fs1, fs2, fs3]
 
 
 # ---------------------------------------------------
@@ -218,37 +221,53 @@ class CSPBlock(nn.Module):
 class CSPPAN(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
-        self.c3_conv = pointwise_conv(in_channels[0], out_channels)
-        self.c4_conv = pointwise_conv(in_channels[1], out_channels)
-        self.c5_conv = pointwise_conv(in_channels[2], out_channels)
-        # self.upsample = nn.Upsample(scale_factor=2, mode="bilinear")
-        self.c3_csp = CSPBlock(out_channels * 2, out_channels)
-        self.c4_csp_1 = CSPBlock(out_channels * 2, out_channels)
-        self.c4_csp_2 = CSPBlock(out_channels * 2, out_channels)
-        self.c5_csp = CSPBlock(out_channels * 2, out_channels)
-        self.downsample_1 = nn.Sequential(
+        self.pw_fs0 = pointwise_conv(in_channels[0], out_channels)
+        self.pw_fs1 = pointwise_conv(in_channels[1], out_channels)
+        self.pw_fs2 = pointwise_conv(in_channels[2], out_channels)
+        self.pw_fs3 = pointwise_conv(in_channels[3], out_channels)
+
+        self.in_csp_fs0 = CSPBlock(out_channels * 2, out_channels)
+        self.in_csp_fs1 = CSPBlock(out_channels * 2, out_channels)
+        self.in_csp_fs2 = CSPBlock(out_channels * 2, out_channels)
+
+        self.out_csp_fs1 = CSPBlock(out_channels * 2, out_channels)
+        self.out_csp_fs2 = CSPBlock(out_channels * 2, out_channels)
+        self.out_csp_fs3 = CSPBlock(out_channels * 2, out_channels)
+
+        self.dp_fs0 = nn.Sequential(
             depthwise_conv(out_channels, 5, 2),
             pointwise_conv(out_channels, out_channels),
         )
-        self.downsample_2 = nn.Sequential(
+        self.dp_fs1 = nn.Sequential(
+            depthwise_conv(out_channels, 5, 2),
+            pointwise_conv(out_channels, out_channels),
+        )
+        self.dp_fs2 = nn.Sequential(
             depthwise_conv(out_channels, 5, 2),
             pointwise_conv(out_channels, out_channels),
         )
 
     def forward(self, x):
-        c3, c4, c5 = x
-        c3 = self.c3_conv(c3)  # channel down-scale
-        c4 = self.c4_conv(c4)
-        c5 = self.c5_conv(c5)
-        c4 = torch.cat([c4, F.interpolate(c5, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
-        c4 = self.c4_csp_1(c4)
-        c3 = torch.cat([c3, F.interpolate(c4, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
-        c3 = self.c3_csp(c3)
-        c4 = torch.cat([c4, self.downsample_1(c3)], dim=1)
-        c4 = self.c4_csp_2(c4)
-        c5 = torch.cat([c5, self.downsample_2(c4)], dim=1)
-        c5 = self.c5_csp(c5)
-        return [c3, c4, c5]
+        fs0, fs1, fs2, fs3 = x
+        # channel compression
+        fs0, fs1, fs2, fs3 = self.pw_fs0(fs0), self.pw_fs1(fs1), self.pw_fs2(fs2), self.pw_fs3(fs3)
+        # top-down pathway
+        fs3 = fs3
+        fs2 = torch.cat([fs2, F.interpolate(fs3, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
+        fs2 = self.in_csp_fs2(fs2)
+        fs1 = torch.cat([fs1, F.interpolate(fs2, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
+        fs1 = self.in_csp_fs1(fs1)
+        fs0 = torch.cat([fs0, F.interpolate(fs1, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
+        fs0 = self.in_csp_fs0(fs0)
+        # bottom-up pathway
+        fs0 = fs0
+        fs1 = torch.cat([fs1, self.dp_fs0(fs0)], dim=1)
+        fs1 = self.out_csp_fs1(fs1)
+        fs2 = torch.cat([fs2, self.dp_fs1(fs1)], dim=1)
+        fs2 = self.out_csp_fs2(fs2)
+        fs3 = torch.cat([fs3, self.dp_fs2(fs2)], dim=1)
+        fs3 = self.out_csp_fs3(fs3)
+        return [fs0, fs1, fs2, fs3]
 
 
 # Detection Head modified from yolov5 series
@@ -261,7 +280,7 @@ class DetectHead(nn.Module):
         self.nl = len(anchors)  # number of detection layers
         self.na = len(anchors[0]) // 2  # number of anchors
         self.grid = [torch.zeros(1)] * self.nl  # init grid
-        self.stride = torch.tensor((8, 16, 32))  # strides computed during build
+        self.stride = torch.tensor((4, 8, 16, 32))  # strides computed during build
         a = torch.tensor(anchors).float().view(self.nl, -1, 2)
         self.register_buffer("anchors", a)  # shape(nl,na,2)
         self.register_buffer("anchor_grid", a.clone().view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
@@ -286,7 +305,7 @@ class DetectHead(nn.Module):
                     y[..., 0:2] = (y[..., 0:2] * 2.0 - 0.5 + self.grid[i]) * self.stride[i]  # xy
                     y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
                     z.append(y.view(bs, -1, self.no))
-        if self.training:
+        if self.training or not self.mode_dsp_off:
             return x
         else:
             return torch.cat(z, 1), x
@@ -297,8 +316,8 @@ class M2yolov5(nn.Module):
     def __init__(self, num_classes, anchors):
         super().__init__()
         self.backbone = MobileNetv2()
-        self.neck = CSPPAN([40, 80, 160], 80)
-        self.head = DetectHead([80, 80, 80], num_classes, anchors)
+        self.neck = CSPPAN([24, 40, 80, 160], 40)
+        self.head = DetectHead([40, 40, 40, 40], num_classes, anchors)
 
     def forward(self, x):
         x = self.backbone(x)
@@ -310,9 +329,10 @@ class M2yolov5(nn.Module):
 def mobilenet_v2_cspp_yolov5(
     num_classes=3,
     anchors=(
-        [5, 6, 10, 13, 16, 30, 33, 23],
-        [15, 30, 30, 61, 62, 45, 59, 119],
-        [58, 45, 116, 90, 156, 198, 373, 326],
+        [10, 13, 16, 30, 33, 23],  # force to recompute anchors
+        [10, 13, 16, 30, 33, 23],
+        [10, 13, 16, 30, 33, 23],
+        [10, 13, 16, 30, 33, 23],
     ),
 ):
     return M2yolov5(num_classes=num_classes, anchors=anchors)
@@ -320,5 +340,8 @@ def mobilenet_v2_cspp_yolov5(
 
 if __name__ == "__main__":
     model = mobilenet_v2_cspp_yolov5()
-    for y in model(torch.rand(4, 3, 224, 416)):
+    model.head.mode_dsp_off = False
+    model.eval()
+    pred = model(torch.rand(4, 3, 224, 416))
+    for y in pred:
         print(y.shape)

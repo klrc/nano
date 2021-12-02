@@ -75,7 +75,7 @@ def eval(model, opt, device):
 
     # Image sizes
     gs = 32  # grid size (max stride)
-    nl = 3  # number of detection layers (used for scaling hyp['obj'])
+    nl = model.head.nl  # number of detection layers (used for scaling hyp['obj'])
 
     # Initialize/load model and set device
     training = dataloader is not None

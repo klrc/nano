@@ -83,10 +83,10 @@ def train(model, ckpt, hyp, opt, device, logger):
             wandb.config.update(hyp)
 
     # Save run settings
-    with open(save_dir / "hyp.yaml", "w") as f:
-        yaml.safe_dump(hyp, f, sort_keys=False)
-    with open(save_dir / "opt.yaml", "w") as f:
-        yaml.safe_dump(vars(opt), f, sort_keys=False)
+    # with open(save_dir / "hyp.yaml", "w") as f:
+    #     yaml.safe_dump(hyp, f, sort_keys=False)
+    # with open(save_dir / "opt.yaml", "w") as f:
+    #     yaml.safe_dump(vars(opt), f, sort_keys=False)
     data_dict = None
 
     # Config
@@ -153,7 +153,7 @@ def train(model, ckpt, hyp, opt, device, logger):
 
     # Image sizes
     gs = 32  # grid size (max stride)
-    nl = 3  # number of detection layers (used for scaling hyp['obj'])
+    nl = model.head.nl  # number of detection layers (used for scaling hyp['obj'])
     imgsz = check_img_size(opt.imgsz, gs, floor=gs * 2)  # verify imgsz is gs-multiple
 
     # Trainloader
@@ -232,7 +232,7 @@ def train(model, ckpt, hyp, opt, device, logger):
     )
 
     for epoch in range(
-        start_epoch, start_epoch + epochs
+        start_epoch + 1, start_epoch + epochs + 1
     ):  # epoch ------------------------------------------------------------------
         model.train()
 
@@ -385,7 +385,7 @@ def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", type=str, default=ROOT / "configs/coco128.yaml", help="dataset.yaml path")
     parser.add_argument("--hyp", type=str, default=ROOT / "configs/hyps/hyp.scratch.yaml", help="hyperparameters path")
-    parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--epochs", type=int, default=300)
     parser.add_argument("--ckpt", type=str, default="", help="checkpoint file path")
     parser.add_argument("--load-optimizer", action="store_true", help="load optimizer.state_dict from ckpt if true")
     parser.add_argument("--batch-size", type=int, default=16, help="total batch size for all GPUs")

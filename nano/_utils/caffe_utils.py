@@ -160,6 +160,27 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
                     alpha,
                 )._to_proto()
             )
+        elif node.op_type == "Clip":
+            node_name = node.name
+            input_names = [str(node.input[0])]
+            output_names = [str(node.output[0])]
+            clip_min = float(constants.get(str(node.input[1])))
+            clip_max = float(constants.get(str(node.input[2])))
+            blob_channels[output_names[0]] = blob_channels[input_names[0]]
+            if clip_min == 0 and clip_max == 6:
+                node_name += "_repflag_relu6"
+                inplace = input_names[0] == output_names[0]
+                caffe_layers.append(
+                    operators.relu(
+                        node_name,
+                        input_names,
+                        output_names,
+                        inplace,
+                    )._to_proto()
+                )
+
+            else:
+                raise NotImplementedError
         elif node.op_type == "Concat":
             node_name = node.name
             input_names = [str(x) for x in node.input]
@@ -323,15 +344,7 @@ def convert_to_caffe(graph, prototxt_path, caffemodel_path):
             slice_points = attrs["slice_points"]
             slice_points = [constants[str(int(x))][0] for x in slice_points]
             for i, output_name in enumerate(output_names):
-                fsp = (
-                    [
-                        0,
-                    ]
-                    + slice_points
-                    + [
-                        blob_channels[input_names[0]],
-                    ]
-                )
+                fsp = [0] + slice_points + [blob_channels[input_names[0]]]
                 output_channels = fsp[i + 1] - fsp[i]
                 blob_channels[output_name] = output_channels
             print(len(output_names), len(slice_points))

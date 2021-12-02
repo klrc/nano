@@ -33,7 +33,7 @@ def detection_nms(preds, conf_thres, iou_thres, max_nms=30000):
         obj_conf = pred[4]
         cls_conf, cls_id = pred[5:].max(dim=0, keepdim=True)  # Confidence calculation
         conf = obj_conf * cls_conf
-        if conf < conf_thres:  # Select candidates
+        if obj_conf < conf_thres:  # Select candidates
             continue
         x1 = pred[0] - pred[2] / 2.0  # Box (center x, center y, width, height) to (x1, y1, x2, y2)
         y1 = pred[1] - pred[3] / 2.0
@@ -179,10 +179,12 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
 if __name__ == "__main__":
 
     def acquire_model():
-        return ...
+        model = nano.models.mobilenet_v2_cspp_yolov5(num_classes=3)
+        model.load_state_dict(torch.load('runs/train/exp175/weights/last.pt', map_location='cpu')['state_dict'])
+        return model
 
     test_front_camera(
-        conf_thres=0.15,
+        conf_thres=0.25,
         iou_thres=0.6,
         class_names=["person", "bike", "car"],
         device="cpu",

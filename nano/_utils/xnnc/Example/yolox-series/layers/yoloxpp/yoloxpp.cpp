@@ -12,10 +12,11 @@ using namespace std;
 #define CONFIDENCE_THRESH 0.2
 #define IOU_THRESH 0.45
 #define MAX_NMS 30000  // maximum number of boxes into torchvision.ops.nms()
-#define FEATURE_STAGES 3
+#define FEATURE_STAGES 4
 #define MAX_DETECTIONS 300
 #define INPUT_HEIGHT 224
 #define INPUT_WIDTH 416
+#define CURSOR(i, h, w, max_stack, k) hw*(max_stack * i + k)
 
 typedef struct BoundingBox {
     float x1;
@@ -84,21 +85,24 @@ void post_process(const std::vector<Tensor<float>*>& inputs, const std::vector<T
     vector<BoundingBox> results;
     vector<float> cls_stack;
 
-    const int strides[] = {8, 16, 32};
-    const float anchors[] = {11.3359375, 13.6875, 30.359375, 46.34375, 143.0, 129.5};
+    const int strides[] = {4, 8, 16, 32};
+    const float anchors[] = {6.2929688, 7.2070312, 7.0585938, 18.0625, 18.328125, 13.5546875, 15.0859375, 30.359375,
+                             33.125,    26.59375,  25.234375, 60.4375, 66.3125,   43.4375,    44.875,     103.0625,
+                             107.375,   90.0,      104.4375,  194.5,   226.125,   116.5625,   301.75,     244.875};
 
     // select cadidates with obj_score > conf_thresh
     for (int i = 0; i < FEATURE_STAGES; i++) {
         float* input_memory = inputs[i]->getMutableData();
-        const int IN_H = inputs[i]->getDepth();
-        const int IN_W = inputs[i]->getHeight();
-        const int IN_C = inputs[i]->getWidth();
+        const int IN_D = inputs[i]->getDepth();
+        const int IN_H = inputs[i]->getHeight();
+        const int IN_W = inputs[i]->getWidth();
+        const int MAX_STACK = IN_D / FEATURE_STAGES;
         for (int h = 0; h < IN_H; h++) {
             for (int w = 0; w < IN_W; w++) {
-                int cursor = (h * IN_W + w) * IN_C;
                 // get object score & class score
                 cls_stack.clear();
-                for (int li = cursor + 5; li < cursor + IN_C; li++) {
+                for (int li = 5; li < MAX_STACK; li++) {
+                    int cursor = CURSOR(i, IN_H, IN_W, MAX_STACK, li);
                     cls_stack.push_back(input_memory[li]);
                 }
                 int label = max_element(cls_stack.begin(), cls_stack.end()) - cls_stack.begin();  // 0, 1, 2, ...
