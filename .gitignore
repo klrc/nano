@@ -1,11 +1,19 @@
+# regular ignores
 .idea
 .DS_Store
 .vscode
 __pycache__
 runs
 nano/_utils/xnnc
+
+# yoloxpp layer source
 !nano/_utils/xnnc/Example/yolox-series/layers/yoloxpp/*.cpp
 !nano/_utils/xnnc/Example/yolox-series/layers/yoloxpp/*.hpp
 !nano/_utils/xnnc/Example/yolox-series/layers/yoloxpp/CMakeLists.txt
 !nano/_utils/xnnc/Example/yolox-series/yolox.cfg
 !nano/_utils/xnnc/Example/yolox-series/model
+
+# slice layer source
+!nano/_utils/xnnc/Example/yolox-series/layers/slice/*.cpp
+!nano/_utils/xnnc/Example/yolox-series/layers/slice/*.hpp
+!nano/_utils/xnnc/Example/yolox-series/layers/slice/CMakeLists.txt
