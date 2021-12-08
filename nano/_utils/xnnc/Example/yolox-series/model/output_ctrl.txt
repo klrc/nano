@@ -1,1 +1,0 @@
-[detection_out:detection_out] save det dataset/voc2012_labels.txt dataset/
