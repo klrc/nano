@@ -356,7 +356,7 @@ def train(model, ckpt, hyp, opt, device, logger):
             # Save model
             if (not nosave) or (final_epoch and not evolve):  # if save
                 ckpt = {
-                    "state_dict": deepcopy(model).half().state_dict(),
+                    "state_dict": deepcopy(ema.ema).half().state_dict(),
                     "optimizer": optimizer.state_dict(),
                 }
                 ckpt.update(log_vals)

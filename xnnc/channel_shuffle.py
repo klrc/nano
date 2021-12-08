@@ -1,28 +1,27 @@
-from ._layer import XNNCLayer, parse_attribute
+from ._layer import CaffeLayer, parse_attribute
 import onnx
 
-# layer {
-#   name: "shuffle2"
-#   type: "CppCustom"
-#   bottom: "resx2_conv1"
-#   top: "shuffle2"
-#   cpp_custom_param {
-#     module: "XnncShuffleChannel"
-#     param_map_str: "group:3 "
-#   }
-# }
-class ShuffleChannel(XNNCLayer):
+
+class ShuffleChannel:
     def __init__(self, node, constant_dict) -> None:
         # basic attributes
         super().__init__()
         self.node_name = node.name
         self.input_names = [str(node.input[0])]
         self.output_names = [str(node.output[0])]
-        # slice attributes
+        # shuffle_channel attributes
         self.groups = constant_dict[node.input[1]]
 
     def reshape(self, bottom_shapes):  # -> top_shapes
         return bottom_shapes
+
+    def shadow_proto(self):
+        return CaffeLayer(
+            "ReLU",
+            self.node_name,
+            self.input_names,
+            self.output_names,
+        )._to_proto()
 
     def to_proto(self):
         # XNNC mResize layer definition.

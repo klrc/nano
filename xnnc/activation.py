@@ -1,4 +1,4 @@
-from ._layer import CaffeLayer, XNNCLayer, parse_attribute
+from ._layer import CaffeLayer, parse_attribute
 import onnx
 
 
@@ -44,7 +44,7 @@ class LeakyRelu(Relu):
         )._to_proto()
 
 
-class Relu6(XNNCLayer):
+class Relu6:
     def __init__(self, node, constant_dict) -> None:
         super().__init__()
         # basic attributes
@@ -59,6 +59,14 @@ class Relu6(XNNCLayer):
 
     def reshape(self, bottom_shapes):  # -> top_shapes
         return bottom_shapes
+
+    def shadow_proto(self):
+        return CaffeLayer(
+            "ReLU",
+            self.node_name,
+            self.input_names,
+            self.output_names,
+        )._to_proto()
 
     def to_proto(self):
         txt_proto = ""

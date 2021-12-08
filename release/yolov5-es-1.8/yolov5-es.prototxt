@@ -31,14 +31,9 @@ layer {
 }
 layer {
   name: "Clip_1"
-  type: "Python"
-  bottom:"1032"
-  top:"512"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1032"
+  top: "512"
 }
 layer {
   name: "MaxPool_2"
@@ -75,14 +70,9 @@ layer {
 }
 layer {
   name: "Clip_4"
-  type: "Python"
-  bottom:"1035"
-  top:"518"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1035"
+  top: "518"
 }
 layer {
   name: "Conv_5"
@@ -122,14 +112,9 @@ layer {
 }
 layer {
   name: "Clip_7"
-  type: "Python"
-  bottom:"1041"
-  top:"525"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1041"
+  top: "525"
 }
 layer {
   name: "Conv_8"
@@ -169,14 +154,9 @@ layer {
 }
 layer {
   name: "Clip_10"
-  type: "Python"
-  bottom:"1047"
-  top:"532"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1047"
+  top: "532"
 }
 layer {
   name: "Concat_11"
@@ -208,14 +188,9 @@ layer {
 }
 layer {
   name: "Clip_13"
-  type: "Python"
-  bottom:"1050"
-  top:"538"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1050"
+  top: "538"
 }
 layer {
   name: "Conv_14"
@@ -237,14 +212,9 @@ layer {
 }
 layer {
   name: "Clip_15"
-  type: "Python"
-  bottom:"1053"
-  top:"543"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1053"
+  top: "543"
 }
 layer {
   name: "_Slice_16"
@@ -253,7 +223,7 @@ layer {
   top:"548"
   top:"553"
   python_param {
-  module: "xnnc._layer"
+  module: "xnnc.slice"
   layer: "XNNCTypeSlice"
   param_str: "{'chunks':2, 'dim':1}"
   }
@@ -278,14 +248,9 @@ layer {
 }
 layer {
   name: "Clip_18"
-  type: "Python"
-  bottom:"1056"
-  top:"558"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1056"
+  top: "558"
 }
 layer {
   name: "Conv_19"
@@ -335,14 +300,9 @@ layer {
 }
 layer {
   name: "Clip_22"
-  type: "Python"
-  bottom:"1062"
-  top:"566"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1062"
+  top: "566"
 }
 layer {
   name: "Concat_23"
@@ -356,14 +316,9 @@ layer {
 }
 layer {
   name: "channel_shuffle_24"
-  type: "Python"
-  bottom:"567"
-  top:"569"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "567"
+  top: "569"
 }
 layer {
   name: "_Slice_25"
@@ -372,7 +327,7 @@ layer {
   top:"574"
   top:"579"
   python_param {
-  module: "xnnc._layer"
+  module: "xnnc.slice"
   layer: "XNNCTypeSlice"
   param_str: "{'chunks':2, 'dim':1}"
   }
@@ -397,14 +352,9 @@ layer {
 }
 layer {
   name: "Clip_27"
-  type: "Python"
-  bottom:"1065"
-  top:"584"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1065"
+  top: "584"
 }
 layer {
   name: "Conv_28"
@@ -454,14 +404,9 @@ layer {
 }
 layer {
   name: "Clip_31"
-  type: "Python"
-  bottom:"1071"
-  top:"592"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1071"
+  top: "592"
 }
 layer {
   name: "Concat_32"
@@ -475,14 +420,9 @@ layer {
 }
 layer {
   name: "channel_shuffle_33"
-  type: "Python"
-  bottom:"593"
-  top:"input.75"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "593"
+  top: "input.75"
 }
 layer {
   name: "Conv_34"
@@ -504,14 +444,9 @@ layer {
 }
 layer {
   name: "Clip_35"
-  type: "Python"
-  bottom:"1074"
-  top:"600"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1074"
+  top: "600"
 }
 layer {
   name: "Conv_36"
@@ -551,14 +486,9 @@ layer {
 }
 layer {
   name: "Clip_38"
-  type: "Python"
-  bottom:"1080"
-  top:"607"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1080"
+  top: "607"
 }
 layer {
   name: "Conv_39"
@@ -598,14 +528,9 @@ layer {
 }
 layer {
   name: "Clip_41"
-  type: "Python"
-  bottom:"1086"
-  top:"614"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1086"
+  top: "614"
 }
 layer {
   name: "Concat_42"
@@ -637,14 +562,9 @@ layer {
 }
 layer {
   name: "Clip_44"
-  type: "Python"
-  bottom:"1089"
-  top:"620"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1089"
+  top: "620"
 }
 layer {
   name: "Conv_45"
@@ -666,14 +586,9 @@ layer {
 }
 layer {
   name: "Clip_46"
-  type: "Python"
-  bottom:"1092"
-  top:"625"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1092"
+  top: "625"
 }
 layer {
   name: "_Slice_47"
@@ -682,7 +597,7 @@ layer {
   top:"630"
   top:"635"
   python_param {
-  module: "xnnc._layer"
+  module: "xnnc.slice"
   layer: "XNNCTypeSlice"
   param_str: "{'chunks':2, 'dim':1}"
   }
@@ -707,14 +622,9 @@ layer {
 }
 layer {
   name: "Clip_49"
-  type: "Python"
-  bottom:"1095"
-  top:"640"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1095"
+  top: "640"
 }
 layer {
   name: "Conv_50"
@@ -764,14 +674,9 @@ layer {
 }
 layer {
   name: "Clip_53"
-  type: "Python"
-  bottom:"1101"
-  top:"648"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1101"
+  top: "648"
 }
 layer {
   name: "Concat_54"
@@ -785,14 +690,9 @@ layer {
 }
 layer {
   name: "channel_shuffle_55"
-  type: "Python"
-  bottom:"649"
-  top:"651"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "649"
+  top: "651"
 }
 layer {
   name: "_Slice_56"
@@ -801,7 +701,7 @@ layer {
   top:"656"
   top:"661"
   python_param {
-  module: "xnnc._layer"
+  module: "xnnc.slice"
   layer: "XNNCTypeSlice"
   param_str: "{'chunks':2, 'dim':1}"
   }
@@ -826,14 +726,9 @@ layer {
 }
 layer {
   name: "Clip_58"
-  type: "Python"
-  bottom:"1104"
-  top:"666"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1104"
+  top: "666"
 }
 layer {
   name: "Conv_59"
@@ -883,14 +778,9 @@ layer {
 }
 layer {
   name: "Clip_62"
-  type: "Python"
-  bottom:"1110"
-  top:"674"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1110"
+  top: "674"
 }
 layer {
   name: "Concat_63"
@@ -904,14 +794,9 @@ layer {
 }
 layer {
   name: "channel_shuffle_64"
-  type: "Python"
-  bottom:"675"
-  top:"677"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "675"
+  top: "677"
 }
 layer {
   name: "_Slice_65"
@@ -920,7 +805,7 @@ layer {
   top:"682"
   top:"687"
   python_param {
-  module: "xnnc._layer"
+  module: "xnnc.slice"
   layer: "XNNCTypeSlice"
   param_str: "{'chunks':2, 'dim':1}"
   }
@@ -945,14 +830,9 @@ layer {
 }
 layer {
   name: "Clip_67"
-  type: "Python"
-  bottom:"1113"
-  top:"692"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1113"
+  top: "692"
 }
 layer {
   name: "Conv_68"
@@ -1002,14 +882,9 @@ layer {
 }
 layer {
   name: "Clip_71"
-  type: "Python"
-  bottom:"1119"
-  top:"700"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1119"
+  top: "700"
 }
 layer {
   name: "Concat_72"
@@ -1023,14 +898,9 @@ layer {
 }
 layer {
   name: "channel_shuffle_73"
-  type: "Python"
-  bottom:"701"
-  top:"703"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "701"
+  top: "703"
 }
 layer {
   name: "_Slice_74"
@@ -1039,7 +909,7 @@ layer {
   top:"708"
   top:"713"
   python_param {
-  module: "xnnc._layer"
+  module: "xnnc.slice"
   layer: "XNNCTypeSlice"
   param_str: "{'chunks':2, 'dim':1}"
   }
@@ -1064,14 +934,9 @@ layer {
 }
 layer {
   name: "Clip_76"
-  type: "Python"
-  bottom:"1122"
-  top:"718"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1122"
+  top: "718"
 }
 layer {
   name: "Conv_77"
@@ -1121,14 +986,9 @@ layer {
 }
 layer {
   name: "Clip_80"
-  type: "Python"
-  bottom:"1128"
-  top:"726"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1128"
+  top: "726"
 }
 layer {
   name: "Concat_81"
@@ -1142,14 +1002,9 @@ layer {
 }
 layer {
   name: "channel_shuffle_82"
-  type: "Python"
-  bottom:"727"
-  top:"729"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "727"
+  top: "729"
 }
 layer {
   name: "_Slice_83"
@@ -1158,7 +1013,7 @@ layer {
   top:"734"
   top:"739"
   python_param {
-  module: "xnnc._layer"
+  module: "xnnc.slice"
   layer: "XNNCTypeSlice"
   param_str: "{'chunks':2, 'dim':1}"
   }
@@ -1183,14 +1038,9 @@ layer {
 }
 layer {
   name: "Clip_85"
-  type: "Python"
-  bottom:"1131"
-  top:"744"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1131"
+  top: "744"
 }
 layer {
   name: "Conv_86"
@@ -1240,14 +1090,9 @@ layer {
 }
 layer {
   name: "Clip_89"
-  type: "Python"
-  bottom:"1137"
-  top:"752"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1137"
+  top: "752"
 }
 layer {
   name: "Concat_90"
@@ -1261,14 +1106,9 @@ layer {
 }
 layer {
   name: "channel_shuffle_91"
-  type: "Python"
-  bottom:"753"
-  top:"755"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "753"
+  top: "755"
 }
 layer {
   name: "_Slice_92"
@@ -1277,7 +1117,7 @@ layer {
   top:"760"
   top:"765"
   python_param {
-  module: "xnnc._layer"
+  module: "xnnc.slice"
   layer: "XNNCTypeSlice"
   param_str: "{'chunks':2, 'dim':1}"
   }
@@ -1302,14 +1142,9 @@ layer {
 }
 layer {
   name: "Clip_94"
-  type: "Python"
-  bottom:"1140"
-  top:"770"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1140"
+  top: "770"
 }
 layer {
   name: "Conv_95"
@@ -1359,14 +1194,9 @@ layer {
 }
 layer {
   name: "Clip_98"
-  type: "Python"
-  bottom:"1146"
-  top:"778"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1146"
+  top: "778"
 }
 layer {
   name: "Concat_99"
@@ -1380,14 +1210,9 @@ layer {
 }
 layer {
   name: "channel_shuffle_100"
-  type: "Python"
-  bottom:"779"
-  top:"input.207"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "779"
+  top: "input.207"
 }
 layer {
   name: "Conv_101"
@@ -1409,14 +1234,9 @@ layer {
 }
 layer {
   name: "Clip_102"
-  type: "Python"
-  bottom:"1149"
-  top:"786"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1149"
+  top: "786"
 }
 layer {
   name: "Conv_103"
@@ -1456,14 +1276,9 @@ layer {
 }
 layer {
   name: "Clip_105"
-  type: "Python"
-  bottom:"1155"
-  top:"793"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1155"
+  top: "793"
 }
 layer {
   name: "Conv_106"
@@ -1503,14 +1318,9 @@ layer {
 }
 layer {
   name: "Clip_108"
-  type: "Python"
-  bottom:"1161"
-  top:"800"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1161"
+  top: "800"
 }
 layer {
   name: "Concat_109"
@@ -1542,14 +1352,9 @@ layer {
 }
 layer {
   name: "Clip_111"
-  type: "Python"
-  bottom:"1164"
-  top:"806"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1164"
+  top: "806"
 }
 layer {
   name: "Conv_112"
@@ -1571,14 +1376,9 @@ layer {
 }
 layer {
   name: "Clip_113"
-  type: "Python"
-  bottom:"1167"
-  top:"811"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1167"
+  top: "811"
 }
 layer {
   name: "_Slice_114"
@@ -1587,7 +1387,7 @@ layer {
   top:"816"
   top:"821"
   python_param {
-  module: "xnnc._layer"
+  module: "xnnc.slice"
   layer: "XNNCTypeSlice"
   param_str: "{'chunks':2, 'dim':1}"
   }
@@ -1612,14 +1412,9 @@ layer {
 }
 layer {
   name: "Clip_116"
-  type: "Python"
-  bottom:"1170"
-  top:"826"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1170"
+  top: "826"
 }
 layer {
   name: "Conv_117"
@@ -1669,14 +1464,9 @@ layer {
 }
 layer {
   name: "Clip_120"
-  type: "Python"
-  bottom:"1176"
-  top:"834"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1176"
+  top: "834"
 }
 layer {
   name: "Concat_121"
@@ -1690,14 +1480,9 @@ layer {
 }
 layer {
   name: "channel_shuffle_122"
-  type: "Python"
-  bottom:"835"
-  top:"837"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "835"
+  top: "837"
 }
 layer {
   name: "_Slice_123"
@@ -1706,7 +1491,7 @@ layer {
   top:"842"
   top:"847"
   python_param {
-  module: "xnnc._layer"
+  module: "xnnc.slice"
   layer: "XNNCTypeSlice"
   param_str: "{'chunks':2, 'dim':1}"
   }
@@ -1731,14 +1516,9 @@ layer {
 }
 layer {
   name: "Clip_125"
-  type: "Python"
-  bottom:"1179"
-  top:"852"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1179"
+  top: "852"
 }
 layer {
   name: "Conv_126"
@@ -1788,14 +1568,9 @@ layer {
 }
 layer {
   name: "Clip_129"
-  type: "Python"
-  bottom:"1185"
-  top:"860"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1185"
+  top: "860"
 }
 layer {
   name: "Concat_130"
@@ -1809,14 +1584,9 @@ layer {
 }
 layer {
   name: "channel_shuffle_131"
-  type: "Python"
-  bottom:"861"
-  top:"input.283"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "861"
+  top: "input.283"
 }
 layer {
   name: "Conv_132"
@@ -1838,14 +1608,9 @@ layer {
 }
 layer {
   name: "Clip_133"
-  type: "Python"
-  bottom:"1188"
-  top:"868"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1188"
+  top: "868"
 }
 layer {
   name: "Conv_134"
@@ -1867,14 +1632,9 @@ layer {
 }
 layer {
   name: "Clip_135"
-  type: "Python"
-  bottom:"1191"
-  top:"873"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1191"
+  top: "873"
 }
 layer {
   name: "Conv_136"
@@ -1896,24 +1656,28 @@ layer {
 }
 layer {
   name: "Clip_137"
-  type: "Python"
-  bottom:"1194"
-  top:"878"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1194"
+  top: "878"
 }
 layer {
-  name: "Resize_138"
-  type: "Python"
-  bottom:"878"
-  top:"883"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeResize"
-  param_str: "{'ScaleX':2.0, 'ScaleY':2.0}"
+  name: "_Resize_138"
+  type: "Deconvolution"
+  bottom: "878"
+  top: "883"
+  convolution_param {
+    num_output: 96
+    bias_term: false
+    group: 96
+    weight_filler {
+      type: "bilinear"
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 4
+    kernel_w: 4
+    stride_h: 2
+    stride_w: 2
   }
 }
 layer {
@@ -1946,14 +1710,9 @@ layer {
 }
 layer {
   name: "Clip_141"
-  type: "Python"
-  bottom:"1197"
-  top:"889"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1197"
+  top: "889"
 }
 layer {
   name: "Conv_142"
@@ -1975,14 +1734,9 @@ layer {
 }
 layer {
   name: "Clip_143"
-  type: "Python"
-  bottom:"1200"
-  top:"894"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1200"
+  top: "894"
 }
 layer {
   name: "Conv_144"
@@ -2004,14 +1758,9 @@ layer {
 }
 layer {
   name: "Clip_145"
-  type: "Python"
-  bottom:"1203"
-  top:"899"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1203"
+  top: "899"
 }
 layer {
   name: "Conv_146"
@@ -2033,14 +1782,9 @@ layer {
 }
 layer {
   name: "Clip_147"
-  type: "Python"
-  bottom:"1206"
-  top:"904"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1206"
+  top: "904"
 }
 layer {
   name: "Conv_148"
@@ -2100,24 +1844,28 @@ layer {
 }
 layer {
   name: "Clip_152"
-  type: "Python"
-  bottom:"1212"
-  top:"913"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1212"
+  top: "913"
 }
 layer {
-  name: "Resize_153"
-  type: "Python"
-  bottom:"913"
-  top:"918"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeResize"
-  param_str: "{'ScaleX':2.0, 'ScaleY':2.0}"
+  name: "_Resize_153"
+  type: "Deconvolution"
+  bottom: "913"
+  top: "918"
+  convolution_param {
+    num_output: 96
+    bias_term: false
+    group: 96
+    weight_filler {
+      type: "bilinear"
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 4
+    kernel_w: 4
+    stride_h: 2
+    stride_w: 2
   }
 }
 layer {
@@ -2150,14 +1898,9 @@ layer {
 }
 layer {
   name: "Clip_156"
-  type: "Python"
-  bottom:"1215"
-  top:"924"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1215"
+  top: "924"
 }
 layer {
   name: "Conv_157"
@@ -2179,14 +1922,9 @@ layer {
 }
 layer {
   name: "Clip_158"
-  type: "Python"
-  bottom:"1218"
-  top:"929"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1218"
+  top: "929"
 }
 layer {
   name: "Conv_159"
@@ -2208,14 +1946,9 @@ layer {
 }
 layer {
   name: "Clip_160"
-  type: "Python"
-  bottom:"1221"
-  top:"934"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1221"
+  top: "934"
 }
 layer {
   name: "Conv_161"
@@ -2237,14 +1970,9 @@ layer {
 }
 layer {
   name: "Clip_162"
-  type: "Python"
-  bottom:"1224"
-  top:"939"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1224"
+  top: "939"
 }
 layer {
   name: "Conv_163"
@@ -2304,14 +2032,9 @@ layer {
 }
 layer {
   name: "Clip_167"
-  type: "Python"
-  bottom:"1230"
-  top:"948"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1230"
+  top: "948"
 }
 layer {
   name: "Conv_168"
@@ -2333,14 +2056,9 @@ layer {
 }
 layer {
   name: "Clip_169"
-  type: "Python"
-  bottom:"1233"
-  top:"953"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1233"
+  top: "953"
 }
 layer {
   name: "Conv_170"
@@ -2362,14 +2080,9 @@ layer {
 }
 layer {
   name: "Clip_171"
-  type: "Python"
-  bottom:"1236"
-  top:"958"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1236"
+  top: "958"
 }
 layer {
   name: "Concat_172"
@@ -2401,14 +2114,9 @@ layer {
 }
 layer {
   name: "Clip_174"
-  type: "Python"
-  bottom:"1239"
-  top:"964"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1239"
+  top: "964"
 }
 layer {
   name: "Conv_175"
@@ -2430,14 +2138,9 @@ layer {
 }
 layer {
   name: "Clip_176"
-  type: "Python"
-  bottom:"1242"
-  top:"969"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1242"
+  top: "969"
 }
 layer {
   name: "Conv_177"
@@ -2459,14 +2162,9 @@ layer {
 }
 layer {
   name: "Clip_178"
-  type: "Python"
-  bottom:"1245"
-  top:"974"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1245"
+  top: "974"
 }
 layer {
   name: "Conv_179"
@@ -2488,14 +2186,9 @@ layer {
 }
 layer {
   name: "Clip_180"
-  type: "Python"
-  bottom:"1248"
-  top:"979"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1248"
+  top: "979"
 }
 layer {
   name: "Conv_181"
@@ -2555,14 +2248,9 @@ layer {
 }
 layer {
   name: "Clip_185"
-  type: "Python"
-  bottom:"1254"
-  top:"988"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1254"
+  top: "988"
 }
 layer {
   name: "Conv_186"
@@ -2584,14 +2272,9 @@ layer {
 }
 layer {
   name: "Clip_187"
-  type: "Python"
-  bottom:"1257"
-  top:"993"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1257"
+  top: "993"
 }
 layer {
   name: "Conv_188"
@@ -2613,14 +2296,9 @@ layer {
 }
 layer {
   name: "Clip_189"
-  type: "Python"
-  bottom:"1260"
-  top:"998"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1260"
+  top: "998"
 }
 layer {
   name: "Concat_190"
@@ -2652,14 +2330,9 @@ layer {
 }
 layer {
   name: "Clip_192"
-  type: "Python"
-  bottom:"1263"
-  top:"1004"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1263"
+  top: "1004"
 }
 layer {
   name: "Conv_193"
@@ -2681,14 +2354,9 @@ layer {
 }
 layer {
   name: "Clip_194"
-  type: "Python"
-  bottom:"1266"
-  top:"1009"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1266"
+  top: "1009"
 }
 layer {
   name: "Conv_195"
@@ -2710,14 +2378,9 @@ layer {
 }
 layer {
   name: "Clip_196"
-  type: "Python"
-  bottom:"1269"
-  top:"1014"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1269"
+  top: "1014"
 }
 layer {
   name: "Conv_197"
@@ -2739,14 +2402,9 @@ layer {
 }
 layer {
   name: "Clip_198"
-  type: "Python"
-  bottom:"1272"
-  top:"1019"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1272"
+  top: "1019"
 }
 layer {
   name: "Conv_199"
@@ -2806,14 +2464,9 @@ layer {
 }
 layer {
   name: "Clip_203"
-  type: "Python"
-  bottom:"1278"
-  top:"1028"
-  python_param {
-  module: "xnnc._layer"
-  layer: "XNNCTypeIdentity"
-  param_str: ""
-  }
+  type: "ReLU"
+  bottom: "1278"
+  top: "1028"
 }
 layer {
   name: "Conv_204"

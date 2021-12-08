@@ -25,11 +25,7 @@ class Add:
             attrs = parse_attribute(node)
             self.axis = attrs.get("axis", 0)
             self.broadcast = True
-            broadcast_target = (
-                0
-                if shape_dict[self.input_names[0]] > shape_dict[self.input_names[1]]
-                else 1
-            )
+            broadcast_target = 0 if shape_dict[self.input_names[0]][1] > shape_dict[self.input_names[1]][1] else 1
             self.broadcast_bias = self.input_names[1 - broadcast_target]
             self.broadcast_target = self.input_names[broadcast_target]
             self.flatten_bias = self.broadcast_bias + "_broadcast"
@@ -42,25 +38,21 @@ class Add:
 
     def to_proto(self):
         if self.broadcast:
-            layers = []
-            layers.append(
-                CaffeLayer(
-                    "Flatten",
-                    self.flatten_bias,
-                    [self.broadcast_bias],
-                    [self.flatten_bias],
-                )._to_proto()
-            )
-            layers.append(
-                CaffeLayer(
-                    "Bias",
-                    self.node_name,
-                    [self.broadcast_target, self.flatten_bias],
-                    self.output_names,
-                    axis=self.axis,
-                )._to_proto()
-            )
-            return layers
+            proto = ""
+            proto += CaffeLayer(
+                "Flatten",
+                self.flatten_bias,
+                [self.broadcast_bias],
+                [self.flatten_bias],
+            )._to_proto()
+            proto += CaffeLayer(
+                "Bias",
+                self.node_name,
+                [self.broadcast_target, self.flatten_bias],
+                self.output_names,
+                axis=self.axis,
+            )._to_proto()
+            return proto
         else:
             return CaffeLayer(
                 "Eltwise",

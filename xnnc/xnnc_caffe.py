@@ -63,7 +63,7 @@ slice
 # print(node_def)
 
 
-from ._layer import parse_attribute, XNNCLayer
+from ._layer import parse_attribute
 from .channel_shuffle import ShuffleChannel
 from .resize import Resize
 from .slice import Slice, slice_killer
@@ -95,7 +95,7 @@ def register_shape(layer, shape_dict, input_mode=False):
         output_shapes = layer.reshape(bottom_shapes)
     assert len(output_names) == len(output_shapes), (output_names, output_shapes)
     for blob, shape in zip(output_names, output_shapes):
-        shape_dict[blob] = shape
+        shape_dict[blob] = tuple(shape)
 
 
 def export(onnx_path):
@@ -104,11 +104,7 @@ def export(onnx_path):
     graph = onnx.load(onnx_path).graph
     # model = shape_inference.infer_shapes(model)
     slice_killer(graph)
-    constant_dict = {
-        str(n.output[0]): parse_attribute(n)["value"]
-        for n in graph.node
-        if n.op_type == "Constant"
-    }
+    constant_dict = {str(n.output[0]): parse_attribute(n)["value"] for n in graph.node if n.op_type == "Constant"}
     tensor_dict = {t.name: numpy_helper.to_array(t) for t in graph.initializer}
     shape_dict = {}
     layer_list = []
@@ -145,23 +141,20 @@ def export(onnx_path):
         elif node.op_type == "Clip":
             layer = Relu6(node, constant_dict)
         elif node.op_type == "Resize":
-            layer = Resize(node, tensor_dict)
+            layer = Resize(node, tensor_dict, shape_dict)
         elif node.op_type == "_Slice":
             layer = Slice(node, constant_dict)
         elif node.op_type == "channel_shuffle":
             layer = ShuffleChannel(node, constant_dict)
         else:
             raise NotImplementedError(f"{node.op_type} not supported.")
-        if type(layer) is not list:
-            layer = [layer]
-        for l in layer:  # register shape
-            register_shape(l, shape_dict)
-            layer_list.append(l)
+        register_shape(layer, shape_dict)
+        layer_list.append(layer)
 
     with open(prototxt_path, "w") as f:
         for layer in layer_list:
-            if isinstance(layer, XNNCLayer):
-                proto = layer.universal_proto()
+            if hasattr(layer, "shadow_proto"):
+                proto = layer.shadow_proto()
             else:
                 proto = layer.to_proto()
             f.write(proto)

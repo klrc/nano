@@ -1,8 +1,52 @@
-from ._layer import XNNCLayer, parse_attribute
+from ._layer import parse_attribute
 import onnx
+import caffe
 
 from onnx import helper
 
+
+
+class XNNCTypeSlice(caffe.Layer):
+    def setup(self, bottom, top):
+        pass
+
+    def reshape(self, bottom, top):
+        params = eval(self.param_str)
+        self.dim = params["dim"]
+        self.chunks = params["chunks"]
+        top_shape = [x for x in bottom[0].data.shape]
+        top_shape[self.dim] = top_shape[self.dim] // self.chunks
+        for i in range(self.chunks):
+            top[i].reshape(*top_shape)
+
+    def forward(self, bottom, top):
+        pass
+
+    def backward(self, top, propagate_down, bottom):
+        pass
+
+
+class XNNCLayer:
+    def __init__(self) -> None:
+        self.param_str = ""
+        self.xnnc_rep = "XNNCTypeIdentity"
+
+    def shadow_proto(self):
+        proto = ""
+        proto += "layer {\n"
+        proto += '  name: "{}"\n'.format(self.node_name)
+        proto += '  type: "Python"\n'
+        for input_name in self.input_names:
+            proto += '  bottom:"{}"\n'.format(input_name)
+        for output_name in self.output_names:
+            proto += '  top:"{}"\n'.format(output_name)
+        proto += "  python_param {\n"
+        proto += '  module: "xnnc.slice"\n'
+        proto += '  layer: "{}"\n'.format(self.xnnc_rep)
+        proto += '  param_str: "{}"\n'.format(self.param_str)
+        proto += "  }\n"
+        proto += "}\n"
+        return proto
 
 def slice_killer(graph):
     # merge slice layers with same input data

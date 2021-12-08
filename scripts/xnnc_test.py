@@ -13,14 +13,14 @@ class DockerShell:
             image=self.image,
             command="/bin/sh",
             volumes={
-                "/home/sh/Projects/klrc/nano/nano/_utils/xnnc": {
+                "/home/sh/Projects/klrc/nano/xnnc/src": {
                     "bind": "/xnnc",
                     "mode": "rw",
                 },
                 "/home/sh/Projects/tensilica/xtensa/XtDevTools": {
                     "bind": "/home/sh/Projects/tensilica/xtensa/XtDevTools",
                     "mode": "rw",
-                }
+                },
             },
             working_dir=self.root,
             auto_remove=False,
@@ -30,7 +30,7 @@ class DockerShell:
         return self
 
     def exec_run(self, cmd, stream=False):
-        print('>', cmd)
+        print(">", cmd)
         exit_code, output = self.container.exec_run(cmd=cmd, stream=stream)
         if stream is True:
             for data in output:
@@ -79,14 +79,16 @@ def yolov5_test():
         s.exec_run("rm layers/MobYolo_output/cmake_install.cmake", stream=True)
         s.exec_run("cmake layers/MobYolo_output/CMakeLists.txt", stream=True)
         s.exec_run("make -C layers/MobYolo_output", stream=True)
-        s.exec_run('cp layers/MobYolo_output/libXnncMobiYoloOutputLayer.so ./', stream=True)
+        s.exec_run("cp layers/MobYolo_output/libXnncMobiYoloOutputLayer.so ./", stream=True)
         s.exec_run("make install -C layers/MobYolo_output", stream=True)
         s.exec_run("python3 ../../Scripts/xnnc.py --config_file cfg/MobileYolo.cfg", stream=True)
 
 
 def custom_layer_test():
     with docker_shell(root="/xnnc/Example/custom-cadenceNet") as s:
-        for custom_layer in ['mish',]:
+        for custom_layer in [
+            "mish",
+        ]:
             s.exec_run(f"rm layers/{custom_layer}/CMakeCache.txt", stream=True)
             s.exec_run(f"rm -r layers/{custom_layer}/CMakeFiles", stream=True)
             s.exec_run(f"rm layers/{custom_layer}/Makefile", stream=True)
@@ -96,14 +98,14 @@ def custom_layer_test():
             s.exec_run(f"rm ./lib{custom_layer}.so", stream=True)
             s.exec_run(f"cmake layers/{custom_layer}/CMakeLists.txt", stream=True)
             s.exec_run(f"make -C layers/{custom_layer}", stream=True)
-            s.exec_run(f'cp layers/{custom_layer}/lib{custom_layer}.so ./', stream=True)
+            s.exec_run(f"cp layers/{custom_layer}/lib{custom_layer}.so ./", stream=True)
             s.exec_run(f"make install -C layers/{custom_layer}", stream=True)
         s.exec_run("python3 ../../Scripts/xnnc.py --keep --config_file cadenceNet.cfg", stream=True)
 
 
 def yolox_test():
     with docker_shell(root="/xnnc/Example/yolox-series") as s:
-        for custom_layer in ['yoloxpp',]:
+        for custom_layer in ["yoloxpp", 'slice']:
             s.exec_run(f"rm layers/{custom_layer}/CMakeCache.txt", stream=True)
             s.exec_run(f"rm -r layers/{custom_layer}/CMakeFiles", stream=True)
             s.exec_run(f"rm layers/{custom_layer}/Makefile", stream=True)
@@ -113,7 +115,7 @@ def yolox_test():
             s.exec_run(f"rm ./lib{custom_layer}.so", stream=True)
             s.exec_run(f"cmake layers/{custom_layer}/CMakeLists.txt", stream=True)
             s.exec_run(f"make -C layers/{custom_layer}", stream=True)
-            s.exec_run(f'cp layers/{custom_layer}/lib{custom_layer}.so ./', stream=True)
+            s.exec_run(f"cp layers/{custom_layer}/lib{custom_layer}.so ./", stream=True)
             s.exec_run(f"make install -C layers/{custom_layer}", stream=True)
         s.exec_run("python3 ../../Scripts/xnnc.py --keep --config_file yolox.cfg", stream=True)
 

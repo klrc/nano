@@ -12,7 +12,8 @@ if __name__ == "__main__":
     # model setup ===========================================
     print("\n[model setup]")
     model = nano.models.esnet_cspp_yolov5_s3__seblock_canceled()
-    model.load_state_dict(torch.load("runs/train/exp186/weights/best.pt", map_location="cpu")["state_dict"])
+    model.load_state_dict(torch.load("runs/train/exp191/weights/best.pt", map_location="cpu")["state_dict"])
+
     output_names = ["fs1", "fs2", "fs3"]
     class_names = ["person", "bike", "car"]
     model_stamp = "yolov5-es-1.8"
@@ -66,6 +67,7 @@ if __name__ == "__main__":
         model,
         model_name,
         cache_dir=root,
+        output_names=output_names,
         dummy_input_shape=(1, 3, 224, 416),
     )
 

@@ -1814,7 +1814,7 @@ layer {
   top: "883"
   cpp_custom_param {
     module: "mResize"
-    param_map_str: "scaleX:2.0 scaleY:2.0 align_corners:1"
+    param_map_str: "scaleX:2 scaleY:2 align_corners:1"
   }
 }
 layer {
@@ -2007,7 +2007,7 @@ layer {
   top: "918"
   cpp_custom_param {
     module: "mResize"
-    param_map_str: "scaleX:2.0 scaleY:2.0 align_corners:1"
+    param_map_str: "scaleX:2 scaleY:2 align_corners:1"
   }
 }
 layer {

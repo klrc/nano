@@ -109,8 +109,9 @@ class Mv2Type2(nn.Module):
 
 
 class MobileNetv2(nn.Module):
-    def __init__(self):
+    def __init__(self, stages=3):
         super().__init__()
+        self.stages=stages
         self.feature_s0 = nn.Sequential(
             nn.Sequential(nn.Conv2d(3, 16, 3, 2, bias=False), nn.BatchNorm2d(16), nn.ReLU6()),
             Mv2Type1(16, 16, 1),  # -
@@ -143,7 +144,12 @@ class MobileNetv2(nn.Module):
         fs1 = self.feature_s1(fs0)
         fs2 = self.feature_s2(fs1)
         fs3 = self.feature_s3(fs2)
-        return [fs0, fs1, fs2, fs3]
+        if self.stages == 3:
+            return [fs1, fs2, fs3]
+        elif self.stages == 4:
+            return [fs0, fs1, fs2, fs3]
+        else:
+            raise NotImplementedError
 
 
 # ---------------------------------------------------
@@ -477,12 +483,26 @@ class DetectHead(nn.Module):
         else:
             return torch.cat(z, 1), x
 
+# Full detection model
+class M2yolov5(nn.Module):
+    def __init__(self, num_classes, anchors):
+        super().__init__()
+        self.backbone = MobileNetv2()
+        self.neck = CSPPANS3([40, 80, 160], 40)
+        self.head = DetectHead([40, 40, 40], num_classes, anchors, strides=(8, 16, 32))
+
+    def forward(self, x):
+        x = self.backbone(x)
+        x = self.neck(x)
+        x = self.head(x)
+        return x
+
 
 # Full detection model
 class M2yolov5S4(nn.Module):
     def __init__(self, num_classes, anchors):
         super().__init__()
-        self.backbone = MobileNetv2()
+        self.backbone = MobileNetv2(stages=4)
         self.neck = CSPPANS4([24, 40, 80, 160], 40)
         self.head = DetectHead([40, 40, 40, 40], num_classes, anchors, strides=(4, 8, 16, 32))
 
@@ -506,6 +526,15 @@ class ESyolov5(nn.Module):
         x = self.head(x)
         return x
 
+def mobilenet_v2_cspp_yolov5(
+    num_classes=3,
+    anchors=(
+        [10, 13, 16, 30, 33, 23],  # force to recompute anchors
+        [10, 13, 16, 30, 33, 23],
+        [10, 13, 16, 30, 33, 23],
+    ),
+):
+    return M2yolov5(num_classes=num_classes, anchors=anchors)
 
 def mobilenet_v2_cspp_yolov5_s4(
     num_classes=3,
@@ -546,7 +575,7 @@ def esnet_cspp_yolov5_s3__seblock_canceled(
     return model
 
 if __name__ == "__main__":
-    model = esnet_cspp_yolov5_s3__seblock_canceled()
+    model = esnet_cspp_yolov5_s3()
     model.head.mode_dsp_off = False
     model.eval()
     print("init finished")
