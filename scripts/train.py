@@ -2,20 +2,19 @@ import nano
 
 
 # model setup
-model = nano.models.esnet_cspp_yolov5_s3__seblock_canceled(num_classes=3)
+model = nano.models.esnet_cspp_yolov5_s4__seblock_canceled(num_classes=3)
 trainer = nano.detection.trainer
 
 # speed-run
-# ckpt = trainer.run(
-#     model=model,
-#     data="configs/coc-s.yaml",
-#     hyp="configs/hyp.finetune-nomixup.yaml",
-#     adam=True,
-#     patience=8,
-#     imgsz=416,
-#     epochs=50,
-# )
-ckpt = "runs/train/exp186/weights/best.pt"
+ckpt = trainer.run(
+    model=model,
+    data="configs/coc-s.yaml",
+    hyp="configs/hyp.finetune-nomixup.yaml",
+    adam=True,
+    patience=8,
+    imgsz=416,
+    epochs=50,
+)
 
 # finetune phase 2
 ckpt = trainer.run(

@@ -111,7 +111,7 @@ class Mv2Type2(nn.Module):
 class MobileNetv2(nn.Module):
     def __init__(self, stages=3):
         super().__init__()
-        self.stages=stages
+        self.stages = stages
         self.feature_s0 = nn.Sequential(
             nn.Sequential(nn.Conv2d(3, 16, 3, 2, bias=False), nn.BatchNorm2d(16), nn.ReLU6()),
             Mv2Type1(16, 16, 1),  # -
@@ -304,6 +304,59 @@ class EnhancedShuffleNetv2(nn.Module):
         return [fs1, fs2, fs3]
 
 
+class EnhancedShuffleNetv2S4(nn.Module):
+    def __init__(self, scale=1.0):
+        super().__init__()
+        channels = [
+            48,
+            make_divisible(128 * scale),
+            make_divisible(256 * scale),
+            make_divisible(512 * scale),
+        ]
+        __inc, __mid = 24, channels[0]
+        self.feature_s0 = nn.Sequential(
+            nn.Conv2d(3, __inc, 3, 2, 1),
+            nn.BatchNorm2d(__inc),
+            nn.ReLU6(),
+            # nn.MaxPool2d(3, 2, 1),
+            ESBlockS2(__inc, __mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+        )
+        __inc, __mid = channels[0], channels[1]
+        self.feature_s1 = nn.Sequential(
+            ESBlockS2(__inc, __mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+        )
+        __inc, __mid = channels[1], channels[2]
+        self.feature_s2 = nn.Sequential(
+            ESBlockS2(__inc, __mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+        )
+        __inc, __mid = channels[2], channels[3]
+        self.feature_s3 = nn.Sequential(
+            ESBlockS2(__inc, __mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+        )
+
+    def forward(self, x):
+        fs0 = self.feature_s0(x)
+        fs1 = self.feature_s1(fs0)
+        fs2 = self.feature_s2(fs1)
+        fs3 = self.feature_s3(fs2)
+        return [fs0, fs1, fs2, fs3]
+
+
 # ---------------------------------------------------
 
 # ================================================================================================
@@ -462,7 +515,8 @@ class DetectHead(nn.Module):
 
     def forward(self, x):
         z = []
-        for i in range(self.nl):
+        for i in [0,]:
+            # for i in range(self.nl):
             x[i] = self.m[i](x[i])
             if self.mode_dsp_off:
                 # reshape
@@ -482,6 +536,7 @@ class DetectHead(nn.Module):
             return x
         else:
             return torch.cat(z, 1), x
+
 
 # Full detection model
 class M2yolov5(nn.Module):
@@ -526,6 +581,21 @@ class ESyolov5(nn.Module):
         x = self.head(x)
         return x
 
+
+class ESyolov5S4(nn.Module):
+    def __init__(self, num_classes, anchors):
+        super().__init__()
+        self.backbone = EnhancedShuffleNetv2S4(scale=0.75)
+        self.neck = CSPPANS4([48, 96, 192, 384], 48)
+        self.head = DetectHead([48, 48, 48, 48], num_classes, anchors, strides=(4, 8, 16, 32))
+
+    def forward(self, x):
+        x = self.backbone(x)
+        x = self.neck(x)
+        x = self.head(x)
+        return x
+
+
 def mobilenet_v2_cspp_yolov5(
     num_classes=3,
     anchors=(
@@ -535,6 +605,7 @@ def mobilenet_v2_cspp_yolov5(
     ),
 ):
     return M2yolov5(num_classes=num_classes, anchors=anchors)
+
 
 def mobilenet_v2_cspp_yolov5_s4(
     num_classes=3,
@@ -574,8 +645,26 @@ def esnet_cspp_yolov5_s3__seblock_canceled(
                 setattr(m, lid, nn.Identity())
     return model
 
+
+def esnet_cspp_yolov5_s4__seblock_canceled(
+    num_classes=3,
+    anchors=(
+        [10, 13, 16, 30, 33, 23],
+        [10, 13, 16, 30, 33, 23],
+        [10, 13, 16, 30, 33, 23],
+        [10, 13, 16, 30, 33, 23],
+    ),
+):
+    model = ESyolov5S4(num_classes=num_classes, anchors=anchors)
+    for m in model.modules():
+        for lid, layer in m.named_children():
+            if isinstance(layer, SEBlock):
+                setattr(m, lid, nn.Identity())
+    return model
+
+
 if __name__ == "__main__":
-    model = esnet_cspp_yolov5_s3()
+    model = esnet_cspp_yolov5_s4__seblock_canceled()
     model.head.mode_dsp_off = False
     model.eval()
     print("init finished")

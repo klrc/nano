@@ -11,13 +11,13 @@ import xnnc
 if __name__ == "__main__":
     # model setup ===========================================
     print("\n[model setup]")
-    model = nano.models.esnet_cspp_yolov5_s3__seblock_canceled()
-    model.load_state_dict(torch.load("runs/train/exp191/weights/best.pt", map_location="cpu")["state_dict"])
+    model = nano.models.esnet_cspp_yolov5_s4__seblock_canceled()
+    model.load_state_dict(torch.load("runs/train/exp193/weights/best.pt", map_location="cpu")["state_dict"])
 
-    output_names = ["fs1", "fs2", "fs3"]
+    output_names = ["fs0", "fs1", "fs2", "fs3"]
     class_names = ["person", "bike", "car"]
-    model_stamp = "yolov5-es-1.8"
-    forced_export = True
+    model_stamp = "yolov5-es-s4-1.9"
+    forced_export = False
     print("start exporting", model_stamp)
 
     # Process the model in advance ==========================
