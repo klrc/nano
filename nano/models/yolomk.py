@@ -515,8 +515,7 @@ class DetectHead(nn.Module):
 
     def forward(self, x):
         z = []
-        for i in [0,]:
-            # for i in range(self.nl):
+        for i in range(self.nl):
             x[i] = self.m[i](x[i])
             if self.mode_dsp_off:
                 # reshape
