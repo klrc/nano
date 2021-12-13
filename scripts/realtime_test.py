@@ -179,8 +179,8 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
 if __name__ == "__main__":
 
     def acquire_model():
-        model = nano.models.esnet_cspp_yolov5_s4__seblock_canceled(num_classes=3)
-        model.load_state_dict(torch.load('runs/train/exp193/weights/best.pt', map_location='cpu')['state_dict'])
+        model = nano.models.esnet_cspp_yolov5(num_classes=3)
+        model.load_state_dict(torch.load('runs/train/exp196/weights/best.pt', map_location='cpu')['state_dict'])
         return model
 
     test_front_camera(

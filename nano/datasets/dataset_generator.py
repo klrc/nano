@@ -1,6 +1,7 @@
 import os
 import random
 import shutil
+import json
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -79,6 +80,32 @@ class DatasetContainer:
             D = DataProto(image_path, annotations, target_dataset)
             self.data.append(D)
 
+    def _panda_loader(self, root, dataset, target_dataset):
+        for json_file in ["/image_annos/person_bbox_train.json", "/image_annos/vehicle_bbox_train.json"]:
+            with open(root + json_file, "r") as f:
+                json_data = json.load(f)
+                for img_subpath in json_data:
+                    annotations = []
+                    info = json_data[img_subpath]
+                    for obj in info["objects list"]:
+                        ccls = obj["category"]
+                        if ccls == "person":
+                            anno_cls = "person"
+                            box = obj["rects"]["full body"]
+                        elif "car" in ccls:
+                            anno_cls = "car"
+                            box = obj["rect"]
+                        elif "cycle" in ccls:
+                            anno_cls = "bike"
+                            box = obj["rect"]
+                        else:
+                            continue
+                        x1, y1, x2, y2 = box["tl"]["x"], box["tl"]["y"], box["br"]["x"], box["br"]["y"]
+                        annotations.append(Bbox(anno_cls, x1, y1, x2 - x1, y2 - y1))
+                    image_path = root + "/image_train/" + img_subpath
+                    D = DataProto(image_path, annotations, target_dataset)
+                    self.data.append(D)
+
     def _voc_loader(self, root, dataset, target_dataset):
         voc_names = [
             "airplane",
@@ -118,6 +145,8 @@ class DatasetContainer:
             self._coco_loader(root, dataset, target_dataset)
         elif root.endswith("VOC"):
             self._voc_loader(root, dataset, target_dataset)
+        elif root.endswith("panda"):
+            self._panda_loader(root, dataset, target_dataset)
         print("len(data):", len(self.data))
         print(self.data[-1])
 
@@ -217,20 +246,23 @@ class DatasetContainer:
         # finish exporting, return with root path
         return root
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # 读取local dataset，支持VOC/MSCOCO/自定义数据集
     c = DatasetContainer()
-    # c.load_dataset("/home/sh/Datasets/VOC", "train2012", "train")
-    # c.load_dataset("/home/sh/Datasets/VOC", "test2007", "train")
-    # c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
-    # c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
-    c.load_dataset("/home/sh/Datasets/coco", "val2017", "val")
-    # c.load_negative_samples("/home/sh/Datasets/coc-sup", "train")
+    c.load_dataset("/home/sh/Datasets/VOC", "train2012", "train")
+    c.load_dataset("/home/sh/Datasets/VOC", "test2007", "train")
+    c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
+    c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
+    c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
+    c.load_negative_samples("/home/sh/Datasets/coc-sup", "train")
     # c.load_negative_samples("/home/sh/Datasets/coc-sup", "val")
 
     # 调整数据集&分布可视化（optional）
-    # c.reduce_instances(cut_val=False, remove_small_objects=True, balance_percent=0.95)
-    # c.show_class_histplot()
+    c.reduce_instances(cut_val=False, remove_small_objects=False, balance_percent=0.5)
+
+    c.load_dataset("/home/sh/Datasets/panda", None, "train")
+    c.show_class_histplot()
 
     # 导出数据集
-    c.export("/home/sh/Datasets/coco-val")
+    c.export("/home/sh/Datasets/coc-mega")

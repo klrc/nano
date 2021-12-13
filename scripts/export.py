@@ -11,12 +11,12 @@ import xnnc
 if __name__ == "__main__":
     # model setup ===========================================
     print("\n[model setup]")
-    model = nano.models.esnet_cspp_yolov5_s4__seblock_canceled()
-    model.load_state_dict(torch.load("runs/train/exp193/weights/best.pt", map_location="cpu")["state_dict"])
+    model = nano.models.esnet_cspp_yolov5()
+    model.load_state_dict(torch.load("runs/train/exp196/weights/best.pt", map_location="cpu")["state_dict"])
 
-    output_names = ["fs0", "fs1", "fs2", "fs3"]
+    output_names = ["fs1", "fs2", "fs3"]
     class_names = ["person", "bike", "car"]
-    model_stamp = "yolov5-es-s4-1.9"
+    model_stamp = "yolov5-es-2.13"
     forced_export = False
     print("start exporting", model_stamp)
 
@@ -86,15 +86,15 @@ if __name__ == "__main__":
         f.write("  }\n")
         f.write("}\n")
 
-    # Directly porting to XNNC source (optional) =====================================
-    print("\n[update XNNC source]")
-    for cmd in [
-        "rm xnnc/src/Example/yolox-series/model/*.prototxt",
-        "rm xnnc/src/Example/yolox-series/model/*.caffemodel",
-        f"cp release/{model_stamp}/*-custom.prototxt xnnc/src/Example/yolox-series/model/",
-        f"cp release/{model_stamp}/*.caffemodel xnnc/src/Example/yolox-series/model/",
-    ]:
-        print(cmd)
-        os.system(cmd)
+    # # Directly porting to XNNC source (optional) =====================================
+    # print("\n[update XNNC source]")
+    # for cmd in [
+    #     "rm xnnc/src/Example/yolox-series/model/*.prototxt",
+    #     "rm xnnc/src/Example/yolox-series/model/*.caffemodel",
+    #     f"cp release/{model_stamp}/*-custom.prototxt xnnc/src/Example/yolox-series/model/",
+    #     f"cp release/{model_stamp}/*.caffemodel xnnc/src/Example/yolox-series/model/",
+    # ]:
+    #     print(cmd)
+    #     os.system(cmd)
 
-    print("\nall process finished.")
+    # print("\nall process finished.")

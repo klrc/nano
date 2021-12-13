@@ -72,88 +72,6 @@ def depthwise_conv(in_channels, kernel_size, stride, norm=__default_norm, act=__
     )
 
 
-# MobileNetv2 Implementation ------------------------
-# https://zhuanlan.zhihu.com/p/98874284
-
-
-class Mv2Type1(nn.Module):
-    def __init__(self, in_channels, out_channels, expand_ratio):
-        super().__init__()
-        self.pw_1 = pointwise_conv(in_channels, in_channels * expand_ratio)
-        self.dw = depthwise_conv(in_channels * expand_ratio, 3, 1)
-        self.pw_2 = pointwise_conv(in_channels * expand_ratio, out_channels, act=None)
-        self.use_res_connect = in_channels == out_channels
-
-    def forward(self, x):
-        identity = x
-        x = self.pw_1(x)
-        x = self.dw(x)
-        x = self.pw_2(x)
-        if self.use_res_connect:
-            x += identity
-        return x
-
-
-class Mv2Type2(nn.Module):
-    def __init__(self, in_channels, out_channels, expand_ratio):
-        super().__init__()
-        self.pw_1 = pointwise_conv(in_channels, in_channels * expand_ratio)
-        self.dw = depthwise_conv(in_channels * expand_ratio, 3, 2)
-        self.pw_2 = pointwise_conv(in_channels * expand_ratio, out_channels, act=None)
-
-    def forward(self, x):
-        x = self.pw_1(x)
-        x = self.dw(x)
-        x = self.pw_2(x)
-        return x
-
-
-class MobileNetv2(nn.Module):
-    def __init__(self, stages=3):
-        super().__init__()
-        self.stages = stages
-        self.feature_s0 = nn.Sequential(
-            nn.Sequential(nn.Conv2d(3, 16, 3, 2, bias=False), nn.BatchNorm2d(16), nn.ReLU6()),
-            Mv2Type1(16, 16, 1),  # -
-            Mv2Type2(16, 24, 6),  # -
-            Mv2Type1(24, 24, 6),
-        )
-        self.feature_s1 = nn.Sequential(
-            Mv2Type2(24, 40, 6),  # -
-            Mv2Type1(40, 40, 6),
-            Mv2Type1(40, 40, 6),
-        )
-        self.feature_s2 = nn.Sequential(
-            Mv2Type2(40, 64, 6),  # -
-            Mv2Type1(64, 64, 6),
-            Mv2Type1(64, 64, 6),
-            Mv2Type1(64, 64, 6),
-            Mv2Type1(64, 80, 6),  # -
-            Mv2Type1(80, 80, 6),
-            Mv2Type1(80, 80, 6),
-        )
-        self.feature_s3 = nn.Sequential(
-            Mv2Type2(80, 160, 6),  # -
-            Mv2Type1(160, 160, 6),
-            Mv2Type1(160, 160, 6),
-            Mv2Type1(160, 160, 6),  # -
-        )
-
-    def forward(self, x):
-        fs0 = self.feature_s0(x)
-        fs1 = self.feature_s1(fs0)
-        fs2 = self.feature_s2(fs1)
-        fs3 = self.feature_s3(fs2)
-        if self.stages == 3:
-            return [fs1, fs2, fs3]
-        elif self.stages == 4:
-            return [fs0, fs1, fs2, fs3]
-        else:
-            raise NotImplementedError
-
-
-# ---------------------------------------------------
-
 # ESNet Implementation ------------------------------
 # https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.3/ppdet/modeling/backbones/esnet.py
 # Arxiv: https://arxiv.org/pdf/2111.00902.pdf
@@ -259,27 +177,31 @@ class ESBlockS1(nn.Module):
 
 
 class EnhancedShuffleNetv2(nn.Module):
-    def __init__(self, scale=1.0):
+    def __init__(self):
         super().__init__()
         channels = [
-            24,
-            make_divisible(128 * scale),
-            make_divisible(256 * scale),
-            make_divisible(512 * scale),
+            16,
+            make_divisible(64),
+            make_divisible(128),
+            make_divisible(256),
+            make_divisible(320),
         ]
-        self.feature_s0 = nn.Sequential(
-            nn.Conv2d(3, channels[0], 3, 2, 1),
-            nn.BatchNorm2d(channels[0]),
-            nn.ReLU6(),
-            nn.MaxPool2d(3, 2, 1),
-        )
         __inc, __mid = channels[0], channels[1]
-        self.feature_s1 = nn.Sequential(
+        self.feature_s0 = nn.Sequential(
+            nn.Conv2d(3, __inc, 3, 2, 1),
+            nn.BatchNorm2d(__inc),
+            nn.ReLU6(),
             ESBlockS2(__inc, __mid, __mid),
             ESBlockS1(__mid, __mid),
             ESBlockS1(__mid, __mid),
         )
         __inc, __mid = channels[1], channels[2]
+        self.feature_s1 = nn.Sequential(
+            ESBlockS2(__inc, __mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+        )
+        __inc, __mid = channels[2], channels[3]
         self.feature_s2 = nn.Sequential(
             ESBlockS2(__inc, __mid, __mid),
             ESBlockS1(__mid, __mid),
@@ -289,7 +211,7 @@ class EnhancedShuffleNetv2(nn.Module):
             ESBlockS1(__mid, __mid),
             ESBlockS1(__mid, __mid),
         )
-        __inc, __mid = channels[2], channels[3]
+        __inc, __mid = channels[3], channels[4]
         self.feature_s3 = nn.Sequential(
             ESBlockS2(__inc, __mid, __mid),
             ESBlockS1(__mid, __mid),
@@ -302,59 +224,6 @@ class EnhancedShuffleNetv2(nn.Module):
         fs2 = self.feature_s2(fs1)
         fs3 = self.feature_s3(fs2)
         return [fs1, fs2, fs3]
-
-
-class EnhancedShuffleNetv2S4(nn.Module):
-    def __init__(self, scale=1.0):
-        super().__init__()
-        channels = [
-            48,
-            make_divisible(128 * scale),
-            make_divisible(256 * scale),
-            make_divisible(512 * scale),
-        ]
-        __inc, __mid = 24, channels[0]
-        self.feature_s0 = nn.Sequential(
-            nn.Conv2d(3, __inc, 3, 2, 1),
-            nn.BatchNorm2d(__inc),
-            nn.ReLU6(),
-            # nn.MaxPool2d(3, 2, 1),
-            ESBlockS2(__inc, __mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-        )
-        __inc, __mid = channels[0], channels[1]
-        self.feature_s1 = nn.Sequential(
-            ESBlockS2(__inc, __mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-        )
-        __inc, __mid = channels[1], channels[2]
-        self.feature_s2 = nn.Sequential(
-            ESBlockS2(__inc, __mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-        )
-        __inc, __mid = channels[2], channels[3]
-        self.feature_s3 = nn.Sequential(
-            ESBlockS2(__inc, __mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-        )
-
-    def forward(self, x):
-        fs0 = self.feature_s0(x)
-        fs1 = self.feature_s1(fs0)
-        fs2 = self.feature_s2(fs1)
-        fs3 = self.feature_s3(fs2)
-        return [fs0, fs1, fs2, fs3]
 
 
 # ---------------------------------------------------
@@ -444,58 +313,6 @@ class CSPPANS3(nn.Module):
         return [fs1, fs2, fs3]
 
 
-class CSPPANS4(nn.Module):
-    def __init__(self, in_channels, out_channels):
-        super().__init__()
-        self.pw_fs0 = pointwise_conv(in_channels[0], out_channels)
-        self.pw_fs1 = pointwise_conv(in_channels[1], out_channels)
-        self.pw_fs2 = pointwise_conv(in_channels[2], out_channels)
-        self.pw_fs3 = pointwise_conv(in_channels[3], out_channels)
-
-        self.in_csp_fs0 = CSPBlock(out_channels * 2, out_channels)
-        self.in_csp_fs1 = CSPBlock(out_channels * 2, out_channels)
-        self.in_csp_fs2 = CSPBlock(out_channels * 2, out_channels)
-
-        self.out_csp_fs1 = CSPBlock(out_channels * 2, out_channels)
-        self.out_csp_fs2 = CSPBlock(out_channels * 2, out_channels)
-        self.out_csp_fs3 = CSPBlock(out_channels * 2, out_channels)
-
-        self.dp_fs0 = nn.Sequential(
-            depthwise_conv(out_channels, 5, 2),
-            pointwise_conv(out_channels, out_channels),
-        )
-        self.dp_fs1 = nn.Sequential(
-            depthwise_conv(out_channels, 5, 2),
-            pointwise_conv(out_channels, out_channels),
-        )
-        self.dp_fs2 = nn.Sequential(
-            depthwise_conv(out_channels, 5, 2),
-            pointwise_conv(out_channels, out_channels),
-        )
-
-    def forward(self, x):
-        fs0, fs1, fs2, fs3 = x
-        # channel compression
-        fs0, fs1, fs2, fs3 = self.pw_fs0(fs0), self.pw_fs1(fs1), self.pw_fs2(fs2), self.pw_fs3(fs3)
-        # top-down pathway
-        fs3 = fs3
-        fs2 = torch.cat([fs2, F.interpolate(fs3, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
-        fs2 = self.in_csp_fs2(fs2)
-        fs1 = torch.cat([fs1, F.interpolate(fs2, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
-        fs1 = self.in_csp_fs1(fs1)
-        fs0 = torch.cat([fs0, F.interpolate(fs1, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
-        fs0 = self.in_csp_fs0(fs0)
-        # bottom-up pathway
-        fs0 = fs0
-        fs1 = torch.cat([fs1, self.dp_fs0(fs0)], dim=1)
-        fs1 = self.out_csp_fs1(fs1)
-        fs2 = torch.cat([fs2, self.dp_fs1(fs1)], dim=1)
-        fs2 = self.out_csp_fs2(fs2)
-        fs3 = torch.cat([fs3, self.dp_fs2(fs2)], dim=1)
-        fs3 = self.out_csp_fs3(fs3)
-        return [fs0, fs1, fs2, fs3]
-
-
 # Detection Head modified from yolov5 series
 # Ultralytics version
 class DetectHead(nn.Module):
@@ -537,42 +354,12 @@ class DetectHead(nn.Module):
             return torch.cat(z, 1), x
 
 
-# Full detection model
-class M2yolov5(nn.Module):
-    def __init__(self, num_classes, anchors):
-        super().__init__()
-        self.backbone = MobileNetv2()
-        self.neck = CSPPANS3([40, 80, 160], 40)
-        self.head = DetectHead([40, 40, 40], num_classes, anchors, strides=(8, 16, 32))
-
-    def forward(self, x):
-        x = self.backbone(x)
-        x = self.neck(x)
-        x = self.head(x)
-        return x
-
-
-# Full detection model
-class M2yolov5S4(nn.Module):
-    def __init__(self, num_classes, anchors):
-        super().__init__()
-        self.backbone = MobileNetv2(stages=4)
-        self.neck = CSPPANS4([24, 40, 80, 160], 40)
-        self.head = DetectHead([40, 40, 40, 40], num_classes, anchors, strides=(4, 8, 16, 32))
-
-    def forward(self, x):
-        x = self.backbone(x)
-        x = self.neck(x)
-        x = self.head(x)
-        return x
-
-
 class ESyolov5(nn.Module):
     def __init__(self, num_classes, anchors):
         super().__init__()
-        self.backbone = EnhancedShuffleNetv2(scale=0.75)
-        self.neck = CSPPANS3([96, 192, 384], 96)
-        self.head = DetectHead([96, 96, 96], num_classes, anchors)
+        self.backbone = EnhancedShuffleNetv2()
+        self.neck = CSPPANS3([128, 256, 320], 48)
+        self.head = DetectHead([48, 48, 48], num_classes, anchors)
 
     def forward(self, x):
         x = self.backbone(x)
@@ -581,55 +368,7 @@ class ESyolov5(nn.Module):
         return x
 
 
-class ESyolov5S4(nn.Module):
-    def __init__(self, num_classes, anchors):
-        super().__init__()
-        self.backbone = EnhancedShuffleNetv2S4(scale=0.75)
-        self.neck = CSPPANS4([48, 96, 192, 384], 48)
-        self.head = DetectHead([48, 48, 48, 48], num_classes, anchors, strides=(4, 8, 16, 32))
-
-    def forward(self, x):
-        x = self.backbone(x)
-        x = self.neck(x)
-        x = self.head(x)
-        return x
-
-
-def mobilenet_v2_cspp_yolov5(
-    num_classes=3,
-    anchors=(
-        [10, 13, 16, 30, 33, 23],  # force to recompute anchors
-        [10, 13, 16, 30, 33, 23],
-        [10, 13, 16, 30, 33, 23],
-    ),
-):
-    return M2yolov5(num_classes=num_classes, anchors=anchors)
-
-
-def mobilenet_v2_cspp_yolov5_s4(
-    num_classes=3,
-    anchors=(
-        [10, 13, 16, 30, 33, 23],  # force to recompute anchors
-        [10, 13, 16, 30, 33, 23],
-        [10, 13, 16, 30, 33, 23],
-        [10, 13, 16, 30, 33, 23],
-    ),
-):
-    return M2yolov5S4(num_classes=num_classes, anchors=anchors)
-
-
-def esnet_cspp_yolov5_s3(
-    num_classes=3,
-    anchors=(
-        [10, 13, 16, 30, 33, 23],
-        [10, 13, 16, 30, 33, 23],
-        [10, 13, 16, 30, 33, 23],
-    ),
-):
-    return ESyolov5(num_classes=num_classes, anchors=anchors)
-
-
-def esnet_cspp_yolov5_s3__seblock_canceled(
+def esnet_cspp_yolov5(
     num_classes=3,
     anchors=(
         [10, 13, 16, 30, 33, 23],
@@ -645,25 +384,8 @@ def esnet_cspp_yolov5_s3__seblock_canceled(
     return model
 
 
-def esnet_cspp_yolov5_s4__seblock_canceled(
-    num_classes=3,
-    anchors=(
-        [10, 13, 16, 30, 33, 23],
-        [10, 13, 16, 30, 33, 23],
-        [10, 13, 16, 30, 33, 23],
-        [10, 13, 16, 30, 33, 23],
-    ),
-):
-    model = ESyolov5S4(num_classes=num_classes, anchors=anchors)
-    for m in model.modules():
-        for lid, layer in m.named_children():
-            if isinstance(layer, SEBlock):
-                setattr(m, lid, nn.Identity())
-    return model
-
-
 if __name__ == "__main__":
-    model = esnet_cspp_yolov5_s4__seblock_canceled()
+    model = esnet_cspp_yolov5()
     model.head.mode_dsp_off = False
     model.eval()
     print("init finished")
