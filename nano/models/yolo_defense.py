@@ -411,9 +411,9 @@ class YoloDefense(nn.Module):
     def __init__(self, num_classes, anchors, reid_channels):
         super().__init__()
         self.backbone = EnhancedShuffleNetv2()
-        self.neck = CSPPANS4([64, 128, 256, 384], 96)
-        self.head = AnchorsHead(96, num_classes, anchors)
-        self.reid_head = ReIDHead(96, reid_channels)
+        self.neck = CSPPANS4([64, 128, 256, 384], 64)
+        self.head = AnchorsHead(64, num_classes, anchors)
+        self.reid_head = ReIDHead(64, reid_channels)
         self.reid_mode = False
 
     def switch_mode(self, reid=True):
@@ -428,7 +428,7 @@ class YoloDefense(nn.Module):
             return self.head(x)
 
 
-def yolo_defense_es_96h_4x(
+def yolo_defense_es_64h_4x(
     num_classes=3,
     anchors=(
         [10, 13, 16, 30, 33, 23],
@@ -441,7 +441,7 @@ def yolo_defense_es_96h_4x(
 
 
 if __name__ == "__main__":
-    model = yolo_defense_es_96h_4x()
+    model = yolo_defense_es_64h_4x()
     model.train()
 
     params = 0

@@ -1,8 +1,14 @@
+import os
+import sys
+
+# set root path
+root_path = os.path.abspath(__file__)
+root_path = "/".join(root_path.split("/")[:-2])
+sys.path.append(root_path)
 import nano
 
-
 # model setup
-model = nano.models.yolo_defense_es_96h_4x(num_classes=3)
+model = nano.models.yolo_defense_es_64h_4x(num_classes=3)
 trainer = nano.detection.trainer
 
 # # speed-run
