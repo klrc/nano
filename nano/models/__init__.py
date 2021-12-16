@@ -1,3 +1,3 @@
-from .yolomk import (
-    esnet_cspp_yolov5,
+from .yolo_defense import (
+    yolo_defense_es_96h_4x,
 )

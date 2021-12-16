@@ -86,22 +86,6 @@ def make_divisible(v, divisor=16, min_value=None):
     return new_v
 
 
-class SEBlock(nn.Module):
-    def __init__(self, in_channels, reduction=4):
-        super().__init__()
-        self.avgpool = nn.AdaptiveAvgPool2d(1)
-        self.squeeze = pointwise_conv(in_channels, in_channels // reduction, norm=None)
-        self.excitation = pointwise_conv(in_channels // reduction, in_channels, norm=None, act=nn.Hardsigmoid)
-
-    def forward(self, x):
-        identity = x
-        x = self.avgpool(x)
-        x = self.squeeze(x)
-        x = self.excitation(x)
-        x = x * identity
-        return x
-
-
 class GhostBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
@@ -122,7 +106,6 @@ class ESBlockS2(nn.Module):
         self.part1 = nn.Sequential(
             pointwise_conv(in_channels, mid_channels // 2),
             depthwise_conv(mid_channels // 2, 3, 2, act=None),
-            SEBlock(mid_channels // 2),
             pointwise_conv(mid_channels // 2, out_channels // 2),
         )
         self.part2 = nn.Sequential(
@@ -162,7 +145,6 @@ class ESBlockS1(nn.Module):
         super().__init__()
         self.main_branch = nn.Sequential(
             GhostBlock(in_channels // 2, mid_channels),
-            SEBlock(mid_channels),
             pointwise_conv(mid_channels, in_channels // 2),
         )
         self.split_point = in_channels // 2
@@ -179,29 +161,25 @@ class ESBlockS1(nn.Module):
 class EnhancedShuffleNetv2(nn.Module):
     def __init__(self):
         super().__init__()
-        channels = [
-            16,
-            make_divisible(64),
-            make_divisible(128),
-            make_divisible(256),
-            make_divisible(320),
-        ]
-        __inc, __mid = channels[0], channels[1]
+        channels = [3, 64, 128, 256, 384]
+        __inc = channels.pop(0)
+        __mid = channels.pop(0)
         self.feature_s0 = nn.Sequential(
-            nn.Conv2d(3, __inc, 3, 2, 1),
-            nn.BatchNorm2d(__inc),
-            nn.ReLU6(),
-            ESBlockS2(__inc, __mid, __mid),
+            _conv_norm_act(__inc, __mid, 3, 2, 1, 1),
+            nn.MaxPool2d(3, 2, 1),
+            ESBlockS1(__mid, __mid),
             ESBlockS1(__mid, __mid),
             ESBlockS1(__mid, __mid),
         )
-        __inc, __mid = channels[1], channels[2]
+        __inc = __mid
+        __mid = channels.pop(0)
         self.feature_s1 = nn.Sequential(
             ESBlockS2(__inc, __mid, __mid),
             ESBlockS1(__mid, __mid),
             ESBlockS1(__mid, __mid),
         )
-        __inc, __mid = channels[2], channels[3]
+        __inc = __mid
+        __mid = channels.pop(0)
         self.feature_s2 = nn.Sequential(
             ESBlockS2(__inc, __mid, __mid),
             ESBlockS1(__mid, __mid),
@@ -211,7 +189,8 @@ class EnhancedShuffleNetv2(nn.Module):
             ESBlockS1(__mid, __mid),
             ESBlockS1(__mid, __mid),
         )
-        __inc, __mid = channels[3], channels[4]
+        __inc = __mid
+        __mid = channels.pop(0)
         self.feature_s3 = nn.Sequential(
             ESBlockS2(__inc, __mid, __mid),
             ESBlockS1(__mid, __mid),
@@ -223,7 +202,7 @@ class EnhancedShuffleNetv2(nn.Module):
         fs1 = self.feature_s1(fs0)
         fs2 = self.feature_s2(fs1)
         fs3 = self.feature_s3(fs2)
-        return [fs1, fs2, fs3]
+        return [fs0, fs1, fs2, fs3]
 
 
 # ---------------------------------------------------
@@ -313,9 +292,80 @@ class CSPPANS3(nn.Module):
         return [fs1, fs2, fs3]
 
 
+
+class CSPPANS4(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.pw_fs0 = pointwise_conv(in_channels[0], out_channels)
+        self.pw_fs1 = pointwise_conv(in_channels[1], out_channels)
+        self.pw_fs2 = pointwise_conv(in_channels[2], out_channels)
+        self.pw_fs3 = pointwise_conv(in_channels[3], out_channels)
+
+        self.in_csp_fs0 = CSPBlock(out_channels * 2, out_channels)
+        self.in_csp_fs1 = CSPBlock(out_channels * 2, out_channels)
+        self.in_csp_fs2 = CSPBlock(out_channels * 2, out_channels)
+
+        self.out_csp_fs1 = CSPBlock(out_channels * 2, out_channels)
+        self.out_csp_fs2 = CSPBlock(out_channels * 2, out_channels)
+        self.out_csp_fs3 = CSPBlock(out_channels * 2, out_channels)
+
+        self.dp_fs0 = nn.Sequential(
+            depthwise_conv(out_channels, 5, 2),
+            pointwise_conv(out_channels, out_channels),
+        )
+        self.dp_fs1 = nn.Sequential(
+            depthwise_conv(out_channels, 5, 2),
+            pointwise_conv(out_channels, out_channels),
+        )
+        self.dp_fs2 = nn.Sequential(
+            depthwise_conv(out_channels, 5, 2),
+            pointwise_conv(out_channels, out_channels),
+        )
+
+    def forward(self, x):
+        fs0, fs1, fs2, fs3 = x
+        # channel compression
+        fs0, fs1, fs2, fs3 = self.pw_fs0(fs0), self.pw_fs1(fs1), self.pw_fs2(fs2), self.pw_fs3(fs3)
+        # top-down pathway
+        fs3 = fs3
+        fs2 = torch.cat([fs2, F.interpolate(fs3, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
+        fs2 = self.in_csp_fs2(fs2)
+        fs1 = torch.cat([fs1, F.interpolate(fs2, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
+        fs1 = self.in_csp_fs1(fs1)
+        fs0 = torch.cat([fs0, F.interpolate(fs1, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
+        fs0 = self.in_csp_fs0(fs0)
+        # bottom-up pathway
+        fs0 = fs0
+        fs1 = torch.cat([fs1, self.dp_fs0(fs0)], dim=1)
+        fs1 = self.out_csp_fs1(fs1)
+        fs2 = torch.cat([fs2, self.dp_fs1(fs1)], dim=1)
+        fs2 = self.out_csp_fs2(fs2)
+        fs3 = torch.cat([fs3, self.dp_fs2(fs2)], dim=1)
+        fs3 = self.out_csp_fs3(fs3)
+        return [fs1, fs2, fs3]
+
+class ReIDHead(nn.Module):
+    def __init__(self, in_channels, reid_channels, stages=3):
+        super().__init__()
+        self.m = nn.ModuleList(nn.Conv2d(in_channels, reid_channels, 1) for _ in range(stages))  # output conv
+
+    def forward(self, x):
+        z = []
+        for i in range(self.nl):
+            x[i] = self.m[i](x[i])
+            if not self.training:
+                y = x[i].flatten(1)
+                y = y.div(y.norm(p=2, dim=1, keepdim=True))
+                z.append(y)
+        if self.training:
+            return x
+        else:
+            return torch.cat(z, 1), x
+
+
 # Detection Head modified from yolov5 series
 # Ultralytics version
-class DetectHead(nn.Module):
+class AnchorsHead(nn.Module):
     def __init__(self, in_channels, num_classes, anchors, strides=(8, 16, 32)):  # detection layer
         super().__init__()
         self.nc = num_classes  # number of classes
@@ -325,16 +375,19 @@ class DetectHead(nn.Module):
         self.grid = [torch.zeros(1)] * self.nl  # init grid
         self.stride = torch.tensor(strides)  # strides computed during build
         a = torch.tensor(anchors).float().view(self.nl, -1, 2)
-        self.register_buffer("anchors", a)  # shape(nl,na,2)
-        self.register_buffer("anchor_grid", a.clone().view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
-        self.mode_dsp_off = True
-        self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in in_channels)  # output conv
+        self.register_buffer("anchors", a)
+        self.register_buffer("anchor_grid", a.clone().view(self.nl, 1, -1, 1, 1, 2))
+        self.m = nn.ModuleList(nn.Conv2d(in_channels, self.no * self.na, 1) for _ in range(len(strides)))  # output conv
+        self.dsp_mode = False
+
+    def dsp(self):
+        self.dsp_mode = True
 
     def forward(self, x):
         z = []
         for i in range(self.nl):
             x[i] = self.m[i](x[i])
-            if self.mode_dsp_off:
+            if not self.dsp_mode:
                 # reshape
                 bs, _, ny, nx = x[i].shape
                 x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
@@ -348,27 +401,34 @@ class DetectHead(nn.Module):
                     y[..., 0:2] = (y[..., 0:2] * 2.0 - 0.5 + self.grid[i]) * self.stride[i]  # xy
                     y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
                     z.append(y.view(bs, -1, self.no))
-        if self.training or not self.mode_dsp_off:
+        if self.training or self.dsp_mode:
             return x
         else:
             return torch.cat(z, 1), x
 
 
-class ESyolov5(nn.Module):
-    def __init__(self, num_classes, anchors):
+class YoloDefense(nn.Module):
+    def __init__(self, num_classes, anchors, reid_channels):
         super().__init__()
         self.backbone = EnhancedShuffleNetv2()
-        self.neck = CSPPANS3([128, 256, 320], 48)
-        self.head = DetectHead([48, 48, 48], num_classes, anchors)
+        self.neck = CSPPANS4([64, 128, 256, 384], 96)
+        self.head = AnchorsHead(96, num_classes, anchors)
+        self.reid_head = ReIDHead(96, reid_channels)
+        self.reid_mode = False
+
+    def switch_mode(self, reid=True):
+        self.reid_mode = reid
 
     def forward(self, x):
         x = self.backbone(x)
         x = self.neck(x)
-        x = self.head(x)
-        return x
+        if self.reid_mode:
+            return self.reid_head(x)
+        else:
+            return self.head(x)
 
 
-def esnet_cspp_yolov5(
+def yolo_defense_es_96h_4x(
     num_classes=3,
     anchors=(
         [10, 13, 16, 30, 33, 23],
@@ -376,18 +436,23 @@ def esnet_cspp_yolov5(
         [10, 13, 16, 30, 33, 23],
     ),
 ):
-    model = ESyolov5(num_classes=num_classes, anchors=anchors)
-    for m in model.modules():
-        for lid, layer in m.named_children():
-            if isinstance(layer, SEBlock):
-                setattr(m, lid, nn.Identity())
+    model = YoloDefense(num_classes=num_classes, anchors=anchors, reid_channels=64)
     return model
 
 
 if __name__ == "__main__":
-    model = esnet_cspp_yolov5()
-    model.head.mode_dsp_off = False
-    model.eval()
+    model = yolo_defense_es_96h_4x()
+    model.train()
+
+    params = 0
+    for module in model.modules():
+        if hasattr(module, "weight") and hasattr(module.weight, "size"):
+            params += torch.prod(torch.LongTensor(list(module.weight.size())))
+        if hasattr(module, "bias") and hasattr(module.bias, "size"):
+            params += torch.prod(torch.LongTensor(list(module.bias.size())))
+    total_params_size = abs(params.numpy() * 4. / (1024 ** 2.))
+    print("Params size (MB): %0.2f" % total_params_size)
+
     print("init finished")
     pred = model(torch.rand(4, 3, 224, 416))
     for y in pred:

@@ -28,7 +28,9 @@
 - model_sheet.md
 
 ## Current TODO
-- custom layer demo
+- adjust channel_shuffle exporting strategy
+- train yolo_defense_es_96h_4x (with focal loss at stage2)
+- train reid head
 
 ## -
 

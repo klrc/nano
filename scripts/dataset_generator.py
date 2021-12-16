@@ -176,7 +176,7 @@ class DatasetContainer:
                 instances_all += 1
                 reduced_annotations.append(b)
             D.annotations = reduced_annotations
-            if instances_vehicle == 0 and random.random() < balance_percent:  # reduce 95% of non-vehicle images
+            if instances_person == 0 and instances_vehicle == 0 and random.random() < balance_percent:  # reduce 95% of non-target images
                 continue
             reduced.append(D)
         print("len(reduced):", len(reduced))
@@ -255,14 +255,14 @@ if __name__ == "__main__":
     c.load_dataset("/home/sh/Datasets/VOC", "val2012", "val")
     c.load_dataset("/home/sh/Datasets/coco", "train2017", "train")
     c.load_dataset("/home/sh/Datasets/coco", "val2017", "train")
-    c.load_negative_samples("/home/sh/Datasets/coc-sup", "train")
+    # c.load_negative_samples("/home/sh/Datasets/coc-sup", "train")
     # c.load_negative_samples("/home/sh/Datasets/coc-sup", "val")
 
     # 调整数据集&分布可视化（optional）
-    c.reduce_instances(cut_val=False, remove_small_objects=False, balance_percent=0.5)
+    c.reduce_instances(cut_val=False, remove_small_objects=False, balance_percent=0.7)
 
-    c.load_dataset("/home/sh/Datasets/panda", None, "train")
+    # c.load_dataset("/home/sh/Datasets/panda", None, "train")
     c.show_class_histplot()
 
     # 导出数据集
-    c.export("/home/sh/Datasets/coc-mega")
+    c.export("/home/sh/Datasets/coc-def")

@@ -3,6 +3,11 @@ import torch
 import torchvision.transforms as T
 import nano
 from multiprocessing import Queue, Process
+import numpy as np
+
+
+TARGET_SIZE_WIDTH = 416
+TARGET_SIZE_HEIGHT = 224
 
 
 def detection_iou(box1, box2):
@@ -67,7 +72,7 @@ def detection(conf_thres, iou_thres, device, capture_queue, bbox_queue):
     model = acquire_model()
     model.eval().to(device)
     print("> model online.")
-    transforms = T.Compose([T.ToPILImage(), T.Resize((224, 416)), T.ToTensor()])
+    transforms = T.Compose([T.ToPILImage(), T.Resize((TARGET_SIZE_HEIGHT, TARGET_SIZE_WIDTH)), T.ToTensor()])
     while True:
         if not capture_queue.empty():
             frame = capture_queue.get()
@@ -82,10 +87,10 @@ def detection(conf_thres, iou_thres, device, capture_queue, bbox_queue):
 
 def cv2_draw_bbox(frame, x, canvas_h, canvas_w, class_names):
     x1, y1, x2, y2, conf, cls_id, cls_conf, obj_conf = x
-    x1 = int(x1 / 416 * canvas_w)
-    x2 = int(x2 / 416 * canvas_w)
-    y1 = int(y1 / 224 * canvas_h)
-    y2 = int(y2 / 224 * canvas_h)
+    x1 = int(x1 / TARGET_SIZE_WIDTH * canvas_w)
+    x2 = int(x2 / TARGET_SIZE_WIDTH * canvas_w)
+    y1 = int(y1 / TARGET_SIZE_HEIGHT * canvas_h)
+    y2 = int(y2 / TARGET_SIZE_HEIGHT * canvas_h)
     label = f"detected: {class_names[int(cls_id)]} conf={conf:.2%} cls={cls_conf:.2%} obj={obj_conf:.2%}"
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 0.5
@@ -176,16 +181,65 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
         raise e
 
 
+def test_yuv(file_name, height, width, conf_thres, iou_thres, class_names, device="cpu", fps=12):
+    import os
+    import time
+
+    capture_queue = Queue(maxsize=1)
+    result_queue = Queue(maxsize=64)
+    bbox_set = []
+
+    try:
+        # inference process --------------
+        proc_1 = Process(target=detection, args=[conf_thres, iou_thres, device, capture_queue, result_queue])
+        proc_1.daemon = True
+        proc_1.start()
+
+        # # capture process ----------------
+
+        # Number of frames: in YUV420 frame size in bytes is width*height*1.5
+        file_size = os.path.getsize(file_name)
+        n_frames = file_size // (width * height * 3 // 2)
+        time.sleep(3)
+
+        with open(file_name, "rb") as f:
+            for _ in range(n_frames):
+                # Read Y, U and V color channels and reshape to height*1.5 x width numpy array
+                yuv = np.frombuffer(f.read(width * height * 3 // 2), dtype=np.uint8).reshape((height * 3 // 2, width))
+                # Convert YUV420 to BGR (for testing), applies BT.601 "Limited Range" conversion.
+                frame = cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR_I420)
+                frame = frame[:360, :640, :]
+                if capture_queue.empty():
+                    # print("put frame", capture_queue.qsize())
+                    capture_queue.put(frame)
+                if not result_queue.empty():
+                    bbox_set = result_queue.get()
+                if len(bbox_set) > 0:
+                    for x in bbox_set:
+                        cv2_draw_bbox(frame, x, height//2, width//2, class_names)
+                cv2.imshow("frame", frame)
+                time.sleep(1 / fps)
+                if cv2.waitKey(10) == 27:
+                    break
+    except Exception as e:
+        cv2.destroyAllWindows()
+        raise e
+
+
 if __name__ == "__main__":
 
     def acquire_model():
         model = nano.models.esnet_cspp_yolov5(num_classes=3)
-        model.load_state_dict(torch.load('runs/train/exp196/weights/best.pt', map_location='cpu')['state_dict'])
+        model.load_state_dict(torch.load("runs/train/exp196/weights/best.pt", map_location="cpu")['state_dict'])
         return model
 
-    test_front_camera(
-        conf_thres=0.25,
+    test_yuv(
+        "1280x720_3.yuv",
+        720,
+        1280,
+        conf_thres=0.2,
         iou_thres=0.6,
         class_names=["person", "bike", "car"],
-        device="cpu",
+        device="cuda:0",
+        fps=12,
     )

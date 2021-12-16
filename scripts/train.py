@@ -2,10 +2,10 @@ import nano
 
 
 # model setup
-model = nano.models.esnet_cspp_yolov5(num_classes=3)
+model = nano.models.yolo_defense_es_96h_4x(num_classes=3)
 trainer = nano.detection.trainer
 
-# speed-run
+# # speed-run
 ckpt = trainer.run(
     model=model,
     data="configs/coc-s.yaml",
@@ -13,13 +13,13 @@ ckpt = trainer.run(
     adam=True,
     patience=8,
     imgsz=416,
-    epochs=20,
+    epochs=50,
 )
 
 # finetune phase 2
 ckpt = trainer.run(
     model=model,
-    data="configs/coc-mega.yaml",
+    data="configs/coc-def.yaml",
     ckpt=ckpt,
     load_optimizer=False,
     hyp="configs/hyp.finetune-nomixup.yaml",
@@ -30,7 +30,7 @@ ckpt = trainer.run(
 # finetune phase 3
 ckpt = trainer.run(
     model=model,
-    data="configs/coc-mega.yaml",
+    data="configs/coc-def.yaml",
     ckpt=ckpt,
     load_optimizer=False,
     hyp="configs/hyp.finetune-nomosaic.yaml",
