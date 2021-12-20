@@ -161,12 +161,12 @@ class ESBlockS1(nn.Module):
 class EnhancedShuffleNetv2(nn.Module):
     def __init__(self):
         super().__init__()
-        channels = [3, 64, 128, 256, 384]
+        channels = [3, 64, 128, 256, 512]
         __inc = channels.pop(0)
         __mid = channels.pop(0)
         self.feature_s0 = nn.Sequential(
-            _conv_norm_act(__inc, __mid, 3, 2, 1, 1),
-            nn.MaxPool2d(3, 2, 1),
+            _conv_norm_act(__inc, 24, 3, 2, 1, 1, act=nn.ReLU),
+            ESBlockS2(24, __mid, __mid),
             ESBlockS1(__mid, __mid),
             ESBlockS1(__mid, __mid),
             ESBlockS1(__mid, __mid),
@@ -175,6 +175,7 @@ class EnhancedShuffleNetv2(nn.Module):
         __mid = channels.pop(0)
         self.feature_s1 = nn.Sequential(
             ESBlockS2(__inc, __mid, __mid),
+            ESBlockS1(__mid, __mid),
             ESBlockS1(__mid, __mid),
             ESBlockS1(__mid, __mid),
         )
@@ -411,21 +412,21 @@ class YoloDefense(nn.Module):
     def __init__(self, num_classes, anchors, reid_channels):
         super().__init__()
         self.backbone = EnhancedShuffleNetv2()
-        self.neck = CSPPANS4([64, 128, 256, 384], 64)
+        self.neck = CSPPANS4([64, 128, 256, 512], 64)
         self.head = AnchorsHead(64, num_classes, anchors)
-        self.reid_head = ReIDHead(64, reid_channels)
-        self.reid_mode = False
+        # self.reid_head = ReIDHead(64, reid_channels)
+        # self.reid_mode = False
 
-    def switch_mode(self, reid=True):
-        self.reid_mode = reid
+    # def switch_mode(self, reid=True):
+    #     self.reid_mode = reid
 
     def forward(self, x):
         x = self.backbone(x)
         x = self.neck(x)
-        if self.reid_mode:
-            return self.reid_head(x)
-        else:
-            return self.head(x)
+        # if self.reid_mode:
+        #     return self.reid_head(x)
+        # else:
+        return self.head(x)
 
 
 def yolo_defense_es_64h_4x(
@@ -437,6 +438,7 @@ def yolo_defense_es_64h_4x(
     ),
 ):
     model = YoloDefense(num_classes=num_classes, anchors=anchors, reid_channels=64)
+    init_parameters(model)
     return model
 
 
