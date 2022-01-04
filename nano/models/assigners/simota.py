@@ -41,7 +41,7 @@ def compute_loss(assigned_batch, num_classes=3, eps=0.05):
         loss: loss for backward
         detached_loss: detached loss, for printing usage
     """
-    preds, (reg_targets, obj_targets, cls_targets) = assigned_batch
+    preds, reg_targets, obj_targets, cls_targets = assigned_batch
     device = preds.device
     # bbox regression loss, objectness loss, classification loss (batched)
     loss = torch.zeros(3, device=device)
@@ -54,7 +54,7 @@ def compute_loss(assigned_batch, num_classes=3, eps=0.05):
     # loss gain
     loss += torch.stack((lbox, lobj, lcls))
     # loss, loss items (for printing)
-    return lbox + lobj + lcls, loss.detach()
+    return 5*lbox + lobj + lcls, loss.detach()
 
 
 class SimOTA(nn.Module):
@@ -73,14 +73,15 @@ class SimOTA(nn.Module):
         self.loss_kwargs = kwargs
 
     def forward(self, result, targets):
-        targets = self.assign_batch(result, targets)
+        reg_targets, obj_targets, cls_targets, _avg_topk = self.assign_batch(result, targets)
         torch.cuda.empty_cache()
         if self.with_loss:
             preds = result[0].flatten(0, 1)
-            assigned_batch = (preds, targets)
-            return compute_loss(assigned_batch, num_classes=self.num_classes, **self.loss_kwargs)
+            assigned_batch = (preds, reg_targets, obj_targets, cls_targets)
+            loss, detached_loss = compute_loss(assigned_batch, num_classes=self.num_classes, **self.loss_kwargs)
+            return loss, detached_loss, _avg_topk
         else:
-            return targets
+            return reg_targets, obj_targets, cls_targets
 
     @torch.no_grad()
     def assign_batch(self, result, targets):
@@ -98,6 +99,7 @@ class SimOTA(nn.Module):
         reg_targets = []
         batch_size = preds.size(0)
         num_classes = self.num_classes
+        _avg_topk = 1
         # process per image
         for bi in range(batch_size):
             # process batch ----------------------------------------------------------------
@@ -116,19 +118,20 @@ class SimOTA(nn.Module):
                 continue
 
             is_in_centers_any, is_matched = self.center_sampling(preds_per_image, targets_per_image, grid_mask, stride_mask)
-            true_preds, true_targets, pred_ious = self.dynamic_topk(preds_per_image[is_in_centers_any], targets_per_image, is_matched, num_classes)
+            is_finally_matched, true_targets, pred_ious, _avg_topk = self.dynamic_topk(preds_per_image[is_in_centers_any], targets_per_image, is_matched, num_classes)
             # update matched anchor indexes
-            match_mask = is_in_centers_any
-            match_mask[match_mask.clone()] = true_preds
+            obj_target = is_in_centers_any.float()
+            true_preds = is_finally_matched.float()
+            true_preds[is_finally_matched] = pred_ious
+            obj_target[is_in_centers_any] = true_preds
+            
             # collect reg_target, obj_target, cls_target
             reg_target = targets_per_image[true_targets, 2:]
-            obj_target = is_in_centers_any
             cls_target = (
                 one_hot(
                     targets_per_image[true_targets, 1].to(torch.int64),
                     num_classes,
                 )
-                * pred_ious.unsqueeze(-1).detach()
             )  # cls_target = onehot_class * iou
             reg_targets.append(reg_target)
             obj_targets.append(obj_target)
@@ -137,7 +140,7 @@ class SimOTA(nn.Module):
         reg_targets = torch.cat(reg_targets, 0)
         obj_targets = torch.cat(obj_targets, 0)
         cls_targets = torch.cat(cls_targets, 0)
-        return reg_targets, obj_targets, cls_targets
+        return reg_targets, obj_targets, cls_targets, _avg_topk
 
     @torch.no_grad()
     def center_sampling(self, preds_per_image, targets_per_image, grid_mask, stride_mask):
@@ -211,6 +214,7 @@ class SimOTA(nn.Module):
         n_candidate_k = min(10, pair_wise_iou.size(1))
         topk_ious, _ = torch.topk(pair_wise_iou, n_candidate_k, dim=1)
         dynamic_ks = torch.clamp(topk_ious.sum(1).int(), min=1)
+        _avg_topk = dynamic_ks.float().mean()
         dynamic_ks = dynamic_ks.tolist()
         for t in range(num_targets):
             _, A = torch.topk(cost[t], k=dynamic_ks[t], largest=False)
@@ -226,7 +230,7 @@ class SimOTA(nn.Module):
         true_matched_targets = matching_matrix[:, true_matched_preds].argmax(0)
         pred_ious = (matching_matrix * pair_wise_iou).sum(0)[true_matched_preds]
         del pair_wise_iou, pair_wise_iou_loss, pair_wise_cls_loss
-        return true_matched_preds, true_matched_targets, pred_ious
+        return true_matched_preds, true_matched_targets, pred_ious, _avg_topk
 
 
 class AssignGuidanceSimOTA(SimOTA):

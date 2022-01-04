@@ -19,7 +19,7 @@ class MSCOCO(DatasetLayer):
         class_id, x, y, w, h
     """
 
-    def __init__(self, imgs_root=None, annotations_root=None, min_size=416, max_size=None, logger=None) -> None:
+    def __init__(self, imgs_root=None, annotations_root=None, min_size=None, max_size=None, logger=None) -> None:
         super().__init__()
         self.data = []
         # load & check annotation exists
@@ -81,8 +81,10 @@ class MSCOCO(DatasetLayer):
         height, width = img.shape[:2]  # orig hw
         if self.min_size is not None:
             ratio = self.min_size / min(height, width)
-        else:
+        elif self.max_size is not None:
             ratio = self.max_size / max(height, width)
+        else:
+            ratio = 1
         if ratio != 1:
             img = cv2.resize(
                 img,

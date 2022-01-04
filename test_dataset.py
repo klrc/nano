@@ -18,7 +18,7 @@ def test_load():
     dataset = ToTensor(dataset)
     rand = random.randint(0, len(dataset) - 1)
     img, labels = dataset.__getitem__(rand)
-    cv_img = draw_bounding_boxes(img, labels, names)
+    cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], labels =labels[..., 0],label_names=names)
     cv2.imwrite("test_load.png", cv_img)
 
 
@@ -29,7 +29,7 @@ def test_mosaic4():
     for i in range(10):
         rand = random.randint(0, len(dataset) - 1)
         img, labels = dataset.__getitem__(rand)
-        cv_img = draw_bounding_boxes(img, labels, names)
+        cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], labels =labels[..., 0],label_names=names)
         cv2.imwrite(f"test_mosaic4_{i}.png", cv_img)
 
 
@@ -40,7 +40,7 @@ def test_affine():
     for i in range(4):
         rand = random.randint(0, len(dataset) - 1)
         img, labels = dataset.__getitem__(rand)
-        cv_img = draw_bounding_boxes(img, labels, names)
+        cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], labels =labels[..., 0],label_names=names)
         cv2.imwrite(f"test_affine_{i}.png", cv_img)
 
 
@@ -51,7 +51,7 @@ def test_albumentations():
     for i in range(10):
         rand = random.randint(0, len(dataset) - 1)
         img, labels = dataset.__getitem__(rand)
-        cv_img = draw_bounding_boxes(img, labels, names)
+        cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], labels =labels[..., 0],label_names=names)
         cv2.imwrite(f"test_albumentations_{i}.png", cv_img)
 
 
@@ -60,7 +60,7 @@ def test_sizelimit():
     dataset = SizeLimit(dataset, limit=5)
     dataset = ToTensor(dataset)
     for i, (img, labels) in enumerate(dataset):
-        cv_img = draw_bounding_boxes(img, labels, names)
+        cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], labels =labels[..., 0],label_names=names)
         cv2.imwrite(f"test_sizelimit_{i}.png", cv_img)
 
 
@@ -74,7 +74,7 @@ def test_combination():
     for i in range(4):
         rand = random.randint(0, len(dataset) - 1)
         img, labels = dataset.__getitem__(rand)
-        cv_img = draw_bounding_boxes(img, labels, names)
+        cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], labels =labels[..., 0],label_names=names)
         cv2.imwrite(f"test_combination_{i}.png", cv_img)
 
 

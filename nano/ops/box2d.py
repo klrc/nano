@@ -38,7 +38,7 @@ def non_max_suppression(
 
     # Candidates
     xc = prediction[..., 4] > conf_thres 
-
+    
     # Checks
     assert (
         0 <= conf_thres <= 1

@@ -242,7 +242,7 @@ def run(
 
         mloss = torch.zeros(3, device=device)  # mean losses
         pbar = enumerate(train_loader)
-        print(("\n" + "%10s" * 7) % ("Epoch", "gpu_mem", "box", "obj", "cls", "labels", "img_size"))
+        print(("\n" + "%10s" * 7) % ("Epoch", "gpu_mem", "box", "obj", "cls", "labels", "topk"))
         pbar = tqdm(pbar, total=nb)  # progress bar
         optimizer.zero_grad()
         for i, (imgs, targets) in pbar:  # batch -------------------------------------------------------------
@@ -263,7 +263,7 @@ def run(
             # Forward
             with amp.autocast(enabled=cuda):
                 result = model(imgs)  # forward
-                loss, loss_items = criteria(result, targets.to(device))  # loss scaled by batch_size
+                loss, loss_items, topk = criteria(result, targets.to(device))  # loss scaled by batch_size
 
             # Backward
             scaler.scale(loss).backward()
@@ -280,7 +280,7 @@ def run(
             # Log
             mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
             mem = f"{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G"  # (GB)
-            pbar.set_description(("%10s" * 2 + "%10.4g" * 5) % (f"{epoch}/{start_epoch + epochs - 1}", mem, *mloss, targets.shape[0], imgs.shape[-1]))
+            pbar.set_description(("%10s" * 2 + "%10.4g" * 5) % (f"{epoch}/{start_epoch + epochs - 1}", mem, *mloss, targets.shape[0], topk.item()))
 
             # end batch ------------------------------------------------------------------------------------------------
 
@@ -353,7 +353,6 @@ if __name__ == "__main__":
         Ghostyolox_3x3_s32,
         Ghostyolox_3x3_m48,
         Ghostyolox_4x3_l128,
-        Ghostyolox_3x3_m96_coupled,
     )
     from nano.models.model_zoo.yolox_es import ESyolox_3x3_m96
     from nano.datasets.coco_box2d import MSCOCO, collate_fn, letterbox_collate_fn
@@ -368,7 +367,7 @@ if __name__ == "__main__":
     imgs_root = "/home/sh/Datasets/coco3/images/train"
     annotations_root = "/home/sh/Datasets/coco3/labels/train"
     base = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, min_size=416)
-    base = SizeLimit(base, 20000)
+    base = SizeLimit(base, 5000)
     base = Affine(base, horizontal_flip=0.5, perspective=0.3, max_perspective=0.2)
     base = Albumentations(base, "random_blind")
     base = Mosaic4(base, img_size=448)
@@ -395,9 +394,9 @@ if __name__ == "__main__":
         class_names,
         criteria,
         device,
-        lr0=0.001,
-        optimizer='AdamW',
-        warmup_epochs=0,
+        lr0=0.01,
+        optimizer='SGD',
+        warmup_epochs=3,
         batch_size=batch_size,
         patience=16,
         epochs=300,
