@@ -19,7 +19,7 @@ class MSCOCO(DatasetLayer):
         class_id, x, y, w, h
     """
 
-    def __init__(self, imgs_root=None, annotations_root=None, max_size=416, logger=None) -> None:
+    def __init__(self, imgs_root=None, annotations_root=None, min_size=416, max_size=None, logger=None) -> None:
         super().__init__()
         self.data = []
         # load & check annotation exists
@@ -32,7 +32,10 @@ class MSCOCO(DatasetLayer):
                     self.data.append((image_path, annotation_path))
         # Cache labels into memory for faster training
         self.label_cache = {}
+        assert min_size is None or max_size is None, 'only 1 of min/max can be set'
+        self.min_size = min_size
         self.max_size = max_size
+
         # set logger
         if logger is not None:
             assert hasattr(logger, "log")
@@ -76,7 +79,10 @@ class MSCOCO(DatasetLayer):
         image_path, annotation_path = self.data[index]
         img = cv2.imread(image_path)  # BGR
         height, width = img.shape[:2]  # orig hw
-        ratio = self.max_size / max(height, width)
+        if self.min_size is not None:
+            ratio = self.min_size / min(height, width)
+        else:
+            ratio = self.max_size / max(height, width)
         if ratio != 1:
             img = cv2.resize(
                 img,

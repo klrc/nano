@@ -14,9 +14,10 @@ class Mosaic4(DatasetLayer):
     4-mosaic augmentation from ultralytics-yolov5
     """
 
-    def __init__(self, base, img_size=416) -> None:
+    def __init__(self, base, img_size=416, loss_thres=0.8) -> None:
         super().__init__(base, DatasetLayer)
         self.img_size = img_size
+        self.loss_thres = loss_thres
 
     def __len__(self):
         return len(self.base)
@@ -68,13 +69,17 @@ class Mosaic4(DatasetLayer):
                 labels[:, 4] += offset_y
                 labels4.append(labels)
 
-        # Concat/clip labels
-        labels4 = np.concatenate(labels4, 0)
         # crop black border to average
         border = int(s // 2)
         img4 = img4[border : 2 * s - border, border : 2 * s - border]
         if len(labels4) > 0:
+            # Concat/clip labels
+            labels4 = np.concatenate(labels4, 0)
+            raw_boxsize = (labels4[:, 3] - labels4[:, 1]) * (labels4[:, 4] - labels4[:, 2])
             labels4[:, 1:] = np.clip(labels4[:, 1:] - border, 0, s - 1)
+            new_boxsize = (labels4[:, 3] - labels4[:, 1]) * (labels4[:, 4] - labels4[:, 2])
+            keeped_boxes = new_boxsize / (raw_boxsize + 1e-16) > (1 - self.loss_thres)
+            labels4 = labels4[keeped_boxes]
         return img4, labels4
 
 
@@ -86,19 +91,13 @@ class Affine(DatasetLayer):
         - perspective
     """
 
-    def __init__(
-        self,
-        base,
-        horizontal_flip=0.5,
-        perspective=0.5,
-        max_perspective=0.15,
-        crop_border=True,
-    ) -> None:
+    def __init__(self, base, horizontal_flip=0.5, perspective=0.5, max_perspective=0.15, crop_border=True, loss_thres=0.1) -> None:
         super().__init__(base, DatasetLayer)
         self.flip = horizontal_flip
         self.perspective = perspective
         self.max_perspective = max_perspective
         self.crop_border = crop_border
+        self.loss_thres = loss_thres
 
     def __len__(self):
         return len(self.base)
@@ -162,10 +161,14 @@ class Affine(DatasetLayer):
                 border_w = (new_w - w) // 2
                 img = img[border_h : new_h - border_h, border_w : new_w - border_w]
                 if len(label) > 0:
+                    raw_boxsize = (label[:, 3] - label[:, 1]) * (label[:, 4] - label[:, 2])
+                    new_boxsize = (label[:, 3] - label[:, 1]) * (label[:, 4] - label[:, 2])
                     label[:, 1] = np.clip(label[:, 1] - border_w, 0, w - 1)
                     label[:, 2] = np.clip(label[:, 2] - border_h, 0, h - 1)
                     label[:, 3] = np.clip(label[:, 3] - border_w, 0, w - 1)
                     label[:, 4] = np.clip(label[:, 4] - border_h, 0, h - 1)
+                    keeped_boxes = new_boxsize / raw_boxsize > (1 - self.loss_thres)
+                    label = label[keeped_boxes]
         return img, label
 
 

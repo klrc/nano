@@ -28,23 +28,35 @@ def from_numpy_image(img):
     return x
 
 
-def draw_bounding_boxes(tensor_im, labels, label_names=("person", "bike", "car"), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, font_thickness=1, font_color=(0, 0, 0)) -> None:
+def draw_bounding_boxes(image, labels, label_names=("person", "bike", "car"), box_color=None, centers=None, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, font_thickness=1, font_color=(0, 0, 0)):
     """
-    tensor_im: tensor image
+    image: image
     labels: numpy.array or torch.Tensor, (N, cxyxy)
     (inplace-safe function)
     returns:
         cv2_img: cv2 image with bounding boxes
     """
-    cv2_img = from_tensor_image(tensor_im)  # CHW BGR 0~255
+    if isinstance(image, torch.Tensor):
+        cv2_img = from_tensor_image(image)  # CHW BGR 0~255
+    else:
+        cv2_img = image
+        print('warning: cv2 image unchecked')
     if len(labels) > 0:
-        for box in labels:
+        for i, box in enumerate(labels):
             cid, x1, y1, x2, y2 = [int(x) for x in box]
-            color = list(np.random.random(size=3) * 128 + 128)
+            if box_color is None:
+                color = list(np.random.random(size=3) * 128 + 128)
+            else:
+                color = box_color
             cv2.rectangle(cv2_img, (x1, y1), (x2, y2), color, 1, 4, 0)
             label = label_names[cid]
             text_size, _ = cv2.getTextSize(label, font, font_scale, font_thickness)
             text_w, text_h = text_size
             cv2.rectangle(cv2_img, (x1, y1), (x1 + text_w + 2, y1 + text_h + 2), color, -1)
             cv2.putText(cv2_img, label, (x1, y1 + text_h), font, font_scale, font_color, font_thickness)
+            if centers is not None:
+                if isinstance(centers, torch.Tensor):
+                    centers = centers.numpy()
+                grid = [int (x) for x in centers[i]]
+                cv2.circle(cv2_img, grid, 1, color, thickness=3)
     return cv2_img
