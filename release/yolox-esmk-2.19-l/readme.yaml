@@ -1,3 +1,0 @@
-class_names: ['person', 'bike', 'car']
-output_names: ['output_1', 'output_2', 'output_3']
-anchors: [11.0, 14.0, 30.0, 46.0, 143.0, 130.0]
