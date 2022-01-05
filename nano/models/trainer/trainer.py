@@ -15,10 +15,9 @@ import torch.nn as nn
 from torch.cuda import amp
 from torch.optim import SGD, Adam, AdamW, lr_scheduler
 from tqdm import tqdm
-import evaluator
+from . import evaluator
 import glob
 import re
-
 
 
 def load_device(device="cuda"):
@@ -154,7 +153,7 @@ def run(
     momentum=0.843,
     weight_decay=0.00036,
     lrf=0.12,
-    optimizer='SGD',
+    optimizer="SGD",
     ckpt=None,
     warmup_epochs=3,
     warmup_bias_lr=0.05,
@@ -192,11 +191,11 @@ def run(
         elif hasattr(v, "weight") and isinstance(v.weight, nn.Parameter):  # weight (with decay)
             g1.append(v.weight)
 
-    if optimizer == 'Adam':
+    if optimizer == "Adam":
         optimizer = Adam(g0, lr=lr0, betas=(momentum, 0.999))  # adjust beta1 to momentum
-    elif optimizer == 'AdamW':
+    elif optimizer == "AdamW":
         optimizer = AdamW(g0, lr=lr0, betas=(momentum, 0.999))  # adjust beta1 to momentum
-    elif optimizer == 'SGD':
+    elif optimizer == "SGD":
         optimizer = SGD(g0, lr=lr0, momentum=momentum, nesterov=True)
 
     optimizer.add_param_group({"params": g1, "weight_decay": weight_decay})  # add g1 with weight_decay
@@ -242,7 +241,7 @@ def run(
 
         mloss = torch.zeros(3, device=device)  # mean losses
         pbar = enumerate(train_loader)
-        print(("\n" + "%10s" * 7) % ("Epoch", "gpu_mem", "box", "obj", "cls", "labels", "topk"))
+        print(("\n" + "%10s" * 9) % ("Epoch", "gpu_mem", "box", "obj", "cls", "topk", "lr0", "lr1", "lr2"))
         pbar = tqdm(pbar, total=nb)  # progress bar
         optimizer.zero_grad()
         for i, (imgs, targets) in pbar:  # batch -------------------------------------------------------------
@@ -278,14 +277,16 @@ def run(
                 last_opt_step = ni
 
             # Log
+            lr_g0, lr_g1, lr_g2 = [x["lr"] for x in optimizer.param_groups]  # for loggers
             mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
             mem = f"{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G"  # (GB)
-            pbar.set_description(("%10s" * 2 + "%10.4g" * 5) % (f"{epoch}/{start_epoch + epochs - 1}", mem, *mloss, targets.shape[0], criteria._avg_topk))
+            pbar.set_description(
+                ("%10s" * 2 + "%10.4f" * 7) % (f"{epoch}/{start_epoch + epochs - 1}", mem, *mloss, criteria._avg_topk, lr_g0, lr_g1, lr_g2)
+            )
 
             # end batch ------------------------------------------------------------------------------------------------
 
         # Scheduler
-        # lr = [x["lr"] for x in optimizer.param_groups]  # for loggers
         scheduler.step()
 
         # mAP
@@ -341,63 +342,3 @@ def run(
     # end training -----------------------------------------------------------------------------------------------------
     torch.cuda.empty_cache()
     return best
-
-
-if __name__ == "__main__":
-    from torch.utils.data import DataLoader
-    from nano.models.assigners.simota import (
-        SimOTA,
-        AssignGuidanceSimOTA,
-    )
-    from nano.models.model_zoo.yolox_ghost import (
-        Ghostyolox_3x3_s32,
-        Ghostyolox_3x3_m48,
-        Ghostyolox_4x3_l128,
-    )
-    from nano.models.model_zoo.yolox_es import ESyolox_3x3_m96
-    from nano.datasets.coco_box2d import MSCOCO, collate_fn, letterbox_collate_fn
-    from nano.datasets.coco_box2d_transforms import (
-        SizeLimit,
-        Affine,
-        Albumentations,
-        Mosaic4,
-        ToTensor,
-    )
-
-    imgs_root = "/home/sh/Datasets/coco3/images/train"
-    annotations_root = "/home/sh/Datasets/coco3/labels/train"
-    base = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, min_size=416)
-    base = SizeLimit(base, 30000)
-    base = Affine(base, horizontal_flip=0.3, perspective=0.3, max_perspective=0.2)
-    base = Albumentations(base, "random_blind")
-    base = Mosaic4(base, img_size=448)
-    trainset = ToTensor(base)
-    imgs_root = "/home/sh/Datasets/coco3/images/val"
-    annotations_root = "/home/sh/Datasets/coco3/labels/val"
-    base = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, max_size=416)
-    valset = ToTensor(base)
-
-    batch_size = 32
-    train_loader = DataLoader(trainset, batch_size=batch_size, num_workers=8, pin_memory=False, shuffle=True, collate_fn=collate_fn)
-    val_loader = DataLoader(valset, batch_size=batch_size//2, num_workers=8, pin_memory=False, collate_fn=letterbox_collate_fn)
-
-    model = Ghostyolox_3x3_s32(num_classes=3)
-    device = load_device("cuda")
-    class_names = ["person", "bike", "car"]
-
-    criteria = SimOTA(3, True)
-
-    run(
-        model,
-        train_loader,
-        val_loader,
-        class_names,
-        criteria,
-        device,
-        lr0=0.001,
-        optimizer='SGD',
-        warmup_epochs=3,
-        batch_size=batch_size,
-        patience=16,
-        epochs=300,
-    )

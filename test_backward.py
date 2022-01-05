@@ -65,10 +65,11 @@ def test_assignment(model, device):
             label_targets = [names[x] for x in label_targets.cpu()]
 
             # draw lobj centers
-            obj_targets = obj_targets.bool()
-            objectness_center = (grid_mask[0, obj_targets] + 0.5) * stride_mask[0, obj_targets].unsqueeze(-1)
+            center_index = obj_targets.bool()
+            objectness_center = (grid_mask[0, center_index] + 0.5) * stride_mask[0, center_index].unsqueeze(-1)
+            alphas = obj_targets[center_index]
             cv_img = draw_bounding_boxes(image=imgs[0].cpu(), boxes=reg_targets.cpu(), boxes_label=label_targets)
-            cv_img = draw_center_points(cv_img, objectness_center)
+            cv_img = draw_center_points(cv_img, objectness_center, alphas=alphas)
             cv2.imwrite(f"test_objectness_center_{i}.png", cv_img)
 
             # draw matched targets
@@ -94,8 +95,8 @@ if __name__ == "__main__":
     from nano.models.model_zoo.yolox_ghost import Ghostyolox_3x3_s32
 
     model = Ghostyolox_3x3_s32(num_classes=3)
-    # model.load_state_dict(torch.load("runs/train/exp6/last.pt")["state_dict"])
+    model.load_state_dict(torch.load("runs/train/exp18/last.pt")["state_dict"])
     model.train().to("cuda")
 
     test_assignment(model, "cuda")
-    test_backward(model, 'cuda')
+    # test_backward(model, 'cuda')

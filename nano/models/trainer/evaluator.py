@@ -115,34 +115,3 @@ def run(model, class_names, dataloader, device, half=False, conf_thres=0.001, io
     model.float()  # for training
     return mp, mr, map50, map
 
-
-if __name__ == "__main__":
-    from nano.datasets.coco_box2d import MSCOCO
-    from nano.datasets.coco_box2d_transforms import (
-        ToTensor,
-    )
-    from torch.utils.data import DataLoader
-    from nano.datasets.coco_box2d import letterbox_collate_fn
-
-    dataset = ToTensor(
-        MSCOCO(
-            imgs_root="/home/sh/Datasets/coc-s/images/val",
-            annotations_root="/home/sh/Datasets/coc-s/labels/val",
-            max_size=416,
-        )
-    )
-    dataloader = DataLoader(
-        dataset,
-        batch_size=32,
-        num_workers=8,
-        pin_memory=False,
-        collate_fn=letterbox_collate_fn,
-    )
-
-    from nano.models.model_zoo.yolox_es import ESyolox_3x3_s32
-
-    model = ESyolox_3x3_s32(num_classes=3)
-
-    class_names = ["person", "bike", "car"]
-
-    run(model, class_names, dataloader, "cuda")

@@ -48,9 +48,9 @@ def compute_loss(assigned_batch, num_classes=3, eps=0):
     # label smoothing
     if eps > 0:
         cls_targets = label_smoothing(cls_targets, eps, num_classes)
-    lbox = iou_loss(preds[match_mask, :4], reg_targets, reduction="mean")
+    lbox = 0.05 * iou_loss(preds[match_mask, :4], reg_targets, reduction="mean")
     lobj = binary_cross_entropy_with_logits(preds[:, 4], obj_targets, reduction="mean")
-    lcls = binary_cross_entropy_with_logits(preds[match_mask, 5:], cls_targets, reduction="mean")
+    lcls = 0.5 * binary_cross_entropy_with_logits(preds[match_mask, 5:], cls_targets, reduction="mean")
     # loss gain
     loss += torch.stack((lbox, lobj, lcls))
     # loss, loss items (for printing)
@@ -120,22 +120,25 @@ class SimOTA(nn.Module):
                 match_masks.append(match_mask)
                 continue
 
-            is_in_boxes_or_center, is_in_boxes_and_center = self.center_sampling(preds_per_image, targets_per_image, grid_mask, stride_mask)
+            is_in_boxes_anchor, is_in_boxes_and_center = self.center_sampling(preds_per_image, targets_per_image, grid_mask, stride_mask)
             is_finally_matched, true_targets, pred_ious = self.dynamic_topk(
-                preds_per_image[is_in_boxes_or_center], targets_per_image, is_in_boxes_and_center, num_classes
+                preds_per_image[is_in_boxes_anchor], targets_per_image, is_in_boxes_and_center, num_classes
             )
 
             # update matched anchor indexes
-            obj_target = is_in_boxes_or_center.clone().float()
-            obj_target[is_in_boxes_or_center] = is_in_boxes_and_center.sum(0).float()
-            match_mask = is_in_boxes_or_center.clone()
-            match_mask[is_in_boxes_or_center] = is_finally_matched
+            match_mask = is_in_boxes_anchor.clone()
+            match_mask[is_in_boxes_anchor] = is_finally_matched
+            obj_target = is_in_boxes_anchor.clone().float()
+            obj_target[is_in_boxes_anchor] = pred_ious.clamp(0, 1)
 
             # collect reg_target, obj_target, cls_target
             reg_target = targets_per_image[true_targets, 2:]
-            cls_target = (one_hot(targets_per_image[true_targets, 1].to(torch.int64), num_classes,)) * pred_ious.unsqueeze(
-                -1
-            )  # cls_target = onehot_class * iou
+            cls_target = (
+                one_hot(
+                    targets_per_image[true_targets, 1].to(torch.int64),
+                    num_classes,
+                )
+            ).float()
             reg_targets.append(reg_target)
             obj_targets.append(obj_target)
             cls_targets.append(cls_target)
@@ -152,7 +155,7 @@ class SimOTA(nn.Module):
         """
         perform center sampling for targets.
         returns:
-            is_in_boxes_or_center: (A,) -> (Am,)  # Am is the number of matched anchors
+            is_in_boxes_anchor: (A,) -> (Am,)  # Am is the number of matched anchors
             is_in_boxes_and_center: (T, Am)
         """
         # build match_matrix with shape (num_targets, num_grids)
@@ -183,9 +186,9 @@ class SimOTA(nn.Module):
         is_in_centers = center_deltas.max(dim=-1).values < center_radius * stride_mask
         is_in_centers_all = is_in_centers.sum(dim=0) > 0
         # in boxes and in centers
-        is_in_boxes_or_center = is_in_boxes_all | is_in_centers_all
-        is_in_boxes_and_center = is_in_boxes[:, is_in_boxes_or_center] & is_in_centers[:, is_in_boxes_or_center]
-        return is_in_boxes_or_center, is_in_boxes_and_center
+        is_in_boxes_anchor = is_in_boxes_all | is_in_centers_all
+        is_in_boxes_and_center = is_in_boxes[:, is_in_boxes_anchor] & is_in_centers[:, is_in_boxes_anchor]
+        return is_in_boxes_anchor, is_in_boxes_and_center
 
     @torch.no_grad()
     def dynamic_topk(self, matched_preds, targets, is_matched, num_classes):
@@ -205,6 +208,7 @@ class SimOTA(nn.Module):
         num_targets = targets.size(0)
         num_anchors = matched_preds.size(0)
         pair_wise_iou = box_iou(targets[..., 2:], matched_preds[..., :4])  # T*D
+        pair_wise_iou = torch.nan_to_num(pair_wise_iou, nan=0) # remove NaN
         pair_wise_iou_loss = -torch.log(pair_wise_iou + 1e-8)
         gt_cls_per_image = one_hot(targets[:, 1].to(torch.int64), num_classes)
         gt_cls_per_image = gt_cls_per_image.float().unsqueeze(1).repeat(1, num_anchors, 1)
@@ -233,32 +237,33 @@ class SimOTA(nn.Module):
             matching_matrix[cost_argmin, targets_per_anchor > 1] = 1
         true_matched_preds = matching_matrix.sum(0) > 0
         true_matched_targets = matching_matrix[:, true_matched_preds].argmax(0)
-        pred_ious = (matching_matrix * pair_wise_iou).sum(0)[true_matched_preds]
+        pred_iou = pair_wise_iou.sum(0)
         del pair_wise_iou, pair_wise_iou_loss, pair_wise_cls_loss
-        return true_matched_preds, true_matched_targets, pred_ious
+        return true_matched_preds, true_matched_targets, pred_iou
 
 
-class AssignGuidanceSimOTA(SimOTA):
-    """
-    SimOTA with assign guidance module (from NanoDet-plus)
-    https://zhuanlan.zhihu.com/p/449912627
-    """
+# TODO: implement this
+# class AssignGuidanceSimOTA(SimOTA):
+#     """
+#     SimOTA with assign guidance module (from NanoDet-plus)
+#     https://zhuanlan.zhihu.com/p/449912627
+#     """
 
-    def __init__(self, num_classes, with_loss, **kwargs):
-        super().__init__(num_classes, with_loss, **kwargs)
+#     def __init__(self, num_classes, with_loss, **kwargs):
+#         super().__init__(num_classes, with_loss, **kwargs)
 
-    def forward(self, result, targets):
-        """
-        result: * result should be with additional guidance
-        """
-        guides, preds, grid_mask, stride_mask = result
-        targets = self.assign_batch((guides, grid_mask, stride_mask), targets)
-        assigned_batch = (preds.flatten(0, 1), targets)
-        guides_batch = (guides.flatten(0, 1), targets)
-        torch.cuda.empty_cache()
-        if self.with_loss:
-            loss_g, _ = compute_loss(guides_batch, num_classes=self.num_classes, **self.loss_kwargs)
-            loss_p, detached_loss_p = compute_loss(guides_batch, num_classes=self.num_classes, **self.loss_kwargs)
-            return loss_g + loss_p, detached_loss_p
-        else:
-            return assigned_batch
+#     def forward(self, result, targets):
+#         """
+#         result: * result should be with additional guidance
+#         """
+#         guides, preds, grid_mask, stride_mask = result
+#         targets = self.assign_batch((guides, grid_mask, stride_mask), targets)
+#         assigned_batch = (preds.flatten(0, 1), targets)
+#         guides_batch = (guides.flatten(0, 1), targets)
+#         torch.cuda.empty_cache()
+#         if self.with_loss:
+#             loss_g, _ = compute_loss(guides_batch, num_classes=self.num_classes, **self.loss_kwargs)
+#             loss_p, detached_loss_p = compute_loss(guides_batch, num_classes=self.num_classes, **self.loss_kwargs)
+#             return loss_g + loss_p, detached_loss_p
+#         else:
+#             return assigned_batch

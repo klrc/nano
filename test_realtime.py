@@ -14,16 +14,19 @@ TARGET_SIZE_HEIGHT = 224
 
 def cv2_draw_bbox(frame, x, canvas_h, canvas_w, class_names):
     # xyxy-conf-cls
-    x[..., 0] *= canvas_w / TARGET_SIZE_WIDTH 
+    if len(x) == 0:
+        print('nothing detected')
+        return
+    x[..., 0] *= canvas_w / TARGET_SIZE_WIDTH
     x[..., 1] *= canvas_h / TARGET_SIZE_HEIGHT
-    x[..., 2] *= canvas_w / TARGET_SIZE_WIDTH 
+    x[..., 2] *= canvas_w / TARGET_SIZE_WIDTH
     x[..., 3] *= canvas_h / TARGET_SIZE_HEIGHT
     return draw_bounding_boxes(
-        image = frame,
-        boxes = x[..., :4],
-        labels = x[..., 5],
-        label_names=class_names,
+        image=frame,
+        boxes=x[..., :4],
+        boxes_label=[class_names[n] for n in x[..., 5].cpu().int()],
     )
+
 
 def detection(conf_thres, iou_thres, device, capture_queue, bbox_queue):
     model = acquire_model()
@@ -168,11 +171,11 @@ if __name__ == "__main__":
         from nano.models.model_zoo.yolox_ghost import Ghostyolox_3x3_s32
 
         model = Ghostyolox_3x3_s32(num_classes=3)
-        model.load_state_dict(torch.load("runs/train/exp6/last.pt", map_location="cpu")["state_dict"])
+        model.load_state_dict(torch.load("runs/train/exp18/last.pt", map_location="cpu")["state_dict"])
         return model
 
     test_front_camera(
-        0.1,
+        0.03,
         0.45,
         ["person", "bike", "car"],
         device="cpu",

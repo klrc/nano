@@ -39,12 +39,14 @@ def any_tensor_format(tensor):
         return tensor.cpu().numpy()
     return tensor
 
+
 def rand_default_color(color):
     if color is None:
         return list(np.random.random(size=3) * 128 + 128)  # light color
     return color
 
-def draw_center_points(image, centers, color=None, thickness=3):
+
+def draw_center_points(image, centers, color=None, thickness=3, alphas=None):
     """
     draw square pixel-style points on image
     """
@@ -58,9 +60,17 @@ def draw_center_points(image, centers, color=None, thickness=3):
     assert centers.shape[-1] == 2
     if len(centers.shape) == 1:
         centers = [centers]
-    for cp in centers:
+    if alphas is not None:
+        assert len(alphas) == len(centers)
+    for i, cp in enumerate(centers):
         grid = [int(x) for x in cp]
-        cv2.circle(cv2_img, grid, 1, color, thickness=thickness)
+        if alphas is not None:
+            alpha = alphas[i]
+            point_color = (int(color[0] * alpha), int(color[1] * alpha), int(color[2] * alpha))
+        else:
+            point_color = color
+        cv2_img = cv2.circle(cv2_img, grid, 1, point_color, thickness=thickness)
+
     return cv2_img
 
 
@@ -81,7 +91,7 @@ def draw_bounding_boxes(image, boxes, box_color=None, boxes_label=None, boxes_ce
     """
     draw bounding boxes on image
     boxes: x1, y1, x2, y2
-    boxes_label: list(str)  string labels of each box 
+    boxes_label: list(str)  string labels of each box
     boxes_centers: list(centers)  each center(s) should be tensor/numpy array
     if no color is set, random colors will be applied
     """
@@ -104,5 +114,5 @@ def draw_bounding_boxes(image, boxes, box_color=None, boxes_label=None, boxes_ce
             cv2_img = draw_text_with_background(cv2_img, text, x1, y1, color)
         # draw center
         if boxes_centers is not None:
-            cv2_img = draw_center_points(cv2_img, boxes_centers, color)
+            cv2_img = draw_center_points(cv2_img, boxes_centers[i], color=color)
     return cv2_img

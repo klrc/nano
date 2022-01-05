@@ -77,7 +77,7 @@ class YoloXHead(nn.Module):
             else:
                 y[:4] = y[:4].sigmoid()
             # ccwh -> xywh
-            y[..., :2] = (y[..., :2] * 5 - 2 + grid_mask) * stride
+            y[..., :2] = (y[..., :2] * 7 - 3 + grid_mask) * stride  # +-3.5
             y[..., 2:4] = torch.exp(y[..., 2:4] * 3) * stride  # max=20*stride
             # xywh -> xyxy
             y[..., :2] -= y[..., 2:4] / 2
