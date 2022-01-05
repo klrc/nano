@@ -263,7 +263,7 @@ def run(
             # Forward
             with amp.autocast(enabled=cuda):
                 result = model(imgs)  # forward
-                loss, loss_items, topk = criteria(result, targets.to(device))  # loss scaled by batch_size
+                loss, loss_items = criteria(result, targets.to(device))  # loss scaled by batch_size
 
             # Backward
             scaler.scale(loss).backward()
@@ -280,7 +280,7 @@ def run(
             # Log
             mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
             mem = f"{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G"  # (GB)
-            pbar.set_description(("%10s" * 2 + "%10.4g" * 5) % (f"{epoch}/{start_epoch + epochs - 1}", mem, *mloss, targets.shape[0], topk.item()))
+            pbar.set_description(("%10s" * 2 + "%10.4g" * 5) % (f"{epoch}/{start_epoch + epochs - 1}", mem, *mloss, targets.shape[0], criteria._avg_topk))
 
             # end batch ------------------------------------------------------------------------------------------------
 
@@ -367,8 +367,8 @@ if __name__ == "__main__":
     imgs_root = "/home/sh/Datasets/coco3/images/train"
     annotations_root = "/home/sh/Datasets/coco3/labels/train"
     base = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, min_size=416)
-    base = SizeLimit(base, 5000)
-    base = Affine(base, horizontal_flip=0.5, perspective=0.3, max_perspective=0.2)
+    base = SizeLimit(base, 30000)
+    base = Affine(base, horizontal_flip=0.3, perspective=0.3, max_perspective=0.2)
     base = Albumentations(base, "random_blind")
     base = Mosaic4(base, img_size=448)
     trainset = ToTensor(base)
@@ -394,7 +394,7 @@ if __name__ == "__main__":
         class_names,
         criteria,
         device,
-        lr0=0.01,
+        lr0=0.001,
         optimizer='SGD',
         warmup_epochs=3,
         batch_size=batch_size,

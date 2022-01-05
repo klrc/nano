@@ -168,14 +168,14 @@ if __name__ == "__main__":
         from nano.models.model_zoo.yolox_ghost import Ghostyolox_3x3_s32
 
         model = Ghostyolox_3x3_s32(num_classes=3)
-        model.load_state_dict(torch.load("runs/train/exp/last.pt", map_location="cpu")["state_dict"])
+        model.load_state_dict(torch.load("runs/train/exp6/last.pt", map_location="cpu")["state_dict"])
         return model
 
     test_front_camera(
-        0.01,
+        0.1,
         0.45,
         ["person", "bike", "car"],
-        device="cuda",
+        device="cpu",
     )
     # test_yuv(
     #     "1280x720_3.yuv",

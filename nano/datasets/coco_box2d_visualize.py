@@ -28,50 +28,81 @@ def from_numpy_image(img):
     return x
 
 
-def draw_bounding_boxes(
-    image,
-    boxes,
-    box_color=None,
-    centers=None,
-    labels=None,
-    label_names=("person", "bike", "car"),
-    font=cv2.FONT_HERSHEY_SIMPLEX,
-    font_scale=0.3,
-    font_thickness=1,
-    font_color=(0, 0, 0),
-):
+def any_image_format(image):
+    if isinstance(image, torch.Tensor):
+        return from_tensor_image(image)
+    return image
+
+
+def any_tensor_format(tensor):
+    if isinstance(tensor, torch.Tensor):
+        return tensor.cpu().numpy()
+    return tensor
+
+def rand_default_color(color):
+    if color is None:
+        return list(np.random.random(size=3) * 128 + 128)  # light color
+    return color
+
+def draw_center_points(image, centers, color=None, thickness=3):
     """
-    image: input image
-    labels: numpy.array or torch.Tensor, (N, cxyxy)
-    (inplace-safe function)
-    returns:
-        cv2_img: cv2 image with bounding boxes
+    draw square pixel-style points on image
     """
     # set image format
-    if isinstance(image, torch.Tensor):
-        cv2_img = from_tensor_image(image)  # CHW BGR 0~255
-    else:
-        cv2_img = image
+    cv2_img = any_image_format(image)  # CHW BGR 0~255
+    # set tensor format (to numpy)
+    centers = any_tensor_format(centers)
+    # set color
+    color = rand_default_color(color)
+    # draw points
+    assert centers.shape[-1] == 2
+    if len(centers.shape) == 1:
+        centers = [centers]
+    for cp in centers:
+        grid = [int(x) for x in cp]
+        cv2.circle(cv2_img, grid, 1, color, thickness=thickness)
+    return cv2_img
+
+
+def draw_text_with_background(image, text, x1, y1, color=None, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, font_thickness=1, font_color=(0, 0, 0)):
+    """
+    draw labels with auto-fitting background color
+    """
+    # set image format
+    cv2_img = any_image_format(image)  # CHW BGR 0~255
+    text_size, _ = cv2.getTextSize(text, font, font_scale, font_thickness)
+    text_w, text_h = text_size
+    cv2.rectangle(cv2_img, (x1, y1), (x1 + text_w + 2, y1 + text_h + 2), color, -1)
+    cv2.putText(cv2_img, text, (x1, y1 + text_h), font, font_scale, font_color, font_thickness)
+    return cv2_img
+
+
+def draw_bounding_boxes(image, boxes, box_color=None, boxes_label=None, boxes_centers=None):
+    """
+    draw bounding boxes on image
+    boxes: x1, y1, x2, y2
+    boxes_label: list(str)  string labels of each box 
+    boxes_centers: list(centers)  each center(s) should be tensor/numpy array
+    if no color is set, random colors will be applied
+    """
+    # set image format
+    cv2_img = any_image_format(image)  # CHW BGR 0~255
+    if boxes_label is not None:
+        assert len(boxes_label) == len(boxes)
+    if boxes_centers is not None:
+        assert len(boxes_centers) == len(boxes)
+    # draw boxes
     for i, box in enumerate(boxes):
         # set color
-        if box_color is None:
-            color = list(np.random.random(size=3) * 128 + 128)
-        else:
-            color = box_color
+        color = rand_default_color(box_color)
         # draw box
         x1, y1, x2, y2 = [int(x) for x in box]
         cv2.rectangle(cv2_img, (x1, y1), (x2, y2), color, 1, 4, 0)
         # draw label
-        if labels is not None:
-            cid = int(labels[i])
-            text_size, _ = cv2.getTextSize(label_names[cid], font, font_scale, font_thickness)
-            text_w, text_h = text_size
-            cv2.rectangle(cv2_img, (x1, y1), (x1 + text_w + 2, y1 + text_h + 2), color, -1)
-            cv2.putText(cv2_img, label_names[cid], (x1, y1 + text_h), font, font_scale, font_color, font_thickness)
+        if boxes_label is not None:
+            text = boxes_label[i]
+            cv2_img = draw_text_with_background(cv2_img, text, x1, y1, color)
         # draw center
-        if centers is not None:
-            if isinstance(centers, torch.Tensor):
-                centers = centers.numpy()
-            grid = [int(x) for x in centers[i]]
-            cv2.circle(cv2_img, grid, 1, color, thickness=3)
+        if boxes_centers is not None:
+            cv2_img = draw_center_points(cv2_img, boxes_centers, color)
     return cv2_img

@@ -7,7 +7,7 @@ from torch.utils.data.dataloader import DataLoader
 
 from nano.datasets.coco_box2d import MSCOCO
 from nano.datasets.coco_box2d_transforms import Affine, Albumentations, SizeLimit, ToTensor, Mosaic4
-from nano.datasets.coco_box2d_visualize import draw_bounding_boxes
+from nano.datasets.coco_box2d_visualize import draw_bounding_boxes, draw_center_points
 from nano.models.assigners.simota import SimOTA
 from nano.datasets.coco_box2d import collate_fn
 
@@ -34,8 +34,8 @@ def test_backward(model, device):
         targets = targets.to(device)
         with torch.autograd.set_detect_anomaly(True):
             result = model(imgs)
-            loss, detached_loss, topk = assigner(result, targets)
-            print(detached_loss, topk)
+            loss, detached_loss = assigner(result, targets)
+            print(detached_loss, assigner._avg_topk)
             loss.backward()
         return
 
@@ -60,34 +60,29 @@ def test_assignment(model, device):
         with torch.autograd.set_detect_anomaly(True):
             result = model(imgs)
             pred, grid_mask, stride_mask = result
-            reg_targets, obj_targets, cls_targets = assigner(result, targets)
+            reg_targets, obj_targets, cls_targets, match_mask = assigner(result, targets)
+            label_targets = torch.argmax(cls_targets, dim=1, keepdim=True)
+            label_targets = [names[x] for x in label_targets.cpu()]
+
+            # draw lobj centers
             obj_targets = obj_targets.bool()
-            cls_targets = torch.argmax(cls_targets, dim=1, keepdim=True)
-            center_targets = (grid_mask[0, obj_targets] + 0.5) * stride_mask[0, obj_targets].unsqueeze(-1)
-            for b, c in zip(reg_targets, center_targets):
-                print(b, c)
-            # draw targets
-            cv_img = draw_bounding_boxes(
-                image=imgs[0].cpu(),
-                boxes=reg_targets.cpu(),
-                centers=center_targets.cpu(),
-                labels=cls_targets.cpu(),
-                label_names=names,
-            )
+            objectness_center = (grid_mask[0, obj_targets] + 0.5) * stride_mask[0, obj_targets].unsqueeze(-1)
+            cv_img = draw_bounding_boxes(image=imgs[0].cpu(), boxes=reg_targets.cpu(), boxes_label=label_targets)
+            cv_img = draw_center_points(cv_img, objectness_center)
+            cv2.imwrite(f"test_objectness_center_{i}.png", cv_img)
+
+            # draw matched targets
+            center_targets = (grid_mask[0, match_mask] + 0.5) * stride_mask[0, match_mask].unsqueeze(-1)
+            cv_img = draw_bounding_boxes(image=imgs[0].cpu(), boxes=reg_targets.cpu(), boxes_label=label_targets, boxes_centers=center_targets)
             cv2.imwrite(f"test_assignment_{i}.png", cv_img)
+
             # draw preds
-            pred = pred.flatten(0, 1)[obj_targets]
+            pred = pred.flatten(0, 1)[match_mask]
             pred_cls = torch.argmax(pred[:, 5:], dim=1, keepdim=True)
+            pred_cls = [names[x] for x in pred_cls.cpu()]
             pred_box = pred[:, :4]
-            matched_pred = torch.cat((pred_cls, pred_box), dim=-1)
             src_copy = cv_img.copy()
-            cv_img = draw_bounding_boxes(
-                image=cv_img,
-                boxes=pred_box,
-                box_color=(0, 140, 255),
-                labels=pred_cls,
-                label_names=names,
-            )
+            cv_img = draw_bounding_boxes(image=cv_img, boxes=pred_box, box_color=(0, 140, 255), boxes_label=pred_cls)
             cv_img = cv2.addWeighted(src_copy, 0.6, cv_img, 0.4, 1)
             cv2.imwrite(f"test_assignment_dense_{i}.png", cv_img)
         i += 1
@@ -99,7 +94,8 @@ if __name__ == "__main__":
     from nano.models.model_zoo.yolox_ghost import Ghostyolox_3x3_s32
 
     model = Ghostyolox_3x3_s32(num_classes=3)
-    model.load_state_dict(torch.load("runs/train/exp/last.pt")["state_dict"])
+    # model.load_state_dict(torch.load("runs/train/exp6/last.pt")["state_dict"])
     model.train().to("cuda")
+
     test_assignment(model, "cuda")
     test_backward(model, 'cuda')

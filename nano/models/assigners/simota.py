@@ -27,7 +27,7 @@ def label_smoothing(target, eps, num_classes, inplace=False):
     return target
 
 
-def compute_loss(assigned_batch, num_classes=3, eps=0.05):
+def compute_loss(assigned_batch, num_classes=3, eps=0):
     """
     compute loss from collected reg (bbox), obj, cls targets,
     all anchors are flatten to batch dimension.
@@ -41,20 +41,20 @@ def compute_loss(assigned_batch, num_classes=3, eps=0.05):
         loss: loss for backward
         detached_loss: detached loss, for printing usage
     """
-    preds, reg_targets, obj_targets, cls_targets = assigned_batch
+    preds, reg_targets, obj_targets, cls_targets, match_mask = assigned_batch
     device = preds.device
     # bbox regression loss, objectness loss, classification loss (batched)
     loss = torch.zeros(3, device=device)
     # label smoothing
     if eps > 0:
         cls_targets = label_smoothing(cls_targets, eps, num_classes)
-    lbox = iou_loss(preds[obj_targets, :4], reg_targets, reduction="mean")
-    lobj = binary_cross_entropy_with_logits(preds[obj_targets, 5:], cls_targets, reduction="mean")
-    lcls = binary_cross_entropy_with_logits(preds[:, 4], obj_targets.float(), reduction="mean")
+    lbox = iou_loss(preds[match_mask, :4], reg_targets, reduction="mean")
+    lobj = binary_cross_entropy_with_logits(preds[:, 4], obj_targets, reduction="mean")
+    lcls = binary_cross_entropy_with_logits(preds[match_mask, 5:], cls_targets, reduction="mean")
     # loss gain
     loss += torch.stack((lbox, lobj, lcls))
     # loss, loss items (for printing)
-    return 5*lbox + lobj + lcls, loss.detach()
+    return lbox + lobj + lcls, loss.detach()
 
 
 class SimOTA(nn.Module):
@@ -71,17 +71,18 @@ class SimOTA(nn.Module):
         self.num_classes = num_classes
         self.with_loss = with_loss
         self.loss_kwargs = kwargs
+        self._avg_topk = 1
 
     def forward(self, result, targets):
-        reg_targets, obj_targets, cls_targets, _avg_topk = self.assign_batch(result, targets)
+        reg_targets, obj_targets, cls_targets, match_mask = self.assign_batch(result, targets)
         torch.cuda.empty_cache()
         if self.with_loss:
             preds = result[0].flatten(0, 1)
-            assigned_batch = (preds, reg_targets, obj_targets, cls_targets)
+            assigned_batch = (preds, reg_targets, obj_targets, cls_targets, match_mask)
             loss, detached_loss = compute_loss(assigned_batch, num_classes=self.num_classes, **self.loss_kwargs)
-            return loss, detached_loss, _avg_topk
+            return loss, detached_loss
         else:
-            return reg_targets, obj_targets, cls_targets
+            return reg_targets, obj_targets, cls_targets, match_mask
 
     @torch.no_grad()
     def assign_batch(self, result, targets):
@@ -97,9 +98,9 @@ class SimOTA(nn.Module):
         cls_targets = []
         obj_targets = []
         reg_targets = []
+        match_masks = []
         batch_size = preds.size(0)
         num_classes = self.num_classes
-        _avg_topk = 1
         # process per image
         for bi in range(batch_size):
             # process batch ----------------------------------------------------------------
@@ -112,42 +113,46 @@ class SimOTA(nn.Module):
                 cls_target = preds_per_image.new_zeros((0, num_classes))
                 reg_target = preds_per_image.new_zeros((0, 4))
                 obj_target = preds_per_image.new_zeros(preds_per_image.size(0)).bool()
+                match_mask = preds_per_image.new_zeros(preds_per_image.size(0)).bool()
                 reg_targets.append(reg_target)
                 obj_targets.append(obj_target)
                 cls_targets.append(cls_target)
+                match_masks.append(match_mask)
                 continue
 
-            is_in_centers_any, is_matched = self.center_sampling(preds_per_image, targets_per_image, grid_mask, stride_mask)
-            is_finally_matched, true_targets, pred_ious, _avg_topk = self.dynamic_topk(preds_per_image[is_in_centers_any], targets_per_image, is_matched, num_classes)
+            is_in_boxes_or_center, is_in_boxes_and_center = self.center_sampling(preds_per_image, targets_per_image, grid_mask, stride_mask)
+            is_finally_matched, true_targets, pred_ious = self.dynamic_topk(
+                preds_per_image[is_in_boxes_or_center], targets_per_image, is_in_boxes_and_center, num_classes
+            )
+
             # update matched anchor indexes
-            obj_target = is_in_centers_any.float()
-            true_preds = is_finally_matched.float()
-            true_preds[is_finally_matched] = pred_ious
-            obj_target[is_in_centers_any] = true_preds
-            
+            obj_target = is_in_boxes_or_center.clone().float()
+            obj_target[is_in_boxes_or_center] = is_in_boxes_and_center.sum(0).float()
+            match_mask = is_in_boxes_or_center.clone()
+            match_mask[is_in_boxes_or_center] = is_finally_matched
+
             # collect reg_target, obj_target, cls_target
             reg_target = targets_per_image[true_targets, 2:]
-            cls_target = (
-                one_hot(
-                    targets_per_image[true_targets, 1].to(torch.int64),
-                    num_classes,
-                )
+            cls_target = (one_hot(targets_per_image[true_targets, 1].to(torch.int64), num_classes,)) * pred_ious.unsqueeze(
+                -1
             )  # cls_target = onehot_class * iou
             reg_targets.append(reg_target)
             obj_targets.append(obj_target)
             cls_targets.append(cls_target)
+            match_masks.append(match_mask)
             # batch finished --------------------------------------------------------------
         reg_targets = torch.cat(reg_targets, 0)
         obj_targets = torch.cat(obj_targets, 0)
         cls_targets = torch.cat(cls_targets, 0)
-        return reg_targets, obj_targets, cls_targets, _avg_topk
+        match_masks = torch.cat(match_masks, 0)
+        return reg_targets, obj_targets, cls_targets, match_masks
 
     @torch.no_grad()
     def center_sampling(self, preds_per_image, targets_per_image, grid_mask, stride_mask):
         """
         perform center sampling for targets.
         returns:
-            matched_anchors: (A,) -> (Am,)  # Am is the number of matched anchors
+            is_in_boxes_or_center: (A,) -> (Am,)  # Am is the number of matched anchors
             is_in_boxes_and_center: (T, Am)
         """
         # build match_matrix with shape (num_targets, num_grids)
@@ -214,7 +219,7 @@ class SimOTA(nn.Module):
         n_candidate_k = min(10, pair_wise_iou.size(1))
         topk_ious, _ = torch.topk(pair_wise_iou, n_candidate_k, dim=1)
         dynamic_ks = torch.clamp(topk_ious.sum(1).int(), min=1)
-        _avg_topk = dynamic_ks.float().mean()
+        self._avg_topk = dynamic_ks.float().mean().item()
         dynamic_ks = dynamic_ks.tolist()
         for t in range(num_targets):
             _, A = torch.topk(cost[t], k=dynamic_ks[t], largest=False)
@@ -230,7 +235,7 @@ class SimOTA(nn.Module):
         true_matched_targets = matching_matrix[:, true_matched_preds].argmax(0)
         pred_ious = (matching_matrix * pair_wise_iou).sum(0)[true_matched_preds]
         del pair_wise_iou, pair_wise_iou_loss, pair_wise_cls_loss
-        return true_matched_preds, true_matched_targets, pred_ious, _avg_topk
+        return true_matched_preds, true_matched_targets, pred_ious
 
 
 class AssignGuidanceSimOTA(SimOTA):
