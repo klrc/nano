@@ -3,10 +3,10 @@ from torch.utils.data import Dataset
 
 
 class DatasetLayer(Dataset):
-    def __init__(self, base=None, pre_layer_type=None) -> None:
+    def __init__(self, base=None, *pre_layer_type) -> None:
         super().__init__()
-        if pre_layer_type is not None:
-            assert isinstance(base, pre_layer_type)
+        assertion = [isinstance(base, p) for p in pre_layer_type]
+        assert len(pre_layer_type) == 0 or any(assertion), assertion
         self.base = base
 
     def __getitem__(self, index):

@@ -59,7 +59,7 @@ class MSCOCO(DatasetLayer):
         # self.log(f"verifying {image_path}")
         try:
             # Image.open(image_path).verify()
-            assert os.path.exists(annotation_path)
+            assert os.path.exists(annotation_path), annotation_path
             with open(annotation_path, "r") as f:
                 for x in f.readlines():
                     assert len(x.strip().split(" ")) == 5, x
@@ -67,6 +67,15 @@ class MSCOCO(DatasetLayer):
             self.log(f"WARNING: Ignoring corrupted image and/or label {image_path}: {e}")
             return False
         return True
+
+    def _yield_labels(self, index):
+        '''
+        yield label only
+        '''
+        _, annotation_path = self.data[index]
+        with open(annotation_path, "r") as f:
+            for x in f.readlines():
+                yield x.strip().split(" ")
 
     def __getitem__(self, index):
         """

@@ -6,6 +6,7 @@ import albumentations as A
 from tqdm import tqdm
 
 from .coco_box2d_visualize import from_numpy_image
+from .coco_box2d import MSCOCO
 from ._layer import DatasetLayer
 
 
@@ -197,13 +198,47 @@ class Albumentations(DatasetLayer):
         return img, label
 
 
+class ClassMapping(DatasetLayer):
+    """
+    map dataset label classes
+    """
+
+    def __init__(self, base=None, map_dict=None) -> None:
+        super().__init__(base, MSCOCO)
+        assert isinstance(map_dict, dict)
+        self.mapping = map_dict
+        self.data = self.base.data
+
+    def __len__(self):
+        return len(self.base)
+
+    def _yield_labels(self, index):
+        for lb in self.base._yield_labels(index):
+            cid = int(lb[0])
+            if cid in self.mapping:
+                lb[0] = self.mapping[cid]
+                yield lb
+
+
+    def __getitem__(self, index):
+        img, labels = self.base.__getitem__(index)
+        new_labels = []
+        for lb in labels:
+            cid = lb[0]
+            if cid in self.mapping:
+                lb[0] = self.mapping[cid]
+                new_labels.append(lb)
+        new_labels = np.array(new_labels)
+        return img, new_labels
+
+
 class SizeLimit(DatasetLayer):
     """
     limit the dataset size for quick scratch-training
     """
 
     def __init__(self, base, limit=5000, sort_only=False) -> None:
-        super().__init__(base, DatasetLayer)
+        super().__init__(base, MSCOCO, ClassMapping)
         if sort_only:
             limit = len(self.base)
         self.limit = min(limit, len(self.base))
@@ -216,11 +251,8 @@ class SizeLimit(DatasetLayer):
         if len(self.data) == 0:
             # for i in range(len(self.base)):
             for i in tqdm(range(len(self.base)), desc="prepare for size limit"):
-                _, annotation_path = self.base.data[i]
                 box_cids = []
-                with open(annotation_path, "r") as f:
-                    for x in f.readlines():
-                        c, _, _, _, _ = x.strip().split(" ")
+                for c, _, _, _, _ in self.base._yield_labels(i):
                         box_cids.append(c)
                 diversity = len(set(box_cids))
                 self.data.append((i, diversity))

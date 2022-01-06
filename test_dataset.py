@@ -3,7 +3,7 @@ import random
 
 
 from nano.datasets.coco_box2d import MSCOCO
-from nano.datasets.coco_box2d_transforms import Affine, Albumentations, SizeLimit, ToTensor, Mosaic4
+from nano.datasets.coco_box2d_transforms import Affine, Albumentations, ClassMapping, SizeLimit, ToTensor, Mosaic4
 from nano.datasets.coco_box2d_visualize import draw_bounding_boxes
 
 
@@ -22,6 +22,20 @@ def test_load():
     cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
     cv2.imwrite("test_load.png", cv_img)
 
+def test_classmapping():
+    img_root_cm = "/home/sh/Datasets/coco128/images/train2017"
+    label_root_cm = "/home/sh/Datasets/coco128/labels/train2017"
+    names_cm = ['person', 'bike', 'car']
+    dataset = MSCOCO(img_root_cm, label_root_cm)
+    dataset = ClassMapping(dataset, {0:0, 1:1, 2:2, 3:1, 5:2, 7:2})
+    dataset = SizeLimit(dataset, limit=10)
+    dataset = ToTensor(dataset)
+    for i in range(10):
+        rand = random.randint(0, len(dataset) - 1)
+        img, labels = dataset.__getitem__(rand)
+        str_labels = [names_cm[x] for x in labels[..., 0].cpu().int()]
+        cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
+        cv2.imwrite(f"test_classmapping_{i}.png", cv_img)
 
 def test_mosaic4():
     dataset = MSCOCO(img_root, label_root, 416)
@@ -85,9 +99,10 @@ def test_combination():
 
 
 if __name__ == "__main__":
-    test_load()
-    test_mosaic4()
-    test_affine()
-    test_albumentations()
-    test_sizelimit()
-    test_combination()
+    # test_load()
+    test_classmapping()
+    # test_mosaic4()
+    # test_affine()
+    # test_albumentations()
+    # test_sizelimit()
+    # test_combination()

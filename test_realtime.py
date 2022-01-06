@@ -171,12 +171,12 @@ if __name__ == "__main__":
         from nano.models.model_zoo.yolox_ghost import Ghostyolox_3x3_s32
 
         model = Ghostyolox_3x3_s32(num_classes=3)
-        model.load_state_dict(torch.load("runs/train/exp18/last.pt", map_location="cpu")["state_dict"])
+        model.load_state_dict(torch.load("runs/train/exp57/last.pt", map_location="cpu")["state_dict"])
         return model
 
     test_front_camera(
-        0.03,
-        0.45,
+        0.3,
+        0.3,
         ["person", "bike", "car"],
         device="cpu",
     )
