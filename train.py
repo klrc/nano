@@ -24,7 +24,7 @@ if __name__ == "__main__":
     imgs_root = "/home/sh/Datasets/coco3/images/train"
     annotations_root = "/home/sh/Datasets/coco3/labels/train"
     base = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, min_size=416)
-    base = SizeLimit(base, 5000)
+    base = SizeLimit(base, 30000)
     base = Affine(base, horizontal_flip=0.3, perspective=0.3, max_perspective=0.15)
     base = Albumentations(base, "random_blind")
     base = Mosaic4(base, img_size=448)
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         class_names,
         criteria,
         device,
-        lr0=0.001,
+        lr0=0.0032,
         optimizer='Adam',
         warmup_epochs=0,
         batch_size=batch_size,
