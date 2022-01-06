@@ -281,7 +281,7 @@ def run(
             mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
             mem = f"{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G"  # (GB)
             pbar.set_description(
-                ("%10s" * 2 + "%10.4f" * 7) % (f"{epoch}/{start_epoch + epochs - 1}", mem, *mloss, criteria._avg_topk, lr_g0, lr_g1, lr_g2)
+                ("%10s" * 2 + "%10.4f" * 7) % (f"{epoch}/{start_epoch + epochs - 1}", mem, *mloss, criteria.max_topk, lr_g0, lr_g1, lr_g2)
             )
 
             # end batch ------------------------------------------------------------------------------------------------

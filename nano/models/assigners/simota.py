@@ -62,7 +62,7 @@ class SimOTA(nn.Module):
         super().__init__()
         self.num_classes = num_classes
         self.compute_loss = compute_loss
-        self._avg_topk = 1
+        self.max_topk = 1
 
     def forward(self, input, target):
         self.device = target.device
@@ -130,13 +130,13 @@ class SimOTA(nn.Module):
 
             # cls target
             cls_t = one_hot(target_per_image[tp, 1].to(torch.int64), num_classes).float()
-            cls_t *= p_iou[mp].unsqueeze(-1)
+            # cls_t *= p_iou[mp].unsqueeze(-1)
 
             # collect mask, box_t, obj_t, cls_t
             match_mask.append(m)
             box_target.append(box_t)
-            obj_target.append(obj_t.clamp(0, 1))
-            cls_target.append(cls_t.clamp(0, 1))
+            obj_target.append(obj_t)
+            cls_target.append(cls_t)
 
             # batch finished --------------------------------------------------------------
 
@@ -225,8 +225,8 @@ class SimOTA(nn.Module):
         n_candidate_k = min(10, P)
         topk_ious, _ = torch.topk(pair_wise_iou, n_candidate_k, dim=1)
         dynamic_ks = torch.clamp(topk_ious.sum(1).int(), min=1)
-        self._avg_topk = dynamic_ks.float().mean().item()  # record dynamic K
         dynamic_ks = dynamic_ks.tolist()
+        self.max_topk = max(dynamic_ks)  # record dynamic K
 
         # select topk paired pred
         for t in range(T):
@@ -245,6 +245,6 @@ class SimOTA(nn.Module):
         mp = matching_matrix.sum(0) > 0  # (P, )
         tp = matching_matrix[:, mp].argmax(0)  # (P, )
         p_iou = pair_wise_iou / (pair_wise_iou.max(dim=1, keepdim=True).values + 1e-8)  # normalize along P
-        p_iou = p_iou.max(0).values  # (P, )
+        p_iou = p_iou.max(0).values.clamp(0, 1)  # (P, )
         del pair_wise_iou, cost
         return mp, tp, p_iou

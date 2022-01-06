@@ -53,7 +53,7 @@ if __name__ == "__main__":
         device,
         lr0=0.001,
         optimizer='Adam',
-        warmup_epochs=3,
+        warmup_epochs=0,
         batch_size=batch_size,
         patience=16,
         epochs=300,
