@@ -1,9 +1,13 @@
 import time
 import torch
+from torch import Tensor
 import torchvision
 from torchvision.ops import box_iou
 import numpy as np
 import math
+
+from torchvision.ops.boxes import _box_inter_union
+
 
 def xywh2xyxy(x):
     # Convert nx4 boxes from [cx, cy, w, h] normalized to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right
@@ -37,15 +41,11 @@ def non_max_suppression(
     """
 
     # Candidates
-    xc = prediction[..., 4] > conf_thres 
-    
+    xc = prediction[..., 4] > conf_thres
+
     # Checks
-    assert (
-        0 <= conf_thres <= 1
-    ), f"Invalid Confidence threshold {conf_thres}, valid values are between 0.0 and 1.0"
-    assert (
-        0 <= iou_thres <= 1
-    ), f"Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0"
+    assert 0 <= conf_thres <= 1, f"Invalid Confidence threshold {conf_thres}, valid values are between 0.0 and 1.0"
+    assert 0 <= iou_thres <= 1, f"Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0"
 
     # Settings
     min_wh, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
@@ -90,9 +90,7 @@ def non_max_suppression(
             # update boxes as boxes(i,4) = weights(i,n) * boxes(n,4)
             iou = box_iou(boxes[i], boxes) > iou_thres  # iou matrix
             weights = iou * scores[None]  # box weights
-            x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(
-                1, keepdim=True
-            )  # merged boxes
+            x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)  # merged boxes
             if redundant:
                 i = i[iou.sum(1) > 1]  # require redundancy
 
@@ -104,30 +102,49 @@ def non_max_suppression(
     return output
 
 
+def safe_box_iou(boxes1: Tensor, boxes2: Tensor) -> Tensor:
+    """
+    Return intersection-over-union (Jaccard index) between two sets of boxes.
+
+    Both sets of boxes are expected to be in ``(x1, y1, x2, y2)`` format with
+    ``0 <= x1 < x2`` and ``0 <= y1 < y2``.
+
+    Args:
+        boxes1 (Tensor[N, 4]): first set of boxes
+        boxes2 (Tensor[M, 4]): second set of boxes
+
+    Returns:
+        Tensor[N, M]: the NxM matrix containing the pairwise IoU values for every element in boxes1 and boxes2
+    """
+    eps = 1e-8
+    inter, union = _box_inter_union(boxes1, boxes2)
+    iou = inter / (union + eps)
+    return iou
+
+
 def completely_box_iou(box1, box2, eps=1e-8):
 
     # Get the coordinates of bounding boxes
-    b1_x1, b1_y1, b1_x2, b1_y2 = box1[...,0], box1[...,1], box1[...,2], box1[...,3]
-    b2_x1, b2_y1, b2_x2, b2_y2 = box2[...,0], box2[...,1], box2[...,2], box2[...,3]
+    b1_x1, b1_y1, b1_x2, b1_y2 = box1[..., 0], box1[..., 1], box1[..., 2], box1[..., 3]
+    b2_x1, b2_y1, b2_x2, b2_y2 = box2[..., 0], box2[..., 1], box2[..., 2], box2[..., 3]
 
     # Intersection area
-    inter = (torch.min(b1_x2, b2_x2) - torch.max(b1_x1, b2_x1)).clamp(0) * \
-            (torch.min(b1_y2, b2_y2) - torch.max(b1_y1, b2_y1)).clamp(0)
+    inter = (torch.min(b1_x2, b2_x2) - torch.max(b1_x1, b2_x1)).clamp(0) * (torch.min(b1_y2, b2_y2) - torch.max(b1_y1, b2_y1)).clamp(0)
 
     # Union Area
-    w1, h1 = b1_x2 - b1_x1, b1_y2 - b1_y1 + eps
-    w2, h2 = b2_x2 - b2_x1, b2_y2 - b2_y1 + eps
-    union = w1 * h1 + w2 * h2 - inter + eps
+    w1, h1 = b1_x2 - b1_x1, b1_y2 - b1_y1
+    w2, h2 = b2_x2 - b2_x1, b2_y2 - b2_y1
+    union = w1 * h1 + w2 * h2 - inter
 
-    iou = inter / union
+    iou = inter / (union + eps)
     cw = torch.max(b1_x2, b2_x2) - torch.min(b1_x1, b2_x1)  # convex (smallest enclosing box) width
     ch = torch.max(b1_y2, b2_y2) - torch.min(b1_y1, b2_y1)  # convex height
     # Distance or Complete IoU https://arxiv.org/abs/1911.08287v1
-    c2 = cw ** 2 + ch ** 2 + eps  # convex diagonal squared
-    rho2 = ((b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2 +
-            (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2) / 4  # center distance squared
+    c2 = cw ** 2 + ch ** 2  # convex diagonal squared
+    rho2 = ((b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2 + (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2) / 4  # center distance squared
     # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
     v = (4 / math.pi ** 2) * torch.pow(torch.atan(w2 / h2) - torch.atan(w1 / h1), 2)
     with torch.no_grad():
-        alpha = v / (v - iou + (1 + eps))
-    return iou - (rho2 / c2 + v * alpha)  # CIoU
+        alpha = v / (v - iou + 1 + eps)
+    ciou = iou - (rho2 / (c2 + eps) + v * alpha)  # CIoU
+    return ciou

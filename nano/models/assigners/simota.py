@@ -1,16 +1,15 @@
 import torch
 from torch import nn
 from torch.nn.functional import binary_cross_entropy_with_logits, one_hot, binary_cross_entropy
-from torchvision.ops import box_iou
-from nano.ops.box2d import completely_box_iou
+from nano.ops.box2d import completely_box_iou, safe_box_iou
 
 
-def iou_loss(pred, target, reduction="mean"):
+def iou_loss(input, target, reduction="mean"):
     """
     calculate IoU loss with both shaped as xyxy
     """
-    assert pred.shape == target.shape
-    loss = 1 - completely_box_iou(pred, target)
+    assert input.shape == target.shape
+    loss = 1 - completely_box_iou(input, target)
     if reduction == "mean":
         loss = loss.mean()
     elif reduction == "sum":
@@ -27,7 +26,7 @@ def label_smoothing(target, eps, num_classes, inplace=False):
     return target
 
 
-def compute_loss(assigned_batch, num_classes=3, eps=0):
+def compute_loss(box_pred, obj_pred, cls_pred, box_target, obj_target, cls_target, device):
     """
     compute loss from collected reg (bbox), obj, cls targets,
     all anchors are flatten to batch dimension.
@@ -41,17 +40,11 @@ def compute_loss(assigned_batch, num_classes=3, eps=0):
         loss: loss for backward
         detached_loss: detached loss, for printing usage
     """
-    preds, reg_targets, obj_targets, cls_targets, match_mask = assigned_batch
-    device = preds.device
     # bbox regression loss, objectness loss, classification loss (batched)
     loss = torch.zeros(3, device=device)
-    # label smoothing
-    if eps > 0:
-        cls_targets = label_smoothing(cls_targets, eps, num_classes)
-    lbox = 0.05 * iou_loss(preds[match_mask, :4], reg_targets, reduction="mean")
-    lobj = binary_cross_entropy_with_logits(preds[:, 4], obj_targets, reduction="mean")
-    lcls = 0.5 * binary_cross_entropy_with_logits(preds[match_mask, 5:], cls_targets, reduction="mean")
-    # loss gain
+    lbox = 0.05 * iou_loss(box_pred, box_target, reduction="mean")
+    lobj = binary_cross_entropy_with_logits(obj_pred, obj_target, reduction="mean")
+    lcls = 0.5 * binary_cross_entropy_with_logits(cls_pred, cls_target, reduction="mean")
     loss += torch.stack((lbox, lobj, lcls))
     # loss, loss items (for printing)
     return lbox + lobj + lcls, loss.detach()
@@ -61,114 +54,118 @@ class SimOTA(nn.Module):
     """
     https://github.com/Megvii-BaseDetection/YOLOX/blob/0cce4a6f4ed6b7772334a612cdcc51aa16eb0591/yolox/models/yolo_head.py#L425
     https://blog.csdn.net/Megvii_tech/article/details/120030518
-    TODO: optimize with https://zhuanlan.zhihu.com/p/405789762?ivk_sa=1024320u
-
-    * Takes about 680MiB CUDA Memory on batch_size=16
+    optimize with https://zhuanlan.zhihu.com/p/405789762?ivk_sa=1024320u
+    * Takes about (TODO: update this)680MiB CUDA Memory on batch_size=16
     """
 
-    def __init__(self, num_classes, with_loss, **kwargs):
+    def __init__(self, num_classes, compute_loss=True):
         super().__init__()
         self.num_classes = num_classes
-        self.with_loss = with_loss
-        self.loss_kwargs = kwargs
+        self.compute_loss = compute_loss
         self._avg_topk = 1
 
-    def forward(self, result, targets):
-        reg_targets, obj_targets, cls_targets, match_mask = self.assign_batch(result, targets)
+    def forward(self, input, target):
+        self.device = target.device
+        pred, grid_mask, stride_mask = input
+        match_mask, box_target, obj_target, cls_target = self.assign_batch(pred, target, grid_mask, stride_mask)
         torch.cuda.empty_cache()
-        if self.with_loss:
-            preds = result[0].flatten(0, 1)
-            assigned_batch = (preds, reg_targets, obj_targets, cls_targets, match_mask)
-            loss, detached_loss = compute_loss(assigned_batch, num_classes=self.num_classes, **self.loss_kwargs)
+        if self.compute_loss:
+            pred = pred.flatten(0, 1)
+            box_pred = pred[match_mask, :4]
+            obj_pred = pred[:, 4]
+            cls_pred = pred[match_mask, 5:]
+            loss, detached_loss = compute_loss(box_pred, obj_pred, cls_pred, box_target, obj_target, cls_target, self.device)
             return loss, detached_loss
         else:
-            return reg_targets, obj_targets, cls_targets, match_mask
+            return match_mask, box_target, obj_target, cls_target
 
     @torch.no_grad()
-    def assign_batch(self, result, targets):
+    def assign_batch(self, pred, target, grid_mask, stride_mask):
         """
-        (Tuple) result:
-            preds: N - A - < (abs)xyxy | (sigmoid) objectness, c1, c2, ... >
+        (Tuple) input:
+            pred: N - A - < (abs)xyxy | (sigmoid) objectness, c1, c2, ... >
             grid_mask: N - A - 2
             stride_mask: N - A
         target: N(collate) - < collate_id, cid, (abs)xyxy >
         """
-        preds, grid_mask, stride_mask = result
         # collect info
-        cls_targets = []
-        obj_targets = []
-        reg_targets = []
-        match_masks = []
-        batch_size = preds.size(0)
+        match_mask = []
+        box_target = []
+        obj_target = []
+        cls_target = []
+        batch_size = pred.size(0)
         num_classes = self.num_classes
         # process per image
         for bi in range(batch_size):
             # process batch ----------------------------------------------------------------
             # get targets & preds batch
-            im_index = targets[:, 0] == bi
-            targets_per_image = targets[im_index]
-            preds_per_image = preds[bi]
+            index_per_image = target[:, 0] == bi
+            target_per_image = target[index_per_image]
+            pred_per_image = pred[bi]
 
-            if targets_per_image.size(0) == 0:  # no targets alive
-                cls_target = preds_per_image.new_zeros((0, num_classes))
-                reg_target = preds_per_image.new_zeros((0, 4))
-                obj_target = preds_per_image.new_zeros(preds_per_image.size(0)).bool()
-                match_mask = preds_per_image.new_zeros(preds_per_image.size(0)).bool()
-                reg_targets.append(reg_target)
-                obj_targets.append(obj_target)
-                cls_targets.append(cls_target)
-                match_masks.append(match_mask)
+            if target_per_image.size(0) == 0:  # no targets alive
+                box_t = pred_per_image.new_zeros((0, 4))
+                cls_t = pred_per_image.new_zeros((0, num_classes))
+                obj_t = pred_per_image.new_zeros(pred_per_image.size(0)).bool()
+                m = pred_per_image.new_zeros(pred_per_image.size(0)).bool()
+                box_target.append(box_t)
+                obj_target.append(obj_t)
+                cls_target.append(cls_t)
+                match_mask.append(m)
                 continue
 
-            is_in_boxes_anchor, is_in_boxes_and_center = self.center_sampling(preds_per_image, targets_per_image, grid_mask, stride_mask)
-            is_finally_matched, true_targets, pred_ious = self.dynamic_topk(
-                preds_per_image[is_in_boxes_anchor], targets_per_image, is_in_boxes_and_center, num_classes
-            )
+            in_box, in_box_center = self.center_sampling(pred_per_image, target_per_image, grid_mask, stride_mask)
+            mp, tp, p_iou = self.dynamic_topk(pred_per_image, target_per_image, in_box, in_box_center)
 
-            # update matched anchor indexes
-            match_mask = is_in_boxes_anchor.clone()
-            match_mask[is_in_boxes_anchor] = is_finally_matched
-            obj_target = is_in_boxes_anchor.clone().float()
-            obj_target[is_in_boxes_anchor] = pred_ious.clamp(0, 1)
+            # match mask
+            m = in_box.clone()
+            m[in_box] = mp
 
-            # collect reg_target, obj_target, cls_target
-            reg_target = targets_per_image[true_targets, 2:]
-            cls_target = (
-                one_hot(
-                    targets_per_image[true_targets, 1].to(torch.int64),
-                    num_classes,
-                )
-            ).float()
-            reg_targets.append(reg_target)
-            obj_targets.append(obj_target)
-            cls_targets.append(cls_target)
-            match_masks.append(match_mask)
+            # box target
+            box_t = target_per_image[tp, 2:]
+
+            # obj target
+            obj_t = in_box.clone().float()
+            obj_t[in_box] = p_iou
+
+            # cls target
+            cls_t = one_hot(target_per_image[tp, 1].to(torch.int64), num_classes).float()
+
+            # collect mask, box_t, obj_t, cls_t
+            match_mask.append(m)
+            box_target.append(box_t)
+            obj_target.append(obj_t)
+            cls_target.append(cls_t)
+
             # batch finished --------------------------------------------------------------
-        reg_targets = torch.cat(reg_targets, 0)
-        obj_targets = torch.cat(obj_targets, 0)
-        cls_targets = torch.cat(cls_targets, 0)
-        match_masks = torch.cat(match_masks, 0)
-        return reg_targets, obj_targets, cls_targets, match_masks
+        
+        # collect assigned batch
+        match_mask = torch.cat(match_mask, 0)
+        box_target = torch.cat(box_target, 0)
+        obj_target = torch.cat(obj_target, 0)
+        cls_target = torch.cat(cls_target, 0)
+
+        return match_mask, box_target, obj_target, cls_target
 
     @torch.no_grad()
     def center_sampling(self, preds_per_image, targets_per_image, grid_mask, stride_mask):
         """
         perform center sampling for targets.
         returns:
-            is_in_boxes_anchor: (A,) -> (Am,)  # Am is the number of matched anchors
+            is_in_boxes_anchor: (A,)
             is_in_boxes_and_center: (T, Am)
         """
         # build match_matrix with shape (num_targets, num_grids)
-        num_targets = targets_per_image.size(0)
-        num_anchors = preds_per_image.size(0)
+        T = targets_per_image.size(0)
+        A = preds_per_image.size(0)
         # set positive samples (anchors inside bbox or 5x5 of box_center)
         # assert center is in box
-        x_centers_per_image = (grid_mask[..., 0] + 0.5).repeat(num_targets, 1) * stride_mask  # (1, na) -> (nt, na)
-        y_centers_per_image = (grid_mask[..., 1] + 0.5).repeat(num_targets, 1) * stride_mask  # (1, na) -> (nt, na)
-        bboxes_x1_per_image = targets_per_image[..., 2].unsqueeze(1).repeat(1, num_anchors)  # (nt, 1) -> (nt, na)
-        bboxes_y1_per_image = targets_per_image[..., 3].unsqueeze(1).repeat(1, num_anchors)  # (nt, 1) -> (nt, na)
-        bboxes_x2_per_image = targets_per_image[..., 4].unsqueeze(1).repeat(1, num_anchors)  # (nt, 1) -> (nt, na)
-        bboxes_y2_per_image = targets_per_image[..., 5].unsqueeze(1).repeat(1, num_anchors)  # (nt, 1) -> (nt, na)
+        x_centers_per_image = (grid_mask[..., 0] + 0.5).repeat(T, 1) * stride_mask  # (1, na) -> (nt, na)
+        y_centers_per_image = (grid_mask[..., 1] + 0.5).repeat(T, 1) * stride_mask  # (1, na) -> (nt, na)
+        bboxes_x1_per_image = targets_per_image[..., 2].unsqueeze(1).repeat(1, A)  # (nt, 1) -> (nt, na)
+        bboxes_y1_per_image = targets_per_image[..., 3].unsqueeze(1).repeat(1, A)  # (nt, 1) -> (nt, na)
+        bboxes_x2_per_image = targets_per_image[..., 4].unsqueeze(1).repeat(1, A)  # (nt, 1) -> (nt, na)
+        bboxes_y2_per_image = targets_per_image[..., 5].unsqueeze(1).repeat(1, A)  # (nt, 1) -> (nt, na)
         b_l = x_centers_per_image - bboxes_x1_per_image
         b_t = y_centers_per_image - bboxes_y1_per_image
         b_r = bboxes_x2_per_image - x_centers_per_image
@@ -191,79 +188,62 @@ class SimOTA(nn.Module):
         return is_in_boxes_anchor, is_in_boxes_and_center
 
     @torch.no_grad()
-    def dynamic_topk(self, matched_preds, targets, is_matched, num_classes):
+    def dynamic_topk(self, input, target, in_box, in_box_center):
         """
         perform dynamic topk algorithm on matched anchors,
         firstly, each target is assigned to k anchors, (according to sum of ranked iou)
         then multiple targets will be purged,
         which means each anchor should have <= 1 targets.
         returns:
-            true_matched_preds: (D,)     # D is the number of matched anchors
-            true_matched_targets: (D,)
-            pred_ious: (D,)
+            mp: (P,)   matched anchors (bool)
+            tp: (P,)   target index of each matched anchor (long)
+            p_iou: (P,)  sum iou for each matched anchor (float)
         """
         # dynamic k algorithm
-        # get l_reg & l_cls of all possible samples
-        device = targets.device
-        num_targets = targets.size(0)
-        num_anchors = matched_preds.size(0)
-        pair_wise_iou = box_iou(targets[..., 2:], matched_preds[..., :4])  # T*D
-        pair_wise_iou = torch.nan_to_num(pair_wise_iou, nan=0) # remove NaN
+        paired = input[in_box]
+
+        # get (iou+obj*cls)cost for all paired-target
+        T = target.size(0)
+        P = paired.size(0)
+
+        pair_wise_iou = safe_box_iou(target[..., 2:], paired[..., :4])  # (T, P)
         pair_wise_iou_loss = -torch.log(pair_wise_iou + 1e-8)
-        gt_cls_per_image = one_hot(targets[:, 1].to(torch.int64), num_classes)
-        gt_cls_per_image = gt_cls_per_image.float().unsqueeze(1).repeat(1, num_anchors, 1)
-        cls_preds = matched_preds[..., 4:5].sigmoid() * matched_preds[..., 5:].sigmoid()
-        cls_preds = cls_preds.float().unsqueeze(0).repeat(num_targets, 1, 1).sqrt()
+
+        cls_target = one_hot(target[:, 1].to(torch.int64), self.num_classes)
+        cls_target = cls_target.float().unsqueeze(1).repeat(1, P, 1)
+        cls_pred = paired[..., 4:5].sigmoid() * paired[..., 5:].sigmoid()
+        cls_pred = cls_pred.sqrt().float().unsqueeze(0).repeat(T, 1, 1)
         with torch.cuda.amp.autocast(enabled=False):
-            pair_wise_cls_loss = binary_cross_entropy(cls_preds, gt_cls_per_image, reduction="none").sum(-1)
-        del cls_preds
+            pair_wise_cls_loss = binary_cross_entropy(cls_pred, cls_target, reduction="none").sum(-1)  # (T, P)
+
+        cost = pair_wise_cls_loss + 3.0 * pair_wise_iou_loss + 100000.0 * (~in_box_center)
+        del cls_target, cls_pred, pair_wise_iou_loss, pair_wise_cls_loss
+
         # get dynamic topk
-        cost = pair_wise_cls_loss + 3.0 * pair_wise_iou_loss + 100000.0 * (~is_matched)
-        matching_matrix = torch.zeros_like(cost, dtype=torch.uint8).to(device)
-        n_candidate_k = min(10, pair_wise_iou.size(1))
+        matching_matrix = torch.zeros_like(cost, dtype=torch.uint8).to(self.device)  # (T, P)
+        n_candidate_k = min(10, P)
         topk_ious, _ = torch.topk(pair_wise_iou, n_candidate_k, dim=1)
         dynamic_ks = torch.clamp(topk_ious.sum(1).int(), min=1)
-        self._avg_topk = dynamic_ks.float().mean().item()
+        self._avg_topk = dynamic_ks.float().mean().item()  # record dynamic K
         dynamic_ks = dynamic_ks.tolist()
-        for t in range(num_targets):
-            _, A = torch.topk(cost[t], k=dynamic_ks[t], largest=False)
-            matching_matrix[t, A] = 1
-        del topk_ious, dynamic_ks, A
+
+        # select topk paired pred
+        for t in range(T):
+            _, p = torch.topk(cost[t], k=dynamic_ks[t], largest=False)
+            matching_matrix[t, p] = 1
+        del topk_ious, dynamic_ks, p
+
         # purge duplicated assignment
         targets_per_anchor = matching_matrix.sum(0)
         if (targets_per_anchor > 1).sum() > 0:
             _, cost_argmin = torch.min(cost[:, targets_per_anchor > 1], dim=0)
             matching_matrix[:, targets_per_anchor > 1] *= 0
             matching_matrix[cost_argmin, targets_per_anchor > 1] = 1
-        true_matched_preds = matching_matrix.sum(0) > 0
-        true_matched_targets = matching_matrix[:, true_matched_preds].argmax(0)
-        pred_iou = pair_wise_iou.sum(0)
-        del pair_wise_iou, pair_wise_iou_loss, pair_wise_cls_loss
-        return true_matched_preds, true_matched_targets, pred_iou
 
+        # collect results
+        mp = matching_matrix.sum(0) > 0  # (P, )
+        tp = matching_matrix[:, mp].argmax(0)  # (P, )
+        p_iou = pair_wise_iou.sum(0)  # (P, )
+        del pair_wise_iou, cost
+        return mp, tp, p_iou.clamp(0, 1)
 
-# TODO: implement this
-# class AssignGuidanceSimOTA(SimOTA):
-#     """
-#     SimOTA with assign guidance module (from NanoDet-plus)
-#     https://zhuanlan.zhihu.com/p/449912627
-#     """
-
-#     def __init__(self, num_classes, with_loss, **kwargs):
-#         super().__init__(num_classes, with_loss, **kwargs)
-
-#     def forward(self, result, targets):
-#         """
-#         result: * result should be with additional guidance
-#         """
-#         guides, preds, grid_mask, stride_mask = result
-#         targets = self.assign_batch((guides, grid_mask, stride_mask), targets)
-#         assigned_batch = (preds.flatten(0, 1), targets)
-#         guides_batch = (guides.flatten(0, 1), targets)
-#         torch.cuda.empty_cache()
-#         if self.with_loss:
-#             loss_g, _ = compute_loss(guides_batch, num_classes=self.num_classes, **self.loss_kwargs)
-#             loss_p, detached_loss_p = compute_loss(guides_batch, num_classes=self.num_classes, **self.loss_kwargs)
-#             return loss_g + loss_p, detached_loss_p
-#         else:
-#             return assigned_batch

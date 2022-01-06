@@ -66,7 +66,7 @@ def draw_center_points(image, centers, color=None, thickness=3, alphas=None):
         grid = [int(x) for x in cp]
         if alphas is not None:
             alpha = alphas[i]
-            point_color = (int(color[0] * alpha), int(color[1] * alpha), int(color[2] * alpha))
+            point_color = (int(color[0]* alpha), int(color[1] * alpha), int(color[2] * alpha))
         else:
             point_color = color
         cv2_img = cv2.circle(cv2_img, grid, 1, point_color, thickness=thickness)
