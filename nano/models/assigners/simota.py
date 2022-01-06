@@ -211,9 +211,9 @@ class SimOTA(nn.Module):
         pair_wise_iou_loss = -torch.log(pair_wise_iou + 1e-8)
 
         cls_target = one_hot(target[:, 1].to(torch.int64), self.num_classes)
-        cls_target = cls_target.float().unsqueeze(1).repeat(1, P, 1)
+        cls_target = cls_target.float().clamp(0, 1).unsqueeze(1).repeat(1, P, 1)
         cls_pred = paired[..., 4:5].sigmoid() * paired[..., 5:].sigmoid()
-        cls_pred = cls_pred.sqrt().float().unsqueeze(0).repeat(T, 1, 1)
+        cls_pred = cls_pred.sqrt().float().clamp(0, 1).unsqueeze(0).repeat(T, 1, 1)
         with torch.cuda.amp.autocast(enabled=False):
             pair_wise_cls_loss = binary_cross_entropy(cls_pred, cls_target, reduction="none").sum(-1)  # (T, P)
 
@@ -244,7 +244,6 @@ class SimOTA(nn.Module):
         # collect results
         mp = matching_matrix.sum(0) > 0  # (P, )
         tp = matching_matrix[:, mp].argmax(0)  # (P, )
-        p_iou = pair_wise_iou / (pair_wise_iou.max(dim=1, keepdim=True).values + 1e-8)  # normalize along P
-        p_iou = p_iou.max(0).values.clamp(0, 1)  # (P, )
+        p_iou = pair_wise_iou.max(0).values.clamp(0, 1)  # (P, )
         del pair_wise_iou, cost
         return mp, tp, p_iou

@@ -95,8 +95,8 @@ if __name__ == "__main__":
     from nano.models.model_zoo.yolox_ghost import Ghostyolox_3x3_s32
 
     model = Ghostyolox_3x3_s32(num_classes=3)
-    model.load_state_dict(torch.load("runs/train/exp53/last.pt", map_location='cuda')["state_dict"])
-    model.train().to("cuda")
+    # model.load_state_dict(torch.load("runs/train/exp53/last.pt", map_location='cuda')["state_dict"])
+    model.train().to("cpu")
 
-    test_assignment(model, "cuda")
+    test_assignment(model, "cpu")
     # test_backward(model, 'cuda')
