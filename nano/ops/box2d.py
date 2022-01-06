@@ -119,6 +119,7 @@ def safe_box_iou(boxes1: Tensor, boxes2: Tensor) -> Tensor:
     eps = 1e-8
     inter, union = _box_inter_union(boxes1, boxes2)
     iou = inter / (union + eps)
+    torch.nan_to_num(iou, 0)
     return iou
 
 

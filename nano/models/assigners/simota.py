@@ -130,6 +130,7 @@ class SimOTA(nn.Module):
 
             # cls target
             cls_t = one_hot(target_per_image[tp, 1].to(torch.int64), num_classes).float()
+            cls_t *=  p_iou[mp].unsqueeze(-1)
 
             # collect mask, box_t, obj_t, cls_t
             match_mask.append(m)
@@ -138,7 +139,7 @@ class SimOTA(nn.Module):
             cls_target.append(cls_t)
 
             # batch finished --------------------------------------------------------------
-        
+
         # collect assigned batch
         match_mask = torch.cat(match_mask, 0)
         box_target = torch.cat(box_target, 0)
@@ -246,4 +247,3 @@ class SimOTA(nn.Module):
         p_iou = pair_wise_iou.sum(0)  # (P, )
         del pair_wise_iou, cost
         return mp, tp, p_iou.clamp(0, 1)
-

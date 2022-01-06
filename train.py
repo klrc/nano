@@ -34,11 +34,11 @@ if __name__ == "__main__":
     base = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, max_size=416)
     valset = ToTensor(base)
 
-    batch_size = 32
+    batch_size = 64
     train_loader = DataLoader(trainset, batch_size=batch_size, num_workers=8, pin_memory=False, shuffle=True, collate_fn=collate_fn)
     val_loader = DataLoader(valset, batch_size=batch_size//2, num_workers=8, pin_memory=False, collate_fn=letterbox_collate_fn)
 
-    model = Ghostyolox_3x3_m48(num_classes=3)
+    model = Ghostyolox_3x3_s32(num_classes=3)
     device = load_device("cuda")
     class_names = ["person", "bike", "car"]
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
         criteria,
         device,
         lr0=0.001,
-        optimizer='AdamW',
+        optimizer='Adam',
         warmup_epochs=3,
         batch_size=batch_size,
         patience=16,
