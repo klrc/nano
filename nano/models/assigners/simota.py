@@ -43,9 +43,9 @@ def compute_loss(box_pred, obj_pred, cls_pred, box_target, obj_target, cls_targe
     """
     # bbox regression loss, objectness loss, classification loss (batched)
     loss = torch.zeros(3, device=device)
-    lbox = 0.5 * iou_loss(box_pred, box_target, reduction="mean")
+    lbox = 0.05 * iou_loss(box_pred, box_target, reduction="mean")
     lobj = binary_cross_entropy_with_logits(obj_pred, obj_target, reduction="mean")
-    lcls = 0.1 * binary_cross_entropy_with_logits(cls_pred, cls_target, reduction="mean")
+    lcls = 0.2 * binary_cross_entropy_with_logits(cls_pred, cls_target, reduction="mean")
     loss += torch.stack((lbox, lobj, lcls))
     # loss, loss items (for printing)
     return lbox + lobj + lcls, loss.detach()
@@ -116,8 +116,7 @@ class SimOTA(nn.Module):
                 continue
 
             in_box, in_box_center = self.center_sampling(pred_per_image, target_per_image, grid_mask, stride_mask)
-            # mp, tp, p_iou = self.dynamic_topk(pred_per_image, target_per_image, in_box, in_box_center)
-            mp, tp = self.dynamic_topk(pred_per_image, target_per_image, in_box, in_box_center)
+            mp, tp, p_iou = self.dynamic_topk(pred_per_image, target_per_image, in_box, in_box_center)
 
             # match mask
             m = in_box.clone()
@@ -131,7 +130,7 @@ class SimOTA(nn.Module):
 
             # cls target
             cls_t = one_hot(target_per_image[tp, 1].to(torch.int64), num_classes).float()
-            # cls_t *= p_iou[mp].unsqueeze(-1)
+            cls_t *= p_iou[mp].unsqueeze(-1)
 
             # collect mask, box_t, obj_t, cls_t
             match_mask.append(m)
@@ -245,7 +244,6 @@ class SimOTA(nn.Module):
         # collect results
         mp = matching_matrix.sum(0) > 0  # (P, )
         tp = matching_matrix[:, mp].argmax(0)  # (P, )
-        # p_iou = pair_wise_iou.max(0).values  # (P, )
+        p_iou = pair_wise_iou.max(0).values  # (P, )
         del pair_wise_iou, cost
-        # return mp, tp, p_iou
-        return mp, tp
+        return mp, tp, p_iou

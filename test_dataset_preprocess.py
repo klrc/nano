@@ -2,14 +2,15 @@ import cv2
 import random
 
 
+
 from nano.datasets.coco_box2d import MSCOCO
-from nano.datasets.coco_box2d_transforms import Affine, Albumentations, ClassMapping, SizeLimit, ToTensor, Mosaic4
+from nano.datasets.coco_box2d_transforms import Affine, Albumentations, ClassMapping, RandomScale, SizeLimit, ToTensor, Mosaic4
 from nano.datasets.coco_box2d_visualize import draw_bounding_boxes
 
 
 # preset configurations
-img_root = "/home/sh/Datasets/coco3/images/val"
-label_root = "/home/sh/Datasets/coco3/labels/val"
+img_root = "/home/sh/Datasets/coco3/images/train"
+label_root = "/home/sh/Datasets/coco3/labels/train"
 names = ["person", "bike", "car"]
 
 
@@ -21,6 +22,17 @@ def test_load():
     str_labels = [names[x] for x in labels[..., 0].cpu().int()]
     cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
     cv2.imwrite("test_load.png", cv_img)
+
+def test_randomscale():
+    dataset = MSCOCO(img_root, label_root)
+    dataset = RandomScale(dataset)
+    dataset = ToTensor(dataset)
+    for i in range(10):
+        rand = random.randint(0, len(dataset) - 1)
+        img, labels = dataset.__getitem__(rand)
+        str_labels = [names[x] for x in labels[..., 0].cpu().int()]
+        cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
+        cv2.imwrite(f"test_randomscale_{i}.png", cv_img)
 
 def test_classmapping():
     img_root_cm = "/home/sh/Datasets/coco128/images/train2017"
@@ -87,6 +99,7 @@ def test_combination():
     dataset = MSCOCO(img_root, label_root)
     dataset = SizeLimit(dataset, limit=5)
     dataset = Affine(dataset, perspective=1)
+    dataset = RandomScale(dataset)
     dataset = Albumentations(dataset)
     dataset = Mosaic4(dataset, 448)
     dataset = ToTensor(dataset)
@@ -100,9 +113,10 @@ def test_combination():
 
 if __name__ == "__main__":
     # test_load()
-    test_classmapping()
+    test_randomscale()
+    # test_classmapping()
     # test_mosaic4()
     # test_affine()
     # test_albumentations()
     # test_sizelimit()
-    # test_combination()
+    test_combination()

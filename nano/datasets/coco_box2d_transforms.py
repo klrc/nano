@@ -10,15 +10,56 @@ from .coco_box2d import MSCOCO
 from ._layer import DatasetLayer
 
 
+def center_crop(img, label, raw_size, croped_size, min_iou=0.4):
+    """
+    perform center crop on img & label
+    warning: inplace operations in this function
+    """
+    h, w = raw_size
+    ch, cw = croped_size
+    border_h = (h - ch) // 2
+    border_w = (w - cw) // 2
+    img = img[border_h : h - border_h, border_w : w - border_w]
+    if len(label) > 0:
+        raw_boxsize = (label[:, 3] - label[:, 1]) * (label[:, 4] - label[:, 2])
+        label[:, 1] = np.clip(label[:, 1] - border_w, 0, cw - 1)
+        label[:, 2] = np.clip(label[:, 2] - border_h, 0, ch - 1)
+        label[:, 3] = np.clip(label[:, 3] - border_w, 0, cw - 1)
+        label[:, 4] = np.clip(label[:, 4] - border_h, 0, ch - 1)
+        new_boxsize = (label[:, 3] - label[:, 1]) * (label[:, 4] - label[:, 2])
+        keeped_boxes = new_boxsize / (raw_boxsize + 1e-8) > min_iou
+        label = label[keeped_boxes]
+    return img, label
+
+
+def center_padding(img, label, raw_size, padded_size):
+    """
+    perform center padding on img & label
+    warning: inplace operations in this function
+    """
+    h, w = raw_size
+    ph, pw = padded_size
+    border_h = (ph - h) // 2
+    border_w = (pw - w) // 2
+    new_img = np.ones((ph, pw, img.shape[-1]), img.dtype) * 114
+    new_img[border_h : h + border_h, border_w : w + border_w] = img
+    if len(label) > 0:
+        # xyxy
+        label[:, 1] += border_w
+        label[:, 2] += border_h
+        label[:, 3] += border_w
+        label[:, 4] += border_h
+    return new_img, label
+
+
 class Mosaic4(DatasetLayer):
     """
     4-mosaic augmentation from ultralytics-yolov5
     """
 
-    def __init__(self, base, img_size=416, loss_thres=0.8) -> None:
+    def __init__(self, base, img_size=416) -> None:
         super().__init__(base, DatasetLayer)
         self.img_size = img_size
-        self.loss_thres = loss_thres
 
     def __len__(self):
         return len(self.base)
@@ -70,18 +111,53 @@ class Mosaic4(DatasetLayer):
                 labels[:, 4] += offset_y
                 labels4.append(labels)
 
-        # crop black border to average
-        border = int(s // 2)
-        img4 = img4[border : 2 * s - border, border : 2 * s - border]
+        # Concat/clip labels
         if len(labels4) > 0:
-            # Concat/clip labels
             labels4 = np.concatenate(labels4, 0)
-            raw_boxsize = (labels4[:, 3] - labels4[:, 1]) * (labels4[:, 4] - labels4[:, 2])
-            labels4[:, 1:] = np.clip(labels4[:, 1:] - border, 0, s - 1)
-            new_boxsize = (labels4[:, 3] - labels4[:, 1]) * (labels4[:, 4] - labels4[:, 2])
-            keeped_boxes = new_boxsize / (raw_boxsize + 1e-8) > (1 - self.loss_thres)
-            labels4 = labels4[keeped_boxes]
+
+        # crop black border to average
+        img4, labels4 = center_crop(img4, labels4, (2 * s, 2 * s), (s, s), 0.3)
         return img4, labels4
+
+
+class RandomScale(DatasetLayer):
+    """
+    multi-scale augmentation
+    """
+
+    def __init__(self, base=None, min_r=0.5, max_r=1.5, p=0.2, crop_border=True) -> None:
+        super().__init__(base, DatasetLayer)
+        assert min_r > 0
+        self.min_r = min_r
+        self.max_r = max_r
+        self.crop_border = crop_border
+        self.p = p
+
+    def __len__(self):
+        return len(self.base)
+
+    def __getitem__(self, index):
+        img, label = self.base.__getitem__(index)
+        if random.random() < self.p:
+            h, w, _ = img.shape
+            ratio = random.random() * (self.max_r - self.min_r) + self.min_r
+            new_h = int(h * ratio)
+            new_w = int(w * ratio)
+            img = cv2.resize(
+                img,
+                (new_w, new_h),
+                interpolation=cv2.INTER_AREA,
+            )
+            # xyxy label
+            if len(label) > 0:
+                label[:, 1:] *= ratio
+            # center crop
+            if self.crop_border:
+                if ratio > 1:
+                    img, label = center_crop(img, label, (new_h, new_w), (h, w))
+                elif ratio < 1:
+                    img, label = center_padding(img, label, (new_h, new_w), (h, w))
+        return img, label
 
 
 class Affine(DatasetLayer):
@@ -92,13 +168,12 @@ class Affine(DatasetLayer):
         - perspective
     """
 
-    def __init__(self, base, horizontal_flip=0.5, perspective=0.5, max_perspective=0.15, crop_border=True, loss_thres=0.1) -> None:
+    def __init__(self, base, horizontal_flip=0.5, perspective=0.5, max_perspective=0.15, crop_border=True) -> None:
         super().__init__(base, DatasetLayer)
         self.flip = horizontal_flip
         self.perspective = perspective
         self.max_perspective = max_perspective
         self.crop_border = crop_border
-        self.loss_thres = loss_thres
 
     def __len__(self):
         return len(self.base)
@@ -158,18 +233,7 @@ class Affine(DatasetLayer):
                 label = np.array(affined_label)
             # crop black border to average
             if self.crop_border:
-                border_h = (new_h - h) // 2
-                border_w = (new_w - w) // 2
-                img = img[border_h : new_h - border_h, border_w : new_w - border_w]
-                if len(label) > 0:
-                    raw_boxsize = (label[:, 3] - label[:, 1]) * (label[:, 4] - label[:, 2])
-                    new_boxsize = (label[:, 3] - label[:, 1]) * (label[:, 4] - label[:, 2])
-                    label[:, 1] = np.clip(label[:, 1] - border_w, 0, w - 1)
-                    label[:, 2] = np.clip(label[:, 2] - border_h, 0, h - 1)
-                    label[:, 3] = np.clip(label[:, 3] - border_w, 0, w - 1)
-                    label[:, 4] = np.clip(label[:, 4] - border_h, 0, h - 1)
-                    keeped_boxes = new_boxsize / (raw_boxsize + 1e-8) > (1 - self.loss_thres)
-                    label = label[keeped_boxes]
+                img, label = center_crop(img, label, (new_h, new_w), (h, w))
         return img, label
 
 
@@ -219,7 +283,6 @@ class ClassMapping(DatasetLayer):
                 lb[0] = self.mapping[cid]
                 yield lb
 
-
     def __getitem__(self, index):
         img, labels = self.base.__getitem__(index)
         new_labels = []
@@ -253,7 +316,7 @@ class SizeLimit(DatasetLayer):
             for i in tqdm(range(len(self.base)), desc="prepare for size limit"):
                 box_cids = []
                 for c, _, _, _, _ in self.base._yield_labels(i):
-                        box_cids.append(c)
+                    box_cids.append(c)
                 diversity = len(set(box_cids))
                 self.data.append((i, diversity))
             self.data = sorted(self.data, key=lambda x: x[1], reverse=True)
