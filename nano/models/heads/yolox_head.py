@@ -75,10 +75,11 @@ class YoloXHead(nn.Module):
             if not self.training:
                 y = y.sigmoid()
             else:
-                y[:4] = y[:4].sigmoid()
+                y[..., :4] = y[..., :4].sigmoid()
             # ccwh -> xywh
             y[..., :2] = (y[..., :2] * 7 - 3 + grid_mask) * stride  # +-3.5
             y[..., 2:4] = torch.exp(y[..., 2:4] * 3) * stride  # max=20*stride
+
             # xywh -> xyxy
             y[..., :2] -= y[..., 2:4] / 2
             y[..., 2:4] += y[..., :2]

@@ -76,7 +76,7 @@ class Ghostyolox_3x3_m48(nn.Module):
         x = self.head(x)
         return x
 
-
+# Params size (MB): 1.17
 class Ghostyolox_3x3_s32(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
@@ -96,7 +96,7 @@ class Ghostyolox_3x3_s32(nn.Module):
 if __name__ == "__main__":
     from nano.models.utils import check_size
 
-    model = Ghostyolox_4x3_l128(3)
+    model = Ghostyolox_3x3_s32(3)
     x = torch.rand(4, 3, 224, 416)
     model.eval()
     y = model(x)

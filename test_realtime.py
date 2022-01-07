@@ -14,9 +14,6 @@ TARGET_SIZE_HEIGHT = 224
 
 def cv2_draw_bbox(frame, x, canvas_h, canvas_w, class_names):
     # xyxy-conf-cls
-    if len(x) == 0:
-        print('nothing detected')
-        return
     x[..., 0] *= canvas_w / TARGET_SIZE_WIDTH
     x[..., 1] *= canvas_h / TARGET_SIZE_HEIGHT
     x[..., 2] *= canvas_w / TARGET_SIZE_WIDTH
@@ -62,6 +59,7 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
         proc_1.start()
 
         # # capture process ----------------
+        bbox_set = []
         while True:
             ret, frame = capture.read()
             frame = cv2.copyMakeBorder(frame, 0, 0, 125, 125, cv2.BORDER_CONSTANT, value=(114, 114, 114))
@@ -71,9 +69,12 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
             if capture_queue.empty():
                 # print("put frame", capture_queue.qsize())
                 capture_queue.put(frame)
-            if not result_queue.empty():
+            if not result_queue.empty():  # update bbox_set
                 bbox_set = result_queue.get()
-                cv2_draw_bbox(frame, bbox_set, canvas_h, canvas_w, class_names)
+            if len(bbox_set) == 0:
+                print("nothing detected")
+            else:
+                cv2_draw_bbox(frame, bbox_set.clone(), canvas_h, canvas_w, class_names)
             cv2.imshow("frame", frame)
             if cv2.waitKey(10) == 27:
                 break
@@ -171,12 +172,12 @@ if __name__ == "__main__":
         from nano.models.model_zoo.yolox_ghost import Ghostyolox_3x3_s32
 
         model = Ghostyolox_3x3_s32(num_classes=3)
-        model.load_state_dict(torch.load("runs/train/exp57/last.pt", map_location="cpu")["state_dict"])
+        model.load_state_dict(torch.load("runs/train/exp91/last.pt", map_location="cpu")["state_dict"])
         return model
 
     test_front_camera(
-        0.3,
-        0.3,
+        0.2,
+        0.45,
         ["person", "bike", "car"],
         device="cpu",
     )

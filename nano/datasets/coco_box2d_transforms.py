@@ -79,7 +79,7 @@ class Mosaic4(DatasetLayer):
             raw_boxsize = (labels4[:, 3] - labels4[:, 1]) * (labels4[:, 4] - labels4[:, 2])
             labels4[:, 1:] = np.clip(labels4[:, 1:] - border, 0, s - 1)
             new_boxsize = (labels4[:, 3] - labels4[:, 1]) * (labels4[:, 4] - labels4[:, 2])
-            keeped_boxes = new_boxsize / (raw_boxsize + 1e-16) > (1 - self.loss_thres)
+            keeped_boxes = new_boxsize / (raw_boxsize + 1e-8) > (1 - self.loss_thres)
             labels4 = labels4[keeped_boxes]
         return img4, labels4
 
@@ -168,7 +168,7 @@ class Affine(DatasetLayer):
                     label[:, 2] = np.clip(label[:, 2] - border_h, 0, h - 1)
                     label[:, 3] = np.clip(label[:, 3] - border_w, 0, w - 1)
                     label[:, 4] = np.clip(label[:, 4] - border_h, 0, h - 1)
-                    keeped_boxes = new_boxsize / raw_boxsize > (1 - self.loss_thres)
+                    keeped_boxes = new_boxsize / (raw_boxsize + 1e-8) > (1 - self.loss_thres)
                     label = label[keeped_boxes]
         return img, label
 

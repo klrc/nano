@@ -1,7 +1,8 @@
 import torch
 from torch import nn
 from torch.nn.functional import binary_cross_entropy_with_logits, one_hot, binary_cross_entropy
-from nano.ops.box2d import completely_box_iou, safe_box_iou
+from torchvision.ops.boxes import box_iou
+from nano.ops.box2d import completely_box_iou
 
 
 def iou_loss(input, target, reduction="mean"):
@@ -42,9 +43,9 @@ def compute_loss(box_pred, obj_pred, cls_pred, box_target, obj_target, cls_targe
     """
     # bbox regression loss, objectness loss, classification loss (batched)
     loss = torch.zeros(3, device=device)
-    lbox = 0.05 * iou_loss(box_pred, box_target, reduction="mean")
+    lbox = 0.5 * iou_loss(box_pred, box_target, reduction="mean")
     lobj = binary_cross_entropy_with_logits(obj_pred, obj_target, reduction="mean")
-    lcls = 0.5 * binary_cross_entropy_with_logits(cls_pred, cls_target, reduction="mean")
+    lcls = 0.1 * binary_cross_entropy_with_logits(cls_pred, cls_target, reduction="mean")
     loss += torch.stack((lbox, lobj, lcls))
     # loss, loss items (for printing)
     return lbox + lobj + lcls, loss.detach()
@@ -115,7 +116,8 @@ class SimOTA(nn.Module):
                 continue
 
             in_box, in_box_center = self.center_sampling(pred_per_image, target_per_image, grid_mask, stride_mask)
-            mp, tp, p_iou = self.dynamic_topk(pred_per_image, target_per_image, in_box, in_box_center)
+            # mp, tp, p_iou = self.dynamic_topk(pred_per_image, target_per_image, in_box, in_box_center)
+            mp, tp = self.dynamic_topk(pred_per_image, target_per_image, in_box, in_box_center)
 
             # match mask
             m = in_box.clone()
@@ -125,8 +127,7 @@ class SimOTA(nn.Module):
             box_t = target_per_image[tp, 2:]
 
             # obj target
-            obj_t = in_box.clone().float()
-            obj_t[in_box] = p_iou
+            obj_t = m.clone().float()
 
             # cls target
             cls_t = one_hot(target_per_image[tp, 1].to(torch.int64), num_classes).float()
@@ -207,13 +208,13 @@ class SimOTA(nn.Module):
         T = target.size(0)
         P = paired.size(0)
 
-        pair_wise_iou = safe_box_iou(target[..., 2:], paired[..., :4])  # (T, P)
+        pair_wise_iou = box_iou(target[..., 2:], paired[..., :4])  # (T, P)
         pair_wise_iou_loss = -torch.log(pair_wise_iou + 1e-8)
 
         cls_target = one_hot(target[:, 1].to(torch.int64), self.num_classes)
-        cls_target = cls_target.float().clamp(0, 1).unsqueeze(1).repeat(1, P, 1)
+        cls_target = cls_target.float().unsqueeze(1).repeat(1, P, 1)
         cls_pred = paired[..., 4:5].sigmoid() * paired[..., 5:].sigmoid()
-        cls_pred = cls_pred.sqrt().float().clamp(0, 1).unsqueeze(0).repeat(T, 1, 1)
+        cls_pred = cls_pred.sqrt().float().unsqueeze(0).repeat(T, 1, 1)
         with torch.cuda.amp.autocast(enabled=False):
             pair_wise_cls_loss = binary_cross_entropy(cls_pred, cls_target, reduction="none").sum(-1)  # (T, P)
 
@@ -225,8 +226,8 @@ class SimOTA(nn.Module):
         n_candidate_k = min(10, P)
         topk_ious, _ = torch.topk(pair_wise_iou, n_candidate_k, dim=1)
         dynamic_ks = torch.clamp(topk_ious.sum(1).int(), min=1)
+        self.max_topk = float(topk_ious.sum(1).mean().item())  # record dynamic K
         dynamic_ks = dynamic_ks.tolist()
-        self.max_topk = max(dynamic_ks)  # record dynamic K
 
         # select topk paired pred
         for t in range(T):
@@ -244,6 +245,7 @@ class SimOTA(nn.Module):
         # collect results
         mp = matching_matrix.sum(0) > 0  # (P, )
         tp = matching_matrix[:, mp].argmax(0)  # (P, )
-        p_iou = pair_wise_iou.max(0).values.clamp(0, 1)  # (P, )
+        # p_iou = pair_wise_iou.max(0).values  # (P, )
         del pair_wise_iou, cost
-        return mp, tp, p_iou
+        # return mp, tp, p_iou
+        return mp, tp

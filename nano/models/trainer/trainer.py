@@ -147,8 +147,8 @@ def run(
     criteria,
     device,
     batch_size=32,
-    patience=10,
-    epochs=300,
+    patience=16,
+    epochs=100,
     lr0=0.0032,
     momentum=0.843,
     weight_decay=0.00036,
@@ -190,6 +190,9 @@ def run(
             g0.append(v.weight)
         elif hasattr(v, "weight") and isinstance(v.weight, nn.Parameter):  # weight (with decay)
             g1.append(v.weight)
+    g0 = filter(lambda x: x.requires_grad, g0)
+    g1 = filter(lambda x: x.requires_grad, g1)
+    g2 = filter(lambda x: x.requires_grad, g2)
 
     if optimizer == "Adam":
         optimizer = Adam(g0, lr=lr0, betas=(momentum, 0.999))  # adjust beta1 to momentum
@@ -280,9 +283,7 @@ def run(
             lr_g0, lr_g1, lr_g2 = [x["lr"] for x in optimizer.param_groups]  # for loggers
             mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
             mem = f"{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G"  # (GB)
-            pbar.set_description(
-                ("%10s" * 2 + "%10.4f" * 7) % (f"{epoch}/{start_epoch + epochs - 1}", mem, *mloss, criteria.max_topk, lr_g0, lr_g1, lr_g2)
-            )
+            pbar.set_description(("%10s" * 2 + "%10.4f" * 7) % (f"{epoch}/{start_epoch + epochs - 1}", mem, *mloss, criteria.max_topk, lr_g0, lr_g1, lr_g2))
 
             # end batch ------------------------------------------------------------------------------------------------
 

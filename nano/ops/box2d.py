@@ -34,8 +34,10 @@ def non_max_suppression(
     conf_thres,
     iou_thres,
     max_det=300,
+    max_nms=3000,
 ):
     """Runs Non-Maximum Suppression (NMS) on inference results
+    max_nms: maximum number of boxes into torchvision.ops.nms()
     Returns:
          list of detections, on (n,6) tensor per image [xyxy, conf, cls]
     """
@@ -49,7 +51,6 @@ def non_max_suppression(
 
     # Settings
     min_wh, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
-    max_nms = 30000  # maximum number of boxes into torchvision.ops.nms()
     time_limit = 10.0  # seconds to quit after
     redundant = True  # require redundant detections
     merge = False  # use merge-NMS
@@ -102,31 +103,6 @@ def non_max_suppression(
     return output
 
 
-def safe_box_iou(boxes1: Tensor, boxes2: Tensor) -> Tensor:
-    """
-    Return intersection-over-union (Jaccard index) between two sets of boxes.
-
-    Both sets of boxes are expected to be in ``(x1, y1, x2, y2)`` format with
-    ``0 <= x1 < x2`` and ``0 <= y1 < y2``.
-
-    Args:
-        boxes1 (Tensor[N, 4]): first set of boxes
-        boxes2 (Tensor[M, 4]): second set of boxes
-
-    Returns:
-        Tensor[N, M]: the NxM matrix containing the pairwise IoU values for every element in boxes1 and boxes2
-    """
-    eps = 1e-8
-    inter, union = _box_inter_union(boxes1, boxes2)
-    iou = inter / (union + eps)
-    torch.nan_to_num_(iou, 0)
-    # NaN check -----------------------------
-    # if torch.any(torch.isnan(iou)):
-    #     print(iou, inter, union)
-    #     raise NotImplementedError
-    return iou
-
-
 def completely_box_iou(box1, box2, eps=1e-8):
 
     # Get the coordinates of bounding boxes
@@ -148,7 +124,7 @@ def completely_box_iou(box1, box2, eps=1e-8):
     c2 = cw ** 2 + ch ** 2  # convex diagonal squared
     rho2 = ((b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2 + (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2) / 4  # center distance squared
     # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
-    v = (4 / math.pi ** 2) * torch.pow(torch.atan(w2 / h2) - torch.atan(w1 / h1), 2)
+    v = (4 / math.pi ** 2) * torch.pow(torch.atan(w2 / (h2 + eps)) - torch.atan(w1 / (h1 + eps)), 2)
     with torch.no_grad():
         alpha = v / (v - iou + 1 + eps)
     ciou = iou - (rho2 / (c2 + eps) + v * alpha)  # CIoU

@@ -46,48 +46,80 @@ def rand_default_color(color):
     return color
 
 
-def draw_center_points(image, centers, color=None, thickness=3, alphas=None):
+def draw_center_point(image, center, color=None, thickness=3, alpha=None):
     """
     draw square pixel-style points on image
     """
     # set image format
-    cv2_img = any_image_format(image)  # CHW BGR 0~255
+    canvas = any_image_format(image)  # CHW BGR 0~255
     # set tensor format (to numpy)
-    centers = any_tensor_format(centers)
+    center = any_tensor_format(center)
+    center = [int(x) for x in center]  # to int
     # set color
     color = rand_default_color(color)
-    # draw points
-    assert centers.shape[-1] == 2
-    if len(centers.shape) == 1:
-        centers = [centers]
-    if alphas is not None:
-        assert len(alphas) == len(centers)
-    for i, cp in enumerate(centers):
-        grid = [int(x) for x in cp]
-        if alphas is not None:
-            alpha = alphas[i]
-            point_color = (int(color[0]* alpha), int(color[1] * alpha), int(color[2] * alpha))
-        else:
-            point_color = color
-        cv2_img = cv2.circle(cv2_img, grid, 1, point_color, thickness=thickness)
-
-    return cv2_img
+    # draw point
+    if alpha is None:
+        cv2.circle(canvas, center, 1, color, thickness)
+    else:
+        alpha = float(alpha)
+        p = cv2.circle(canvas.copy(), center, 1, color, thickness)
+        canvas = cv2.addWeighted(canvas, 1-alpha, p, alpha, 0)
+    return canvas
 
 
-def draw_text_with_background(image, text, x1, y1, color=None, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, font_thickness=1, font_color=(0, 0, 0)):
+def draw_bounding_box(image, box, color=None, alpha=None):
+    # set image format
+    canvas = any_image_format(image)  # CHW BGR 0~255
+    # set color
+    color = rand_default_color(color)
+    # draw box
+    x1, y1, x2, y2 = [int(x) for x in box]
+    if alpha is None:
+        cv2.rectangle(canvas, (x1, y1), (x2, y2), color, 1, 4, 0)
+    else:
+        alpha = float(alpha)
+        p = cv2.rectangle(canvas.copy(), (x1, y1), (x2, y2), color, 1, 4, 0)
+        canvas = cv2.addWeighted(canvas, 1-alpha, p, alpha, 0)
+    return canvas
+
+
+def draw_text_with_background(image, text, x1, y1, color=None, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, font_thickness=1, font_color=(0, 0, 0), alpha=None):
     """
     draw labels with auto-fitting background color
     """
     # set image format
-    cv2_img = any_image_format(image)  # CHW BGR 0~255
+    canvas = any_image_format(image)  # CHW BGR 0~255
     text_size, _ = cv2.getTextSize(text, font, font_scale, font_thickness)
     text_w, text_h = text_size
-    cv2.rectangle(cv2_img, (x1, y1), (x1 + text_w + 2, y1 + text_h + 2), color, -1)
-    cv2.putText(cv2_img, text, (x1, y1 + text_h), font, font_scale, font_color, font_thickness)
-    return cv2_img
+    if alpha is None:
+        cv2.rectangle(canvas, (x1, y1), (x1 + text_w + 2, y1 + text_h + 2), color, -1)
+        cv2.putText(canvas, text, (x1, y1 + text_h), font, font_scale, font_color, font_thickness)
+    else:
+        alpha = float(alpha)
+        p = cv2.rectangle(canvas.copy(), (x1, y1), (x1 + text_w + 2, y1 + text_h + 2), color, -1)
+        cv2.putText(p, text, (x1, y1 + text_h), font, font_scale, font_color, font_thickness)
+        canvas = cv2.addWeighted(canvas, 1-alpha, p, alpha, 0)
+    return canvas
 
 
-def draw_bounding_boxes(image, boxes, box_color=None, boxes_label=None, boxes_centers=None):
+
+def draw_center_points(image, centers, color=None, thickness=3, alphas=None):
+    # set image format
+    image = any_image_format(image)  # CHW BGR 0~255
+    # set tensor format (to numpy)
+    centers = any_tensor_format(centers)
+    # set color
+    color = rand_default_color(color)
+    # set alphas
+    if alphas is None:
+        alphas = [None for _ in len(centers)]
+    # draw points
+    for center, alpha in zip(centers, alphas):
+        image = draw_center_point(image, center, color, thickness, alpha)
+    return image
+
+
+def draw_bounding_boxes(image, boxes, box_color=None, boxes_label=None, boxes_centers=None, alphas=None):
     """
     draw bounding boxes on image
     boxes: x1, y1, x2, y2
@@ -101,18 +133,26 @@ def draw_bounding_boxes(image, boxes, box_color=None, boxes_label=None, boxes_ce
         assert len(boxes_label) == len(boxes)
     if boxes_centers is not None:
         assert len(boxes_centers) == len(boxes)
+    if alphas is not None:
+        assert len(alphas) == len(boxes)
     # draw boxes
     for i, box in enumerate(boxes):
         # set color
         color = rand_default_color(box_color)
+        # set alpha
+        alpha = None if alphas is None else alphas[i]
         # draw box
-        x1, y1, x2, y2 = [int(x) for x in box]
-        cv2.rectangle(cv2_img, (x1, y1), (x2, y2), color, 1, 4, 0)
+        cv2_img = draw_bounding_box(cv2_img, box, color, alpha)
         # draw label
         if boxes_label is not None:
+            x1, y1, _, _ = [int(x) for x in box]
             text = boxes_label[i]
-            cv2_img = draw_text_with_background(cv2_img, text, x1, y1, color)
+            cv2_img = draw_text_with_background(cv2_img, text, x1, y1, color, alpha=alpha)
         # draw center
         if boxes_centers is not None:
-            cv2_img = draw_center_points(cv2_img, boxes_centers[i], color=color)
+            centers = boxes_centers[i]
+            if len(centers.shape) == 1:
+                centers = [centers]
+            for center in centers:
+                cv2_img = draw_center_point(cv2_img, center, color, alpha=alpha)
     return cv2_img

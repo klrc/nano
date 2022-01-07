@@ -64,14 +64,6 @@ def test_assignment(model, device):
             label_target = torch.argmax(cls_target, dim=1, keepdim=True)
             label_target = [names[x] for x in label_target.cpu()]
 
-            # draw lobj centers
-            center_index = obj_target.bool()
-            objectness_center = (grid_mask[0, center_index] + 0.5) * stride_mask[0, center_index].unsqueeze(-1)
-            alphas = obj_target[center_index]
-            cv_img = draw_bounding_boxes(image=img[0].cpu()*0.5, boxes=box_target.cpu(), boxes_label=label_target)
-            cv_img = draw_center_points(cv_img, objectness_center, thickness=1, alphas=alphas)
-            cv2.imwrite(f"test_assignment_obj_{i}.png", cv_img)
-
             # draw matched targets
             center_targets = (grid_mask[0, match_mask] + 0.5) * stride_mask[0, match_mask].unsqueeze(-1)
             cv_img = draw_bounding_boxes(image=img[0].cpu(), boxes=box_target.cpu(), boxes_label=label_target, boxes_centers=center_targets)
@@ -95,7 +87,7 @@ if __name__ == "__main__":
     from nano.models.model_zoo.yolox_ghost import Ghostyolox_3x3_s32
 
     model = Ghostyolox_3x3_s32(num_classes=3)
-    # model.load_state_dict(torch.load("runs/train/exp53/last.pt", map_location='cuda')["state_dict"])
+    model.load_state_dict(torch.load("runs/train/exp91/last.pt", map_location='cpu')["state_dict"])
     model.train().to("cpu")
 
     test_assignment(model, "cpu")

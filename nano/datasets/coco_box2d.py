@@ -88,6 +88,7 @@ class MSCOCO(DatasetLayer):
         image_path, annotation_path = self.data[index]
         img = cv2.imread(image_path)  # BGR
         height, width = img.shape[:2]  # orig hw
+        assert height*width > 0
         if self.min_size is not None:
             ratio = self.min_size / min(height, width)
         elif self.max_size is not None:
