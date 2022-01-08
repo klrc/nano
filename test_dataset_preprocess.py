@@ -1,6 +1,8 @@
 import cv2
 import random
 
+from torch.utils import data
+
 
 
 from nano.datasets.coco_box2d import MSCOCO
@@ -25,7 +27,7 @@ def test_load():
 
 def test_randomscale():
     dataset = MSCOCO(img_root, label_root)
-    dataset = RandomScale(dataset)
+    dataset = RandomScale(dataset, 0.2, 1, p=1)
     dataset = ToTensor(dataset)
     for i in range(10):
         rand = random.randint(0, len(dataset) - 1)
@@ -63,7 +65,7 @@ def test_mosaic4():
 
 def test_affine():
     dataset = MSCOCO(img_root, label_root)
-    dataset = Affine(dataset, perspective=1)
+    dataset = Affine(dataset, p_flip=0.5, p_shear=1, max_shear=0.5)
     dataset = ToTensor(dataset)
     for i in range(4):
         rand = random.randint(0, len(dataset) - 1)
@@ -99,7 +101,7 @@ def test_combination():
     dataset = MSCOCO(img_root, label_root)
     dataset = SizeLimit(dataset, limit=5)
     dataset = Affine(dataset, perspective=1)
-    dataset = RandomScale(dataset)
+    dataset = RandomScale(dataset, min_r=0.5, max_r=1, p=1)
     dataset = Albumentations(dataset)
     dataset = Mosaic4(dataset, 448)
     dataset = ToTensor(dataset)
@@ -113,10 +115,10 @@ def test_combination():
 
 if __name__ == "__main__":
     # test_load()
-    test_randomscale()
+    # test_randomscale()
     # test_classmapping()
     # test_mosaic4()
-    # test_affine()
+    test_affine()
     # test_albumentations()
     # test_sizelimit()
-    test_combination()
+    # test_combination()

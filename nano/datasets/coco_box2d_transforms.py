@@ -155,8 +155,8 @@ class RandomScale(DatasetLayer):
             if self.crop_border:
                 if ratio > 1:
                     img, label = center_crop(img, label, (new_h, new_w), (h, w))
-                elif ratio < 1:
-                    img, label = center_padding(img, label, (new_h, new_w), (h, w))
+                # elif ratio < 1:
+                #     img, label = center_padding(img, label, (new_h, new_w), (h, w))
         return img, label
 
 
@@ -168,11 +168,11 @@ class Affine(DatasetLayer):
         - perspective
     """
 
-    def __init__(self, base, horizontal_flip=0.5, perspective=0.5, max_perspective=0.15, crop_border=True) -> None:
+    def __init__(self, base, p_flip=0.5, p_shear=0.2, max_shear=0.5, crop_border=True) -> None:
         super().__init__(base, DatasetLayer)
-        self.flip = horizontal_flip
-        self.perspective = perspective
-        self.max_perspective = max_perspective
+        self.flip = p_flip
+        self.perspective = p_shear
+        self.max_perspective = max_shear
         self.crop_border = crop_border
 
     def __len__(self):
@@ -247,7 +247,7 @@ class Albumentations(DatasetLayer):
         if transforms == "random_blind":
             transforms = [
                 A.Blur(p=0.05),
-                A.MedianBlur(p=0.01),
+                A.MedianBlur(p=0.05),
                 A.ToGray(p=0.1),
             ]
         self.transforms = A.Compose(transforms)
@@ -300,7 +300,7 @@ class SizeLimit(DatasetLayer):
     limit the dataset size for quick scratch-training
     """
 
-    def __init__(self, base, limit=5000, sort_only=False) -> None:
+    def __init__(self, base, limit=50000, sort_only=False) -> None:
         super().__init__(base, MSCOCO, ClassMapping)
         if sort_only:
             limit = len(self.base)

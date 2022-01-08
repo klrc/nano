@@ -93,7 +93,7 @@ class ESyolox_3x3_s32(nn.Module):
 if __name__ == "__main__":
     from nano.models.utils import check_size
 
-    model = ESyolox_3x3_m48(3)
+    model = ESyolox_4x3_l96(3)
     x = torch.rand(4, 3, 224, 416)
     for y in model(x):
         print(y.shape)

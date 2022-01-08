@@ -11,7 +11,7 @@ from nano.models.necks.ghost_pan import (
 )
 from nano.models.heads.yolox_head import YoloXHead
 
-
+# Params size (MB): 7.46
 class Ghostyolox_4x3_l128(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
@@ -96,7 +96,7 @@ class Ghostyolox_3x3_s32(nn.Module):
 if __name__ == "__main__":
     from nano.models.utils import check_size
 
-    model = Ghostyolox_3x3_s32(3)
+    model = Ghostyolox_4x3_l128(3)
     x = torch.rand(4, 3, 224, 416)
     model.eval()
     y = model(x)
