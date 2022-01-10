@@ -1,12 +1,10 @@
 import time
 import torch
-from torch import Tensor
 import torchvision
 from torchvision.ops import box_iou
 import numpy as np
 import math
 
-from torchvision.ops.boxes import _box_inter_union
 
 
 def xywh2xyxy(x):

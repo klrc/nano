@@ -91,7 +91,5 @@ class NanoHeadless(nn.Module):
         ys = []
         for i, x in enumerate(xs):
             y = self.convs[i](x)
-            # output shaped as (N, A, 4+c)
-            y = y.flatten(2).permute(0, 2, 1)
             ys.append(y)
-        return torch.cat(ys, 1)
+        return ys
