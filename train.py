@@ -29,9 +29,9 @@ if __name__ == "__main__":
     for model_type, batch_size in (
         # (GhostNano_3x3_s32, 64),
         (GhostNano_3x3_m96, 16),
-        (GhostNano_4x3_m96, 16),
-        (GhostNano_4x4_m96, 16),
-        (GhostNano_4x4_l128, 16),
+        # (GhostNano_4x3_m96, 16),
+        # (GhostNano_4x4_m96, 16),
+        # (GhostNano_4x4_l128, 16),
     ):
         # --------------------------------------------------
         try:
@@ -58,7 +58,7 @@ if __name__ == "__main__":
             class_names = ["person", "bike", "car"]
             criteria = SimOTA(3, True)
 
-            trainer.run(model, train_loader, val_loader, class_names, criteria, device, batch_size=batch_size)
+            trainer.run(model, train_loader, val_loader, class_names, criteria, device, batch_size=batch_size, ckpt=torch.load('runs/train/exp120/last.pt'), load_optimizer=True)
             del model, criteria, train_loader, val_loader, trainset, valset
             torch.cuda.empty_cache()
         except Exception as e:
