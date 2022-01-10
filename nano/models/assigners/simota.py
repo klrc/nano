@@ -1,7 +1,8 @@
 import torch
 from torch import nn
-from torch.nn.functional import binary_cross_entropy_with_logits, one_hot, binary_cross_entropy
+from torch.nn.functional import one_hot, binary_cross_entropy
 from torchvision.ops.boxes import box_iou
+from nano.models.assigners.gfocal_loss import quality_focal_loss
 from nano.ops.box2d import completely_box_iou
 
 
@@ -27,12 +28,12 @@ def label_smoothing(target, eps, num_classes, inplace=False):
     return target
 
 
-def compute_loss(box_pred, obj_pred, cls_pred, box_target, obj_target, cls_target, device):
+def compute_loss(box_pred, quality_pred, box_target, quality_target, device):
     """
-    compute loss from collected reg (bbox), obj, cls targets,
+    compute loss from collected bbox, quality targets,
     all anchors are flatten to batch dimension.
-    reg loss is processed with GIoU loss,
-    while obj & cls losses are processed with BCE_with_logits loss,
+    box is processed with GIoU loss,
+    quality is processed with QFL loss,
 
     * Note that preds should be logits. (do not need to sigmoid())
     * specially, obj loss is valid on ALL anchors.
@@ -42,13 +43,12 @@ def compute_loss(box_pred, obj_pred, cls_pred, box_target, obj_target, cls_targe
         detached_loss: detached loss, for printing usage
     """
     # bbox regression loss, objectness loss, classification loss (batched)
-    loss = torch.zeros(3, device=device)
-    lbox = 0.05 * iou_loss(box_pred, box_target, reduction="mean")
-    lobj = binary_cross_entropy_with_logits(obj_pred, obj_target, reduction="mean")
-    lcls = 0.2 * binary_cross_entropy_with_logits(cls_pred, cls_target, reduction="mean")
-    loss += torch.stack((lbox, lobj, lcls))
+    loss = torch.zeros(2, device=device)
+    lbox = iou_loss(box_pred, box_target, reduction="mean")
+    lqfl = 0.4 * quality_focal_loss(quality_pred, quality_target, beta=2, reduction="sum") / max(box_target.size(0), 1)
+    loss += torch.stack((lbox, lqfl))
     # loss, loss items (for printing)
-    return lbox + lobj + lcls, loss.detach()
+    return lbox + lqfl, loss.detach()
 
 
 class SimOTA(nn.Module):
@@ -73,9 +73,8 @@ class SimOTA(nn.Module):
         if self.compute_loss:
             pred = pred.flatten(0, 1)
             box_pred = pred[match_mask, :4]
-            obj_pred = pred[:, 4]
-            cls_pred = pred[match_mask, 5:]
-            loss, detached_loss = compute_loss(box_pred, obj_pred, cls_pred, box_target, obj_target, cls_target, self.device)
+            quality_pred = pred[:, 4:]
+            loss, detached_loss = compute_loss(box_pred, quality_pred, box_target, (cls_target, obj_target), self.device)
             return loss, detached_loss
         else:
             return match_mask, box_target, obj_target, cls_target
@@ -95,7 +94,6 @@ class SimOTA(nn.Module):
         obj_target = []
         cls_target = []
         batch_size = pred.size(0)
-        num_classes = self.num_classes
         # process per image
         for bi in range(batch_size):
             # process batch ----------------------------------------------------------------
@@ -106,8 +104,8 @@ class SimOTA(nn.Module):
 
             if target_per_image.size(0) == 0:  # no targets alive
                 box_t = pred_per_image.new_zeros((0, 4))
-                cls_t = pred_per_image.new_zeros((0, num_classes))
-                obj_t = pred_per_image.new_zeros(pred_per_image.size(0)).bool()
+                obj_t = pred_per_image.new_zeros(pred_per_image.size(0))
+                cls_t = pred_per_image.new_zeros(pred_per_image.size(0))
                 m = pred_per_image.new_zeros(pred_per_image.size(0)).bool()
                 box_target.append(box_t)
                 obj_target.append(obj_t)
@@ -127,17 +125,17 @@ class SimOTA(nn.Module):
 
             # obj target
             obj_t = m.clone().float()
+            obj_t[m] *= p_iou[mp]
 
-            # cls target
-            cls_t = one_hot(target_per_image[tp, 1].to(torch.int64), num_classes).float()
-            cls_t *= p_iou[mp].unsqueeze(-1)
+            # cls target, background = num_classes
+            cls_t = pred_per_image.new_ones(pred_per_image.size(0)) * self.num_classes
+            cls_t[m] = target_per_image[tp, 1].to(cls_t.dtype)
 
-            # collect mask, box_t, obj_t, cls_t
+            # collect mask, box_t, obj_t
             match_mask.append(m)
             box_target.append(box_t)
             obj_target.append(obj_t)
             cls_target.append(cls_t)
-
             # batch finished --------------------------------------------------------------
 
         # collect assigned batch
@@ -145,7 +143,6 @@ class SimOTA(nn.Module):
         box_target = torch.cat(box_target, 0)
         obj_target = torch.cat(obj_target, 0)
         cls_target = torch.cat(cls_target, 0)
-
         return match_mask, box_target, obj_target, cls_target
 
     @torch.no_grad()
@@ -212,8 +209,7 @@ class SimOTA(nn.Module):
 
         cls_target = one_hot(target[:, 1].to(torch.int64), self.num_classes)
         cls_target = cls_target.float().unsqueeze(1).repeat(1, P, 1)
-        cls_pred = paired[..., 4:5].sigmoid() * paired[..., 5:].sigmoid()
-        cls_pred = cls_pred.sqrt().float().unsqueeze(0).repeat(T, 1, 1)
+        cls_pred = paired[..., 4:].sigmoid().float().unsqueeze(0).repeat(T, 1, 1)
         with torch.cuda.amp.autocast(enabled=False):
             pair_wise_cls_loss = binary_cross_entropy(cls_pred, cls_target, reduction="none").sum(-1)  # (T, P)
 

@@ -128,6 +128,56 @@ class EnhancedShuffleNetv2_x4_l(nn.Module):
         return [fs0, fs1, fs2, fs3]
 
 
+class EnhancedShuffleNetv2_x4_m(nn.Module):
+    def __init__(self):
+        super().__init__()
+        channels = [
+            24,
+            make_divisible(48),
+            make_divisible(96),
+            make_divisible(192),
+            make_divisible(288),
+        ]
+        __inc, __mid = channels[0], channels[1]
+        self.feature_s0 = nn.Sequential(
+            nn.Conv2d(3, __inc, 3, 2, 1),
+            nn.BatchNorm2d(__inc),
+            nn.ReLU6(),
+            ESBlockS2(__inc, __mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+        )
+        __inc, __mid = channels[1], channels[2]
+        self.feature_s1 = nn.Sequential(
+            ESBlockS2(__inc, __mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+        )
+        __inc, __mid = channels[2], channels[3]
+        self.feature_s2 = nn.Sequential(
+            ESBlockS2(__inc, __mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+        )
+        __inc, __mid = channels[3], channels[4]
+        self.feature_s3 = nn.Sequential(
+            ESBlockS2(__inc, __mid, __mid),
+            ESBlockS1(__mid, __mid),
+            ESBlockS1(__mid, __mid),
+        )
+
+    def forward(self, x):
+        fs0 = self.feature_s0(x)
+        fs1 = self.feature_s1(fs0)
+        fs2 = self.feature_s2(fs1)
+        fs3 = self.feature_s3(fs2)
+        return [fs0, fs1, fs2, fs3]
+
+
 class EnhancedShuffleNetv2_x3_m(nn.Module):
     def __init__(self):
         super().__init__()

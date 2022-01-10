@@ -6,7 +6,7 @@ from torch.utils import data
 
 
 from nano.datasets.coco_box2d import MSCOCO
-from nano.datasets.coco_box2d_transforms import Affine, Albumentations, ClassMapping, RandomScale, SizeLimit, ToTensor, Mosaic4
+from nano.datasets.coco_box2d_transforms import Affine, Albumentations, ClassMapping, HSVTransform, RandomScale, SizeLimit, ToTensor, Mosaic4
 from nano.datasets.coco_box2d_visualize import draw_bounding_boxes
 
 
@@ -24,6 +24,18 @@ def test_load():
     str_labels = [names[x] for x in labels[..., 0].cpu().int()]
     cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
     cv2.imwrite("test_load.png", cv_img)
+
+def test_hsvtransform():
+    dataset = MSCOCO(img_root, label_root)
+    dataset = HSVTransform(dataset, p=1)
+    dataset = ToTensor(dataset)
+    for i in range(10):
+        rand = random.randint(0, len(dataset) - 1)
+        img, labels = dataset.__getitem__(rand)
+        str_labels = [names[x] for x in labels[..., 0].cpu().int()]
+        cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
+        cv2.imwrite(f"test_hsvtransform_{i}.png", cv_img)
+
 
 def test_randomscale():
     dataset = MSCOCO(img_root, label_root)
@@ -98,14 +110,15 @@ def test_sizelimit():
 
 
 def test_combination():
-    dataset = MSCOCO(img_root, label_root)
+    dataset = MSCOCO(img_root, label_root, min_size=416)
     dataset = SizeLimit(dataset, limit=5)
-    dataset = Affine(dataset, perspective=1)
-    dataset = RandomScale(dataset, min_r=0.5, max_r=1, p=1)
-    dataset = Albumentations(dataset)
+    dataset = Affine(dataset)
+    dataset = RandomScale(dataset, p=0.2)
+    dataset = HSVTransform(dataset, p=0.2)
+    dataset = Albumentations(dataset, 'random_blind')
     dataset = Mosaic4(dataset, 448)
     dataset = ToTensor(dataset)
-    for i in range(4):
+    for i in range(10):
         rand = random.randint(0, len(dataset) - 1)
         img, labels = dataset.__getitem__(rand)
         str_labels = [names[x] for x in labels[..., 0].cpu().int()]
@@ -115,10 +128,11 @@ def test_combination():
 
 if __name__ == "__main__":
     # test_load()
+    # test_hsvtransform()
     # test_randomscale()
     # test_classmapping()
     # test_mosaic4()
-    test_affine()
+    # test_affine()
     # test_albumentations()
     # test_sizelimit()
-    # test_combination()
+    test_combination()

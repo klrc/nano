@@ -150,14 +150,14 @@ def run(
     patience=16,
     epochs=100,
     lr0=0.001,
-    momentum=0.937,
+    momentum=0.85,
     weight_decay=0.0005,
     lrf=0.1,
-    optimizer="SGD",
+    optimizer="AdamW",
     ckpt=None,
     warmup_epochs=3,
     warmup_bias_lr=0.1,
-    warmup_momentum=0.8,
+    warmup_momentum=0.5,
     load_optimizer=False,
     verbose=True,
 ):
@@ -242,9 +242,9 @@ def run(
     for epoch in range(start_epoch + 1, start_epoch + epochs + 1):  # epoch ------------------------------------------------------------------
         model.train()
 
-        mloss = torch.zeros(3, device=device)  # mean losses
+        mloss = torch.zeros(2, device=device)  # mean losses
         pbar = enumerate(train_loader)
-        print(("\n" + "%10s" * 9) % ("Epoch", "gpu_mem", "box", "obj", "cls", "topk", "lr0", "lr1", "lr2"))
+        print(("\n" + "%10s" * 8) % ("Epoch", "gpu_mem", "box", "quality", "topk", "lr0", "lr1", "lr2"))
         pbar = tqdm(pbar, total=nb)  # progress bar
         optimizer.zero_grad()
         for i, (imgs, targets) in pbar:  # batch -------------------------------------------------------------
@@ -283,7 +283,7 @@ def run(
             lr_g0, lr_g1, lr_g2 = [x["lr"] for x in optimizer.param_groups]  # for loggers
             mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
             mem = f"{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G"  # (GB)
-            pbar.set_description(("%10s" * 2 + "%10.4f" * 7) % (f"{epoch}/{start_epoch + epochs - 1}", mem, *mloss, criteria.max_topk, lr_g0, lr_g1, lr_g2))
+            pbar.set_description(("%10s" * 2 + "%10.4f" * 6) % (f"{epoch}/{start_epoch + epochs - 1}", mem, *mloss, criteria.max_topk, lr_g0, lr_g1, lr_g2))
 
             # end batch ------------------------------------------------------------------------------------------------
 
@@ -315,11 +315,10 @@ def run(
             "map@.5": results[2].item(),
             "mAP@.5-.95": results[3].item(),
             "train_loss_box": mloss[0].item(),
-            "train_loss_obj": mloss[1].item(),
-            "train_loss_cls": mloss[2].item(),
+            "train_loss_qfl": mloss[1].item(),
             "train_loss": mloss.sum().item(),
         }
-        if logger is not None:
+        if verbose:
             logger.log(log_vals)
 
         # Save model
@@ -342,4 +341,6 @@ def run(
         # end epoch ----------------------------------------------------------------------------------------------------
     # end training -----------------------------------------------------------------------------------------------------
     torch.cuda.empty_cache()
+    if verbose:
+        logger.finish()
     return best

@@ -21,12 +21,12 @@ names = ["person", "bike", "car"]
 def test_backward(model, device):
     base = MSCOCO(imgs_root=img_root, annotations_root=label_root, min_size=416)
     base = SizeLimit(base, 20000)
-    base = Affine(base, horizontal_flip=0.5, perspective=0.3, max_perspective=0.2)
+    base = Affine(base)
     base = Albumentations(base, "random_blind")
     base = Mosaic4(base, img_size=448)
     trainset = ToTensor(base)
 
-    train_loader = DataLoader(trainset, batch_size=32, num_workers=8, pin_memory=False, collate_fn=collate_fn)
+    train_loader = DataLoader(trainset, batch_size=16, num_workers=8, pin_memory=False, collate_fn=collate_fn)
     assigner = SimOTA(num_classes=3, compute_loss=True)
 
     for imgs, targets in train_loader:
@@ -35,7 +35,7 @@ def test_backward(model, device):
         with torch.autograd.set_detect_anomaly(True):
             result = model(imgs)
             loss, detached_loss = assigner(result, targets)
-            print(detached_loss, assigner._avg_topk)
+            print(detached_loss, assigner.max_topk)
             loss.backward()
         return
 
@@ -45,7 +45,7 @@ def test_assignment(model, device):
     annotations_root = "/home/sh/Datasets/coco3/labels/train"
     base = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, min_size=416)
     base = SizeLimit(base, 20000)
-    base = Affine(base, horizontal_flip=0.5, perspective=0.3, max_perspective=0.2)
+    base = Affine(base)
     base = Albumentations(base, "random_blind")
     base = Mosaic4(base, img_size=448)
     trainset = ToTensor(base)
@@ -61,8 +61,8 @@ def test_assignment(model, device):
             result = model(img)
             pred, grid_mask, stride_mask = result
             match_mask, box_target, obj_target, cls_target = assigner(result, target)
-            label_target = torch.argmax(cls_target, dim=1, keepdim=True)
-            label_target = [names[x] for x in label_target.cpu()]
+            label_target = cls_target[cls_target > 0] - 1
+            label_target = [names[int(x)] for x in label_target.cpu()]
 
             # draw matched targets
             center_targets = (grid_mask[0, match_mask] + 0.5) * stride_mask[0, match_mask].unsqueeze(-1)
@@ -71,7 +71,7 @@ def test_assignment(model, device):
 
             # draw preds
             pred = pred.flatten(0, 1)[match_mask]
-            pred_cls = torch.argmax(pred[:, 5:], dim=1, keepdim=True)
+            pred_cls = torch.argmax(pred[:, 4:], dim=1, keepdim=True)
             pred_cls = [names[x] for x in pred_cls.cpu()]
             pred_box = pred[:, :4]
             src_copy = cv_img.copy()
@@ -84,11 +84,11 @@ def test_assignment(model, device):
 
 
 if __name__ == "__main__":
-    from nano.models.model_zoo.yolox_ghost import Ghostyolox_3x3_s32
+    from nano.models.model_zoo.nano_ghost import GhostNano_3x3_s32
 
-    model = Ghostyolox_3x3_s32(num_classes=3)
-    model.load_state_dict(torch.load("runs/train/exp91/last.pt", map_location='cpu')["state_dict"])
-    model.train().to("cpu")
+    model = GhostNano_3x3_s32(num_classes=3)
+    # model.load_state_dict(torch.load("runs/train/exp91/last.pt", map_location='cpu')["state_dict"])
+    model.train().to("cuda")
 
-    test_assignment(model, "cpu")
+    test_assignment(model, "cuda")
     # test_backward(model, 'cuda')

@@ -43,9 +43,9 @@ def test_objectness(model, device):
 
             # draw lobj centers
             box_pred = pred[:, :4]
-            cls_pred = pred[:, 5:]
+            cls_pred = pred[:, 4:]
             centers = (grid_mask + 0.5) * stride_mask.unsqueeze(-1)
-            alphas = pred[:, 4] * cls_pred.max(dim=-1).values
+            alphas = cls_pred.max(dim=-1).values
             mask = alphas > 0.2
             box_pred, cls_pred, centers, alphas = box_pred[mask], cls_pred[mask], centers[mask], alphas[mask]
             if len(alphas) > 0:
@@ -64,10 +64,10 @@ def test_objectness(model, device):
 
 
 if __name__ == "__main__":
-    from nano.models.model_zoo.yolox_ghost import Ghostyolox_3x3_s32
+    from nano.models.model_zoo.nano_ghost import GhostNano_3x3_s32
 
-    model = Ghostyolox_3x3_s32(num_classes=3)
-    model.load_state_dict(torch.load("runs/train/exp91/last.pt", map_location="cpu")["state_dict"])
+    model = GhostNano_3x3_s32(num_classes=3)
+    model.load_state_dict(torch.load("runs/train/exp119/last.pt", map_location="cpu")["state_dict"])
     model.train().to("cpu")
 
     test_objectness(model, "cpu")

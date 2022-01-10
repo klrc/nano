@@ -18,10 +18,12 @@ def cv2_draw_bbox(frame, x, canvas_h, canvas_w, class_names):
     x[..., 1] *= canvas_h / TARGET_SIZE_HEIGHT
     x[..., 2] *= canvas_w / TARGET_SIZE_WIDTH
     x[..., 3] *= canvas_h / TARGET_SIZE_HEIGHT
+    box_classes = [class_names[n] for n in x[..., 5].cpu().int()]
+    box_labels = [f'{cname} {conf:.2f}' for cname, conf in zip(box_classes, x[...,4])]
     return draw_bounding_boxes(
         image=frame,
         boxes=x[..., :4],
-        boxes_label=[class_names[n] for n in x[..., 5].cpu().int()],
+        boxes_label=box_labels,
     )
 
 
@@ -169,14 +171,14 @@ def test_yuv(file_name, height, width, conf_thres, iou_thres, class_names, devic
 if __name__ == "__main__":
 
     def acquire_model():
-        from nano.models.model_zoo.yolox_ghost import Ghostyolox_3x3_s32
+        from nano.models.model_zoo.nano_ghost import GhostNano_3x3_s32
 
-        model = Ghostyolox_3x3_s32(num_classes=3)
-        model.load_state_dict(torch.load("runs/train/exp91/last.pt", map_location="cpu")["state_dict"])
+        model = GhostNano_3x3_s32(num_classes=3)
+        model.load_state_dict(torch.load("runs/train/exp119/last.pt", map_location="cpu")["state_dict"])
         return model
 
     test_front_camera(
-        0.2,
+        0.4,
         0.45,
         ["person", "bike", "car"],
         device="cpu",

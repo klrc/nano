@@ -5,9 +5,12 @@ Validate a trained YOLOv5 model accuracy on a custom dataset
 
 import numpy as np
 import torch
+from torch.utils.data import dataloader
+from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
 from torchvision.ops import box_iou
+from nano.models.trainer.trainer import load_device
 from nano.ops.box2d import non_max_suppression
 from nano.datasets.coco_box2d_metrics import ap_per_class
 
@@ -37,7 +40,7 @@ def process_batch(detections, labels, iouv):
 
 
 @torch.no_grad()
-def run(model, class_names, dataloader, device, half=False, conf_thres=0.001, iou_thres=0.6):
+def run(model, class_names, dataloader, device, half=False, conf_thres=0.01, iou_thres=0.6):
 
     assert hasattr(model, "strides")
 
@@ -115,3 +118,26 @@ def run(model, class_names, dataloader, device, half=False, conf_thres=0.001, io
     model.float()  # for training
     return mp, mr, map50, map
 
+
+if __name__ == "__main__":
+    from nano.datasets.coco_box2d import MSCOCO, collate_fn, letterbox_collate_fn
+    from nano.models.model_zoo.nano_ghost import GhostNano_3x3_s32
+    from nano.datasets.coco_box2d_transforms import (
+        ToTensor,
+    )
+    from nano.models.trainer import load_device
+
+    imgs_root = "/home/sh/Datasets/coco3/images/val"
+    annotations_root = "/home/sh/Datasets/coco3/labels/val"
+    base = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, max_size=416)
+    valset = ToTensor(base)
+
+    batch_size = 64
+    val_loader = DataLoader(valset, batch_size=batch_size // 2, num_workers=8, pin_memory=False, collate_fn=letterbox_collate_fn)
+
+    model = GhostNano_3x3_s32(num_classes=3)
+    model.eval()
+    device = load_device("cuda")
+    class_names = ["person", "bike", "car"]
+
+    run(model, class_names, val_loader, device)

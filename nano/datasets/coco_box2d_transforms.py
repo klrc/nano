@@ -52,6 +52,47 @@ def center_padding(img, label, raw_size, padded_size):
     return new_img, label
 
 
+def augment_hsv(im, hgain=0.5, sgain=0.5, vgain=0.5):
+    # HSV color-space augmentation
+    if hgain or sgain or vgain:
+        r = np.random.uniform(-1, 1, 3) * [hgain, sgain, vgain] + 1  # random gains
+        hue, sat, val = cv2.split(cv2.cvtColor(im, cv2.COLOR_BGR2HSV))
+        dtype = im.dtype  # uint8
+
+        x = np.arange(0, 256, dtype=r.dtype)
+        lut_hue = ((x * r[0]) % 180).astype(dtype)
+        lut_sat = np.clip(x * r[1], 0, 255).astype(dtype)
+        lut_val = np.clip(x * r[2], 0, 255).astype(dtype)
+
+        im_hsv = cv2.merge((cv2.LUT(hue, lut_hue), cv2.LUT(sat, lut_sat), cv2.LUT(val, lut_val)))
+        im = cv2.cvtColor(im_hsv, cv2.COLOR_HSV2BGR)
+    return im
+
+class HSVTransform(DatasetLayer):
+    """
+    Performs hsv transform with random gains
+    hsv_h: 0.015  # image HSV-Hue augmentation (fraction)
+    hsv_s: 0.7  # image HSV-Saturation augmentation (fraction)
+    hsv_v: 0.4  # image HSV-Value augmentation (fraction)
+    """
+
+    def __init__(self, base, hsv_h=0.015, hsv_s=0.7, hsv_v=0.4, p=0.2) -> None:
+        super().__init__(base, DatasetLayer)
+        self.hsv_h = hsv_h
+        self.hsv_s = hsv_s
+        self.hsv_v = hsv_v
+        self.p = p
+
+    def __len__(self):
+        return len(self.base)
+
+    def __getitem__(self, index):
+        img, label = self.base.__getitem__(index)
+        if random.random() < self.p:
+            img = augment_hsv(img, self.hsv_h, self.hsv_s, self.hsv_v)
+        return img, label
+
+
 class Mosaic4(DatasetLayer):
     """
     4-mosaic augmentation from ultralytics-yolov5

@@ -43,6 +43,10 @@ def non_max_suppression(
     """
 
     # Candidates
+    p1 = prediction[..., :4]
+    p2 = prediction[..., 4:]
+    conf = p2.max(dim=-1, keepdim=True).values
+    prediction = torch.cat([p1, conf, p2], dim=-1)
     xc = prediction[..., 4] > conf_thres
 
     # Checks
@@ -68,7 +72,7 @@ def non_max_suppression(
         box = x[:, :4]
 
         # Confidence
-        x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf
+        # x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf
 
         # Detections matrix nx6 (xyxy, conf, cls)
         i, j = (x[:, 5:] > conf_thres).nonzero(as_tuple=False).T
