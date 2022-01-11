@@ -112,7 +112,10 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
         capture_size = (cap_h, cap_w)
 
         def capture_fn():
-            window_info = cv2.getWindowImageRect('Frame')
+            try:
+                window_info = cv2.getWindowImageRect('Frame')
+            except:
+                window_info = None # ignore
             print(window_info)
             frame = capture.grab(capture_range)
             frame = np.array(frame)
