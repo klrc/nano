@@ -39,7 +39,7 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
             bbox_queue.put(out)
 
 
-def test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_names, device="cpu"):
+def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu"):
     cap_h, cap_w = capture_size
     ratio = 416 / max(capture_size)  # h, w <= 416
     inf_h = int(np.ceil(cap_h * ratio / 32) * 32)  # (padding for Thinkpad-P51 front camera)
@@ -58,7 +58,7 @@ def test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_
 
     # # capture process ----------------
     bbox_set = []
-    for frame in capture_fn():
+    for frame in capture_generator:
         frame = cv2.copyMakeBorder(frame, border_h, border_h, border_w, border_w, cv2.BORDER_CONSTANT, value=(114, 114, 114))
         if capture_queue.empty():
             # print("put frame", capture_queue.qsize())
@@ -90,7 +90,7 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
                     break
                 yield cv2.flip(frame, 1)  # cv2.flip 图像翻转
 
-        test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_names, device)
+        test_video(capture_fn(), capture_size, conf_thres, iou_thres, class_names, device)
     except Exception as e:
         capture.release()
         cv2.destroyAllWindows()
@@ -118,7 +118,7 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
                 yield frame
 
-        test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_names, device)
+        test_video(capture_fn(), capture_size, conf_thres, iou_thres, class_names, device)
     except Exception as e:
         cv2.destroyAllWindows()
         raise e
@@ -139,7 +139,7 @@ def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
         n_frames = file_size // (yuv_w * yuv_h * 3 // 2)
         capture_size = (yuv_h, yuv_w)
 
-        def capture_fn(fps=12):
+        def capture_fn(fps=24):
             with open(yuv_file, "rb") as f:
                 for _ in range(n_frames):
                     # Read Y, U and V color channels and reshape to height*1.5 x width numpy array
@@ -150,7 +150,7 @@ def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
                     yield frame
                     time.sleep(1 / fps)
 
-        test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_names, device)
+        test_video(capture_fn(), capture_size, conf_thres, iou_thres, class_names, device)
     except Exception as e:
         cv2.destroyAllWindows()
         raise e
@@ -168,7 +168,7 @@ def acquire_model():
 
 
 if __name__ == "__main__":
-    test_front_camera(
+    test_yuv(
         0.2,
         0.45,
         ["person", "bike", "car"],
