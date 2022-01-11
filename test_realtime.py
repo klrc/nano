@@ -58,10 +58,7 @@ def test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_
 
     # # capture process ----------------
     bbox_set = []
-    while True:
-        frame = capture_fn()
-        if frame is None:
-            break
+    for frame in capture_fn():
         frame = cv2.copyMakeBorder(frame, border_h, border_h, border_w, border_w, cv2.BORDER_CONSTANT, value=(114, 114, 114))
         if capture_queue.empty():
             # print("put frame", capture_queue.qsize())
@@ -76,7 +73,7 @@ def test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_
             frame = cv2_draw_bbox(frame, x, class_names)
         cv2.imshow("frame", frame)
         if cv2.waitKey(10) == 27:
-            break
+            return
 
 
 def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
@@ -87,10 +84,11 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
         capture_size = (cap_h, cap_w)
 
         def capture_fn():
-            ret, frame = capture.read()
-            if ret is False:
-                return None
-            return cv2.flip(frame, 1)  # cv2.flip 图像翻转
+            while True:
+                ret, frame = capture.read()
+                if ret is False:
+                    break
+                yield cv2.flip(frame, 1)  # cv2.flip 图像翻转
 
         test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_names, device)
     except Exception as e:
@@ -111,13 +109,14 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
         capture_size = (cap_h, cap_w)
 
         def capture_fn():
-            x, y = pag.position() #返回鼠标的坐标
-            capture_range['top'] = y - capture_range['height']//2
-            capture_range['left'] = x - capture_range['width']//2
-            frame = capture.grab(capture_range)
-            frame = np.array(frame)
-            frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
-            return frame
+            while True:
+                x, y = pag.position() #返回鼠标的坐标
+                capture_range['top'] = y - capture_range['height']//2
+                capture_range['left'] = x - capture_range['width']//2
+                frame = capture.grab(capture_range)
+                frame = np.array(frame)
+                frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
+                yield frame
 
         test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_names, device)
     except Exception as e:
