@@ -44,8 +44,8 @@ def test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_
     ratio = 416 / max(capture_size)  # h, w <= 416
     inf_h = int(np.ceil(cap_h * ratio / 32) * 32)  # (padding for Thinkpad-P51 front camera)
     inf_w = int(np.ceil(cap_w * ratio / 32) * 32)  # (padding for Thinkpad-P51 front camera)
-    border_h = int((inf_h/ratio - cap_h) // 2)
-    border_w = int((inf_w/ratio - cap_w) // 2)
+    border_h = int((inf_h / ratio - cap_h) // 2)
+    border_w = int((inf_w / ratio - cap_w) // 2)
     inference_size = (inf_h, inf_w)
     capture_queue = Queue(maxsize=1)
     result_queue = Queue(maxsize=64)
@@ -99,23 +99,24 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
         raise e
 
 
-
-
 def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
     from mss import mss
+
     capture_range = {"top": 0, "left": 0, "width": 448, "height": 448}
 
     try:
         capture = mss()
-        cap_h = capture_range['height']
-        cap_w = capture_range['width']
+        cap_h = capture_range["height"]
+        cap_w = capture_range["width"]
         capture_size = (cap_h, cap_w)
 
         def capture_fn():
             try:
-                window_info = cv2.getWindowImageRect('frame')
+                window_info = cv2.getWindowImageRect("frame")  # xywh
+                capture_range["top"] = window_info[1]  # top=y
+                capture_range["left"] = window_info[0] + window_info[2]  # left=x+w
             except:
-                window_info = None # ignore
+                window_info = None  # ignore
             print(window_info)
             frame = capture.grab(capture_range)
             frame = np.array(frame)
@@ -126,7 +127,6 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
     except Exception as e:
         cv2.destroyAllWindows()
         raise e
-
 
 
 # def test_yuv(file_name, height, width, conf_thres, iou_thres, class_names, device="cpu", fps=12):
