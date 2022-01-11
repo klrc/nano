@@ -48,8 +48,12 @@ def detection(conf_thres, iou_thres, device, capture_queue, bbox_queue):
 
 def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
     capture = cv2.VideoCapture(0)  # VideoCapture 读取本地视频和打开摄像头
-    canvas_h = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)  # 计算视频的高
-    canvas_w = capture.get(cv2.CAP_PROP_FRAME_WIDTH) + 125 * 2  # 计算视频的宽 (padding for Thinkpad-P51 front camera)
+    cap_h = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)  # 计算视频的高
+    cap_w = capture.get(cv2.CAP_PROP_FRAME_WIDTH) # 计算视频的宽
+    canvas_h = (cap_h // 32 + 1) * 32 # (padding for Thinkpad-P51 front camera)
+    canvas_w = (cap_w // 32 + 1) * 32 # (padding for Thinkpad-P51 front camera)
+    border_h = (canvas_h - cap_h) // 2
+    border_w = (canvas_w - cap_w) // 2
     capture_queue = Queue(maxsize=1)
     result_queue = Queue(maxsize=64)
     bbox_set = []
@@ -64,7 +68,7 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
         bbox_set = []
         while True:
             ret, frame = capture.read()
-            frame = cv2.copyMakeBorder(frame, 0, 0, 125, 125, cv2.BORDER_CONSTANT, value=(114, 114, 114))
+            frame = cv2.copyMakeBorder(frame, border_h, border_h, border_w, border_w, cv2.BORDER_CONSTANT, value=(114, 114, 114))
             if ret is False:
                 break
             frame = cv2.flip(frame, 1)  # cv2.flip 图像翻转
