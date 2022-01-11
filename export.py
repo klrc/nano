@@ -1,145 +1,94 @@
-# items to export:
-# ---------------------- raw
-#  - xxx.py
-#  - xxx.pt
-# ---------------------- reports
-#  - readme.yaml
-#       - class_names
-#       - output_names
-#       - anchors
-#       - test_log (optional)
-# ---------------------- porting
-#  - xxx.onnx
-#  - xxx.caffemodel
-#  - xxx.prototxt
-# ----------------------- xnnc only
-#  - xxx-custom.prototxt
-#
-
 import os
 import shutil
 import sys
-
-os.environ["GLOG_minloglevel"] = "2"
-
-import torch  # noqa: E402
-import nano  # noqa: E402
-from nano._utils import freeze  # noqa: E402
-
-
-# replace Deconv layer with XNNC mResize layer, add final output layer
-def switch_to_xnnc_layer(proto_path, output_names):
-    with open(proto_path, "r") as f:
-        layers = []
-        current_layer = None
-        for line in f.readlines():
-            if line.startswith("layer {"):
-                if current_layer is not None:
-                    layers.append(current_layer)  # push last layer
-                current_layer = []
-            current_layer.append(line)
-        layers.append(current_layer)
-    for layer in layers:
-        if "Deconvolution" in layer[2]:  # style
-            layer[1] = layer[1].replace('name: "', 'name: "_')  # change name for param issue
-            layer[2] = layer[2].replace("Deconvolution", "CppCustom")
-            end_closure = layer[-1]
-            while len(layer) > 5:
-                layer.pop(-1)
-            layer.append("  cpp_custom_param {\n")
-            layer.append('    module: "mResize"\n')
-            layer.append('    param_map_str: "scaleX:2 scaleY:2 align_corners:1"\n')
-            layer.append("  }\n")
-            layer.append(end_closure)
-    layer = []
-    layer.append("layer {\n")
-    layer.append('  name: "detection_out"\n')
-    layer.append('  type: "CppCustom"\n')
-    for output_name in output_names:
-        layer.append(f'  bottom: "{output_name}"\n')
-    layer.append('  top: "detection_out"\n')
-    layer.append("  cpp_custom_param {\n")
-    layer.append('    module: "yoloxpp"\n')
-    layer.append('    param_map_str: ""\n')
-    layer.append("  }\n")
-    layer.append("}\n")
-    layers.append(layer)
-    with open(proto_path, "w") as f:
-        for layer in layers:
-            for line in layer:
-                f.write(line)
+import torch.nn as nn
+import zipfile
+import time
+import torch
+from nano.models.backbones.enhanced_shufflenet_v2 import ESBlockS1
+from nano.models.heads.nanodet_head import NanoHeadless
+import xnnc
 
 
-def export(
-    model,
-    model_stamp,
-    output_names,
-    class_names,
-    force=False,
-):
+if __name__ == "__main__":
+    # model setup ===========================================
+    print("\n[model setup]")
+    from nano.models.model_zoo.nano_ghost import GhostNano_3x3_s32
+
+    model = GhostNano_3x3_s32(num_classes=3)
+    model.load_state_dict(torch.load("runs/train/exp119/last.pt", map_location="cpu")["state_dict"])
+    model.head = NanoHeadless(model.head)
+    print("adjust model..")
+    for m in model.modules():
+        if isinstance(m, ESBlockS1):
+            m.channel_shuffle = nn.ChannelShuffle(2)
+    model.eval()
+
+    output_names = ["output_0", "output_1", "output_2"]
+    class_names = ["person", "bike", "car"]
+    model_stamp = "GhostNano_3x3_s32"
+    forced_export = True
+    print("start exporting", model_stamp, "..")
+
+    # Copy source file for backup ===========================
+    print("build release dir ..")
     root = f"release/{model_stamp}"
     if os.path.exists(root):
-        if force:
-            print("rm", root)
+        if forced_export:
+            # print("rm", root)
             shutil.rmtree(root)
         else:
             raise FileExistsError("please check your release model stamp.")
     os.makedirs(root)
-    python_source = os.path.abspath(sys.modules[model.__module__].__file__)
-    target_source = f'{root}/{python_source.split("/")[-1]}'
-    print("build", target_source)
-    shutil.copy(python_source, target_source)  # copy source .py file
 
-    model_name = "-".join(model_stamp.split("-")[:-1])
-    target_pt = f"{root}/{model_name}.pt"
-    print("build", target_pt)
+    # Save .pt file =========================================
+    target_pt = f"{root}/{model_stamp}.pt"
     torch.save(model.state_dict(), target_pt)  # save .pt file
+    print("saving pt file as", target_pt)
 
-    target_readme = f"{root}/readme.yaml"
-    print("build", target_readme)
-    with open(target_readme, "w") as f:  # save readme.yaml configuration file
-        values = dict(
-            class_names=class_names,
-            output_names=output_names,
-            anchors=list(model.head.anchor_grid.flatten().numpy()),
-        )
-        for k, v in values.items():
-            f.write(f"{k}: {v}\n")
+    # Save .yaml configuration ==============================
+    print("\n[build release]")
+    target_readme = f"{root}/readme.txt"
+    print("generate", target_readme)
+    with open(target_readme, "w") as f:  # save readme.txt configuration file
+        f.write(f"build_time: {time.asctime(time.localtime(time.time()))}\n")
+        f.write(f"output_names: {output_names}\n")
+        f.write(f"class_names: {class_names}\n")
 
-    # save .onnx & .caffemodel & .prototxt file
-    target_onnx = f"{root}/{model_name}.onnx"
-    freeze(
+    # # Generate onnx & caffe models ==========================
+    print("\n[build onnx & caffe model]")
+    onnx_path, caffemodel_path, prototxt_path = xnnc.make(
         model,
-        onnx_path=target_onnx,
-        to_caffe=True,
-        check_consistency=False,
+        model_stamp,
+        cache_dir=root,
         output_names=output_names,
+        dummy_input_shape=(1, 3, 224, 416),
     )
 
-    # save *-custom.prototxt file
-    target_custom = f"{root}/{model_name}-custom.prototxt"
-    print("build", target_custom)
-    shutil.copy(f"{root}/{model_name}.prototxt", target_custom)
-    switch_to_xnnc_layer(target_custom, output_names)
+    # # Add final PP layer (optional) =========================
+    # print("adjust final prototxt")
+    # with open(prototxt_path, "a") as f:
+    #     f.write("layer {\n")
+    #     f.write('  name: "detection_out"\n')
+    #     f.write('  type: "CppCustom"\n')
+    #     for output_name in output_names:
+    #         f.write(f'  bottom: "{output_name}"\n')
+    #     f.write('  top: "detection_out"\n')
+    #     f.write("  cpp_custom_param {\n")
+    #     f.write('    module: "yoloxpp"\n')
+    #     f.write('    param_map_str: ""\n')
+    #     f.write("  }\n")
+    #     f.write("}\n")
 
+    # # Directly porting to XNNC source (optional) =====================================
+    # print("\n[update XNNC source]")
+    # for cmd in [
+    #     "rm xnnc/src/Example/yolox-series/model/*.prototxt",
+    #     "rm xnnc/src/Example/yolox-series/model/*.caffemodel",
+    #     f"cp release/{model_stamp}/*-custom.prototxt xnnc/src/Example/yolox-series/model/",
+    #     f"cp release/{model_stamp}/*.caffemodel xnnc/src/Example/yolox-series/model/",
+    # ]:
+    #     print(cmd)
+    #     os.system(cmd)
 
-if __name__ == "__main__":
-    # model setup
-    model = ...
-    model_stamp = "yolox-esmk-2.26"
-    output_names = ["output_1", "output_2", "output_3"]
-    class_names = ["person", "bike", "car"]
-
-    export(
-        model,
-        model_stamp=model_stamp,
-        output_names=output_names,
-        class_names=class_names,
-        force=True,
-    )
-
-    # optional
-    os.system("rm nano/_utils/xnnc/Example/yolox-series/model/*.prototxt")
-    os.system("rm nano/_utils/xnnc/Example/yolox-series/model/*.caffemodel")
-    os.system(f"cp release/{model_stamp}/*-custom.prototxt nano/_utils/xnnc/Example/yolox-series/model/")
-    os.system(f"cp release/{model_stamp}/*.caffemodel nano/_utils/xnnc/Example/yolox-series/model/")
+    # print("\nall process finished.")

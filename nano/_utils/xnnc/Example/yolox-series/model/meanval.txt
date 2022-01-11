@@ -1,6 +1,0 @@
-3       # channels
-224     # height 
-416     # width
-0.0     # channel 1
-0.0     # channel 2
-0.0     # channel 3
