@@ -112,7 +112,6 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
 
         def capture_fn():
             x, y = pag.position() #返回鼠标的坐标
-            print (x, y)
             capture_range['top'] = y - capture_range['height']//2
             capture_range['left'] = x - capture_range['width']//2
             frame = capture.grab(capture_range)
@@ -126,47 +125,39 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
         raise e
 
 
-# def test_yuv(file_name, height, width, conf_thres, iou_thres, class_names, device="cpu", fps=12):
-#     import os
-#     import time
 
-#     capture_queue = Queue(maxsize=1)
-#     result_queue = Queue(maxsize=64)
-#     bbox_set = []
 
-#     try:
-#         # inference process --------------
-#         proc_1 = Process(target=detection, args=[conf_thres, iou_thres, target_shape, device, capture_queue, result_queue])
-#         proc_1.daemon = True
-#         proc_1.start()
+def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
+    import os
+    import time
 
-#         # # capture process ----------------
+    yuv_file = "1280x720_3.yuv"
+    yuv_h, yuv_w = 720, 1280
 
-#         # Number of frames: in YUV420 frame size in bytes is width*height*1.5
-#         file_size = os.path.getsize(file_name)
-#         n_frames = file_size // (width * height * 3 // 2)
-#         time.sleep(3)
+    try:
+        # Number of frames: in YUV420 frame size in bytes is width*height*1.5
+        file_size = os.path.getsize(yuv_file)
+        n_frames = file_size // (yuv_w * yuv_h * 3 // 2)
+        capture_size = (yuv_h, yuv_w)
 
-#         with open(file_name, "rb") as f:
-#             for _ in range(n_frames):
-#                 # Read Y, U and V color channels and reshape to height*1.5 x width numpy array
-#                 yuv = np.frombuffer(f.read(width * height * 3 // 2), dtype=np.uint8).reshape((height * 3 // 2, width))
-#                 # Convert YUV420 to BGR (for testing), applies BT.601 "Limited Range" conversion.
-#                 frame = cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR_I420)
+        def capture_fn(fps=12):
+            with open(yuv_file, "rb") as f:
+                for _ in range(n_frames):
+                    # Read Y, U and V color channels and reshape to height*1.5 x width numpy array
+                    yuv = np.frombuffer(f.read(yuv_w * yuv_h * 3 // 2), dtype=np.uint8).reshape((yuv_h * 3 // 2, yuv_w))
+                    # Convert YUV420 to BGR (for testing), applies BT.601 "Limited Range" conversion.
+                    frame = cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR_I420)
+                    yield frame
+                    time.sleep(1 / fps)
+
+        test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_names, device)
+    except Exception as e:
+        cv2.destroyAllWindows()
+        raise e
+
+
 #                 frame = frame[:360, :640, :]
-#                 if capture_queue.empty():
-#                     # print("put frame", capture_queue.qsize())
-#                     capture_queue.put(frame)
-#                 if not result_queue.empty():
-#                     bbox_set = result_queue.get()
-#                     frame = cv2_draw_bbox(frame, scale_ratio, bbox_set, class_names)
-#                 cv2.imshow("frame", frame)
-#                 time.sleep(1 / fps)
-#                 if cv2.waitKey(10) == 27:
-#                     break
-#     except Exception as e:
-#         cv2.destroyAllWindows()
-#         raise e
+
 
 
 def acquire_model():
@@ -178,19 +169,9 @@ def acquire_model():
 
 
 if __name__ == "__main__":
-    test_screenshot(
+    test_yuv(
         0.2,
         0.45,
         ["person", "bike", "car"],
         device="cpu",
     )
-    # test_yuv(
-    #     "1280x720_2.yuv",
-    #     720,
-    #     1280,
-    #     conf_thres=0.2,
-    #     iou_thres=0.6,
-    #     class_names=["person", "bike", "car"],
-    #     device="cpu",
-    #     fps=12,
-    # )
