@@ -182,7 +182,7 @@ def acquire_model():
 
 
 if __name__ == "__main__":
-    test_screenshot(
+    test_front_camera(
         0.2,
         0.45,
         ["person", "bike", "car"],
