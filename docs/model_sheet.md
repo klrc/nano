@@ -5,7 +5,7 @@
 
 
 ## Latest releases
-### GhostNano_3x3_s32
+### [GhostNano_3x3_s32](release/GhostNano_3x3_s32)
 voc-mAP@.5: 0.6871 | voc-mAP@.95: 0.381  
 raw size: 1.13M  
 
