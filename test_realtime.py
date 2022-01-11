@@ -103,6 +103,8 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
     from mss import mss
 
     capture_range = {"top": 0, "left": 0, "width": 448, "height": 448}
+    window_attr = [None, None, None, None]
+    init_frame_y = None
 
     try:
         capture = mss()
@@ -113,7 +115,9 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
         def capture_fn():
             try:
                 window_info = cv2.getWindowImageRect("frame")  # xywh
-                capture_range["top"] = window_info[1]  # top=y
+                if window_attr[1] is None:
+                    window_attr[1] = window_info[1]
+                capture_range["top"] = window_attr[1] - window_info[1]  # top= 1(max)-y
                 capture_range["left"] = window_info[0] + window_info[2]  # left=x+w
             except:
                 window_info = None  # ignore
