@@ -24,7 +24,7 @@ def cv2_draw_bbox(frame, x, canvas_h, canvas_w, class_names):
         image=frame,
         boxes=x[..., :4],
         boxes_label=box_labels,
-        alphas=x[..., 4],
+        alphas=(x[..., 4]*2).clamp(0, 1),
     )
 
 
