@@ -116,6 +116,7 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
                 frame = capture.grab(capture_range)
                 frame = np.array(frame)
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
+                print(frame.shape)
                 yield frame
 
         test_video(capture_fn(), capture_size, conf_thres, iou_thres, class_names, device)
