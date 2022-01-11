@@ -101,10 +101,8 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
 
 def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
     from mss import mss
-
+    import pyautogui as pag
     capture_range = {"top": 0, "left": 0, "width": 448, "height": 448}
-    window_attr = [None, None, None, None]
-    init_frame_y = None
 
     try:
         capture = mss()
@@ -113,15 +111,10 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
         capture_size = (cap_h, cap_w)
 
         def capture_fn():
-            try:
-                window_info = cv2.getWindowImageRect("frame")  # xywh
-                if window_attr[1] is None:
-                    window_attr[1] = window_info[1]
-                capture_range["top"] = window_attr[1] - window_info[1]  # top= 1(max)-y
-                capture_range["left"] = window_info[0] + window_info[2]  # left=x+w
-            except:
-                window_info = None  # ignore
-            print(window_info)
+            x, y = pag.position() #返回鼠标的坐标
+            print (x, y)
+            capture_range['top'] = y - capture_range['height']//2
+            capture_range['left'] = x - capture_range['width']//2
             frame = capture.grab(capture_range)
             frame = np.array(frame)
             frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
