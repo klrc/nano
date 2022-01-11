@@ -52,8 +52,8 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
     cap_w = capture.get(cv2.CAP_PROP_FRAME_WIDTH) # 计算视频的宽
     canvas_h = (cap_h // 32 + 1) * 32 # (padding for Thinkpad-P51 front camera)
     canvas_w = (cap_w // 32 + 1) * 32 # (padding for Thinkpad-P51 front camera)
-    border_h = (canvas_h - cap_h) // 2
-    border_w = (canvas_w - cap_w) // 2
+    border_h = int((canvas_h - cap_h) // 2)
+    border_w = int((canvas_w - cap_w) // 2)
     capture_queue = Queue(maxsize=1)
     result_queue = Queue(maxsize=64)
     bbox_set = []
