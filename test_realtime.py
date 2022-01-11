@@ -195,6 +195,6 @@ if __name__ == "__main__":
         conf_thres=0.2,
         iou_thres=0.6,
         class_names=["person", "bike", "car"],
-        device="cuda",
+        device="cpu",
         fps=12,
     )
