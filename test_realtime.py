@@ -47,7 +47,7 @@ def test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_
     border_h = int((inf_h/ratio - cap_h) // 2)
     border_w = int((inf_w/ratio - cap_w) // 2)
     inference_size = (inf_h, inf_w)
-    print(inf_h, inf_w, border_h, border_w, capture_size)
+    print(cap_h, ratio, cap_h * ratio//32, inf_h, inf_w, border_h, border_w, capture_size)
     capture_queue = Queue(maxsize=1)
     result_queue = Queue(maxsize=64)
     bbox_set = []
