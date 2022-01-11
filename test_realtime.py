@@ -100,7 +100,7 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
 def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
     from mss import mss
     import pyautogui as pag
-    capture_range = {"top": 0, "left": 0, "width": 448, "height": 448}
+    capture_range = {"top": 0, "left": 0, "width": 448//2, "height": 448//2}
 
     try:
         capture = mss()
@@ -116,7 +116,6 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
                 frame = capture.grab(capture_range)
                 frame = np.array(frame)
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
-                print(frame.shape)
                 yield frame
 
         test_video(capture_fn(), capture_size, conf_thres, iou_thres, class_names, device)
