@@ -42,12 +42,11 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
 def test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_names, device="cpu"):
     cap_h, cap_w = capture_size
     ratio = 416 / max(capture_size)  # h, w <= 416
-    inf_h = np.ceil(cap_h * ratio // 32) * 32  # (padding for Thinkpad-P51 front camera)
-    inf_w = np.ceil(cap_w * ratio // 32) * 32  # (padding for Thinkpad-P51 front camera)
+    inf_h = np.ceil(cap_h * ratio / 32) * 32  # (padding for Thinkpad-P51 front camera)
+    inf_w = np.ceil(cap_w * ratio / 32) * 32  # (padding for Thinkpad-P51 front camera)
     border_h = int((inf_h/ratio - cap_h) // 2)
     border_w = int((inf_w/ratio - cap_w) // 2)
     inference_size = (inf_h, inf_w)
-    print(cap_h, ratio, cap_h * ratio//32, inf_h, inf_w, border_h, border_w, capture_size)
     capture_queue = Queue(maxsize=1)
     result_queue = Queue(maxsize=64)
     bbox_set = []
