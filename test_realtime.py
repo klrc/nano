@@ -99,43 +99,34 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
         raise e
 
 
-# def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
-#     from mss import mss
-#     import numpy as np
 
-#     canvas_x = 0
-#     canvas_y = 0
-#     canvas_h = 840
-#     canvas_w = 1560
-#     bounding_box = {"top": canvas_y, "left": canvas_x, "width": canvas_w, "height": canvas_h}
-#     capture_queue = Queue(maxsize=1)
-#     result_queue = Queue(maxsize=64)
-#     capture = mss()
-#     bbox_set = []
 
-#     try:
-#         # inference process --------------
-#         proc_1 = Process(target=detection, args=[conf_thres, iou_thres, target_shape, device, capture_queue, result_queue])
-#         proc_1.daemon = True
-#         proc_1.start()
+def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
+    from mss import mss
+    capture_range = {"top": 0, "left": 0, "width": 448, "height": 448}
 
-#         # # capture process ----------------
-#         while True:
-#             frame = capture.grab(bounding_box)
-#             frame = np.array(frame)
-#             frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
-#             if capture_queue.empty():
-#                 # print("put frame", capture_queue.qsize())
-#                 capture_queue.put(frame)
-#             if not result_queue.empty():
-#                 bbox_set = result_queue.get()
-#                 frame = cv2_draw_bbox(frame, bbox_set, canvas_h, canvas_w, class_names, target_shape)
-#             cv2.imshow("frame", frame)
-#             if cv2.waitKey(10) == 27:
-#                 break
-#     except Exception as e:
-#         cv2.destroyAllWindows()
-#         raise e
+    try:
+        capture = mss()
+        cap_h = capture_range['height']
+        cap_w = capture_range['width']
+        capture_size = (cap_h, cap_w)
+
+        def capture_fn():
+            frame = capture.grab(capture_range)
+            frame = np.array(frame)
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
+
+            ret, frame = capture.read()
+            if ret is False:
+                return None
+            return cv2.flip(frame, 1)  # cv2.flip 图像翻转
+
+        test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_names, device)
+    except Exception as e:
+        capture.release()
+        cv2.destroyAllWindows()
+        raise e
+
 
 
 # def test_yuv(file_name, height, width, conf_thres, iou_thres, class_names, device="cpu", fps=12):
@@ -190,7 +181,7 @@ def acquire_model():
 
 
 if __name__ == "__main__":
-    test_front_camera(
+    test_screenshot(
         0.2,
         0.45,
         ["person", "bike", "car"],
