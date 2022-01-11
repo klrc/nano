@@ -1,29 +1,28 @@
-## Model Performance Sheet
+# Model Performance Sheet
 | Model | Params | Speed | bandwidth | mAP@.5    | mAP@.95   |
 | ---   | ------ | ----  | -------   | -------   | -------   |
 | GhostNano_3x3_s32 | 1.13M | - | - | 0.6871 | 0.381 |     
 
 
-## Latest releases
-### GhostNano_3x3_s32
+# Latest releases
+## GhostNano_3x3_s32
 voc-mAP@.5: 0.6871 | voc-mAP@.95: 0.381  
 raw size: 1.13M  
 
-### GhostNano_3x3_m96
+## GhostNano_3x3_m96
 voc-mAP@.5: *N/A  
 raw size: 2.93M  
 
-### GhostNano_4x3_m96
+## GhostNano_4x3_m96
 voc-mAP@.5: *N/A  
 raw size: 3.12M  
 
-### GhostNano_4x4_m96
+## GhostNano_4x4_m96
 voc-mAP@.5: *N/A  
 raw size: 3.31M  
 
 
----
-## Previous legacy releases
+# Previous legacy releases
 ### yolov5_esmk 
 voc-mAP@.5: 0.634 | voc-mAP@.95: 0.3293  
 raw size: 2.0M  
