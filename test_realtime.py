@@ -145,6 +145,7 @@ def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
                     # Read Y, U and V color channels and reshape to height*1.5 x width numpy array
                     yuv = np.frombuffer(f.read(yuv_w * yuv_h * 3 // 2), dtype=np.uint8).reshape((yuv_h * 3 // 2, yuv_w))
                     # Convert YUV420 to BGR (for testing), applies BT.601 "Limited Range" conversion.
+                    # frame = frame[:360, :640, :]
                     frame = cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR_I420)
                     yield frame
                     time.sleep(1 / fps)
@@ -155,7 +156,6 @@ def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
         raise e
 
 
-#                 frame = frame[:360, :640, :]
 
 
 
@@ -168,7 +168,7 @@ def acquire_model():
 
 
 if __name__ == "__main__":
-    test_yuv(
+    test_front_camera(
         0.2,
         0.45,
         ["person", "bike", "car"],
