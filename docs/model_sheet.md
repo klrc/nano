@@ -4,20 +4,20 @@
 | GhostNano_3x3_s32 | 1.13M | - | - | 0.6871 | 0.381 |     
 
 
-# Latest releases
-## GhostNano_3x3_s32
+## Latest releases
+### GhostNano_3x3_s32
 voc-mAP@.5: 0.6871 | voc-mAP@.95: 0.381  
 raw size: 1.13M  
 
-## GhostNano_3x3_m96
+### GhostNano_3x3_m96
 voc-mAP@.5: *N/A  
 raw size: 2.93M  
 
-## GhostNano_4x3_m96
+### GhostNano_4x3_m96
 voc-mAP@.5: *N/A  
 raw size: 3.12M  
 
-## GhostNano_4x4_m96
+### GhostNano_4x4_m96
 voc-mAP@.5: *N/A  
 raw size: 3.31M  
 
