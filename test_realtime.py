@@ -19,11 +19,12 @@ def cv2_draw_bbox(frame, x, canvas_h, canvas_w, class_names):
     x[..., 2] *= canvas_w / TARGET_SIZE_WIDTH
     x[..., 3] *= canvas_h / TARGET_SIZE_HEIGHT
     box_classes = [class_names[n] for n in x[..., 5].cpu().int()]
-    box_labels = [f'{cname} {conf:.2f}' for cname, conf in zip(box_classes, x[...,4])]
+    box_labels = [f"{cname} {conf:.2f}" for cname, conf in zip(box_classes, x[..., 4])]
     return draw_bounding_boxes(
         image=frame,
         boxes=x[..., :4],
         boxes_label=box_labels,
+        alphas=x[..., 4],
     )
 
 
@@ -49,9 +50,9 @@ def detection(conf_thres, iou_thres, device, capture_queue, bbox_queue):
 def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
     capture = cv2.VideoCapture(0)  # VideoCapture 读取本地视频和打开摄像头
     cap_h = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)  # 计算视频的高
-    cap_w = capture.get(cv2.CAP_PROP_FRAME_WIDTH) # 计算视频的宽
-    canvas_h = (cap_h // 32 + 1) * 32 # (padding for Thinkpad-P51 front camera)
-    canvas_w = (cap_w // 32 + 1) * 32 # (padding for Thinkpad-P51 front camera)
+    cap_w = capture.get(cv2.CAP_PROP_FRAME_WIDTH)  # 计算视频的宽
+    canvas_h = (cap_h // 32 + 1) * 32  # (padding for Thinkpad-P51 front camera)
+    canvas_w = (cap_w // 32 + 1) * 32  # (padding for Thinkpad-P51 front camera)
     border_h = int((canvas_h - cap_h) // 2)
     border_w = int((canvas_w - cap_w) // 2)
     capture_queue = Queue(maxsize=1)
