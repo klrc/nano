@@ -56,4 +56,4 @@ raw size: 6.1M
 ---
 ### yolov3_Tiny
 voc-mAP@.5: 0.6802  
-raw size: 11.52M | quantized size: 2.9M  
+quantized size: 2.9M  
