@@ -1,43 +1,59 @@
-# Model Performance Sheet
+## Model Performance Sheet
+| Model | Params | Speed | bandwidth | mAP@.5    | mAP@.95   |
+| ---   | ------ | ----  | -------   | -------   | -------   |
+| GhostNano_3x3_s32 | 1.13M | - | - | 0.6871 | 0.381 |     
+
+
 ## Latest releases
-| Model | Release date  | Size (.onnx)  | FLOPs | bandwidth | Speed | mAP@.5    | mAP@.95   |
-| ---   | ------------  | ------------- | ----  | --------  | ---   | -------   | -------   |
-| NA    | -      
+---
+### GhostNano_3x3_s32
+voc-mAP@.5: 0.6871 | voc-mAP@.95: 0.381  
+raw size: 1.13M  
 
-## nanodet series
-| Model | Release date  | Size (.onnx)  | FLOPs | bandwidth | Speed | mAP@.5    | mAP@.95   |
-| ---   | ------------  | ------------- | ----  | --------  | ---   | -------   | -------   |
-| yolox_esmk | - | 2.0M | - | - | - | 0.634 | 0.3293 |
-| yolox_esmk_misc | - | - | - | - | - | - | - |
+---
+### GhostNano_3x3_m96
+voc-mAP@.5: *N/A  
+raw size: 2.93M  
 
-## yolox series
-| Model | Release date  | Size (.onnx)  | FLOPs | bandwidth | Speed | mAP@.5    | mAP@.95   |
-| ---   | ------------  | ------------- | ----  | --------  | ---   | -------   | -------   |
-| yolox_cspm | - | 8.8M | - | - | - | 0.82 | - |
-| yolox_depthwise_cspm | - | 6.5M/4M | - | - | - | 0.793 | 0.499 |
+---
+### GhostNano_4x3_m96
+voc-mAP@.5: *N/A  
+raw size: 3.12M  
 
-_*: still training_
-
-## yolov5 series
-| Model | Release date  | Size (caffemodel) | FLOPs | bandwidth | Speed | mAP@.5    | mAP@.95   |
-| ---   | ------------  | ----------------- | ----  | --------  | ---   | -------   | -------   |
-| yolov5s_demo | - | 27M | - | - | - | 0.7849 | - |
-| !yolov5s_relu_voc | - | 27M | - | - | - | 0.5503 | - |
-| !yolov5s_relu_mscoco | - | 27M | - | - | - | 0.645 | - |
-| !yolov5s_relu_balanced_coco | - | 27M | - | - | - | 0.659 | - |
-| !yolov5s_relu_balanced_coco* | - | 27M | - | - | - | 0.701 | - |
-| !yolov5s_relu_balanced_coco_six | - | 27M | - | - | - | 0.636 | - |
-| !yolov5s_relu_e104 | - | 0.95M | - | - | - | 0.201 | - |
-| !yolov5s_relu_e110 | - | 12M | - | - | - | 0.615 | - |
-| yolov5_mobilenetv3_l | - | 6.1M | - | - | - | 0.654 | - |
-
-_!: possibly not well-trained_
-
-_*: adding negative samples_
+---
+### GhostNano_4x4_m96
+voc-mAP@.5: *N/A  
+raw size: 3.31M  
 
 
 
-## yolov3 series
-| Model | Release date  | Size (caffemodel) | FLOPs | bandwidth | Speed | mAP@.5    | mAP@.95   |
-| ---   | ------------  | ----------------- | ----  | --------  | ---   | -------   | -------   |
-| yolov3_Tiny | - | 11.52M/2.9M | - | - | - | 0.6802 | - |
+## Previous legacy releases
+
+---
+### yolov5_esmk 
+voc-mAP@.5: 0.634 | voc-mAP@.95: 0.3293  
+raw size: 2.0M  
+
+---
+### yolov5_depthwise_cspm 
+voc-mAP@.5: 0.793 | voc-mAP@.95: 0.499  
+raw size: 6.5M | quantized size: 4M  
+
+---
+### yolov5_cspm 
+voc-mAP@.5: 0.82  
+raw size: 8.8M  
+
+---
+### yolov5s_demo  （_\*not available now_）
+voc-mAP@.5: 0.7849  
+
+---
+### yolov5_mobilenetv3_l （_\*not available now_）
+voc-mAP@.5: 0.654  
+raw size: 6.1M  
+
+---
+### yolov3_Tiny
+voc-mAP@.5: 0.6802  
+raw size: 11.52M | quantized size: 2.9M  
