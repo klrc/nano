@@ -169,7 +169,7 @@ def acquire_model():
 
 
 if __name__ == "__main__":
-    test_yuv(
+    test_screenshot(
         0.2,
         0.45,
         ["person", "bike", "car"],
