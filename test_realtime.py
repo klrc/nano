@@ -182,19 +182,19 @@ def acquire_model():
 
 
 if __name__ == "__main__":
-    test_front_camera(
-        0.2,
-        0.45,
-        ["person", "bike", "car"],
-        device="cpu",
-    )
-    # test_yuv(
-    #     "1280x720_3.yuv",
-    #     720,
-    #     1280,
-    #     conf_thres=0.2,
-    #     iou_thres=0.6,
-    #     class_names=["person", "bike", "car"],
-    #     device="cuda",
-    #     fps=12,
+    # test_front_camera(
+    #     0.2,
+    #     0.45,
+    #     ["person", "bike", "car"],
+    #     device="cpu",
     # )
+    test_yuv(
+        "1280x720_2.yuv",
+        720,
+        1280,
+        conf_thres=0.2,
+        iou_thres=0.6,
+        class_names=["person", "bike", "car"],
+        device="cuda",
+        fps=12,
+    )
