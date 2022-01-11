@@ -100,13 +100,13 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
 def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
     from mss import mss
     import pyautogui as pag
-    capture_range = {"top": 0, "left": 0, "width": 448//2, "height": 448//2}
+    capture_range = {"top": 0, "left": 0, "width": 448, "height": 448}
 
     try:
         capture = mss()
         cap_h = capture_range["height"]
         cap_w = capture_range["width"]
-        capture_size = (cap_h, cap_w)
+        capture_size = (cap_h*2, cap_w*2)
 
         def capture_fn():
             while True:
