@@ -113,7 +113,7 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
 
         def capture_fn():
             try:
-                window_info = cv2.getWindowImageRect('Frame')
+                window_info = cv2.getWindowImageRect('frame')
             except:
                 window_info = None # ignore
             print(window_info)
