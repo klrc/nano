@@ -141,6 +141,7 @@ def draw_bounding_boxes(image, boxes, box_color=None, boxes_label=None, boxes_ce
         color = rand_default_color(box_color)
         # set alpha
         alpha = None if alphas is None else alphas[i]
+        print(alpha)
         # draw box
         cv2_img = draw_bounding_box(cv2_img, box, color, alpha)
         # draw label
