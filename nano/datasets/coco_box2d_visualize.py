@@ -78,7 +78,6 @@ def draw_bounding_box(image, box, color=None, alpha=None):
         cv2.rectangle(canvas, (x1, y1), (x2, y2), color, 1, 4, 0)
     else:
         alpha = float(alpha)
-        print(alpha)
         p = cv2.rectangle(canvas.copy(), (x1, y1), (x2, y2), color, 1, 4, 0)
         canvas = cv2.addWeighted(canvas, 1-alpha, p, alpha, 0)
     return canvas

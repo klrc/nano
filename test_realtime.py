@@ -81,7 +81,7 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
             if len(bbox_set) == 0:
                 print("nothing detected")
             else:
-                cv2_draw_bbox(frame, bbox_set.clone(), canvas_h, canvas_w, class_names)
+                frame = cv2_draw_bbox(frame, bbox_set.clone(), canvas_h, canvas_w, class_names)
             cv2.imshow("frame", frame)
             if cv2.waitKey(10) == 27:
                 break
@@ -121,7 +121,7 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
                 capture_queue.put(frame)
             if not result_queue.empty():
                 bbox_set = result_queue.get()
-                cv2_draw_bbox(frame, bbox_set, canvas_h, canvas_w, class_names)
+                frame = cv2_draw_bbox(frame, bbox_set, canvas_h, canvas_w, class_names)
             cv2.imshow("frame", frame)
             if cv2.waitKey(10) == 27:
                 break
@@ -163,7 +163,7 @@ def test_yuv(file_name, height, width, conf_thres, iou_thres, class_names, devic
                     capture_queue.put(frame)
                 if not result_queue.empty():
                     bbox_set = result_queue.get()
-                    cv2_draw_bbox(frame, bbox_set, height // 2, width // 2, class_names)
+                    frame = cv2_draw_bbox(frame, bbox_set, height // 2, width // 2, class_names)
                 cv2.imshow("frame", frame)
                 time.sleep(1 / fps)
                 if cv2.waitKey(10) == 27:
