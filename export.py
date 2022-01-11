@@ -13,10 +13,10 @@ import xnnc
 if __name__ == "__main__":
     # model setup ===========================================
     print("\n[model setup]")
-    from nano.models.model_zoo.nano_ghost import GhostNano_3x3_s32
+    from nano.models.model_zoo.nano_ghost import GhostNano_3x3_m96
 
-    model = GhostNano_3x3_s32(num_classes=3)
-    model.load_state_dict(torch.load("runs/train/exp119/last.pt", map_location="cpu")["state_dict"])
+    model = GhostNano_3x3_m96(num_classes=3)
+    model.load_state_dict(torch.load("runs/train/exp123/last.pt", map_location="cpu")["state_dict"])
     model.head = NanoHeadless(model.head)
     print("adjust model..")
     for m in model.modules():
@@ -26,8 +26,8 @@ if __name__ == "__main__":
 
     output_names = ["output_0", "output_1", "output_2"]
     class_names = ["person", "bike", "car"]
-    model_stamp = "GhostNano_3x3_s32"
-    forced_export = True
+    model_stamp = "GhostNano_3x3_m96"
+    forced_export = False
     print("start exporting", model_stamp, "..")
 
     # Copy source file for backup ===========================
