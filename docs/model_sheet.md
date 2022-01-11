@@ -38,5 +38,4 @@ voc-mAP@.5: 0.7849
 #### yolov5_mobilenetv3_l （_\*not available now_）
 ###### voc-mAP@.5: 0.654 | raw size: 6.1M  
 
-#### yolov3_Tiny
-###### voc-mAP@.5: 0.6802 | quantized size: 2.9M  
+#### yolov3_Tiny >> voc-mAP@.5: 0.6802 | quantized size: 2.9M  
