@@ -39,7 +39,7 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
             bbox_queue.put(out)
 
 
-def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu"):
+def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu", always_on_top=False):
     cap_h, cap_w = capture_size
     ratio = 416 / max(capture_size)  # h, w <= 416
     inf_h = int(np.ceil(cap_h * ratio / 32) * 32)  # (padding for Thinkpad-P51 front camera)
@@ -72,6 +72,8 @@ def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_nam
             x[..., :4] /= ratio  # rescale to raw image size
             frame = cv2_draw_bbox(frame, x, class_names)
         cv2.imshow("frame", frame)
+        if always_on_top:
+            cv2.setWindowProperty("frame", cv2.WND_PROP_TOPMOST, 1)
         if cv2.waitKey(10) == 27:
             return
 
@@ -118,7 +120,7 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
                 yield frame
 
-        test_video(capture_fn(), capture_size, conf_thres, iou_thres, class_names, device)
+        test_video(capture_fn(), capture_size, conf_thres, iou_thres, class_names, device, always_on_top=True)
     except Exception as e:
         cv2.destroyAllWindows()
         raise e
