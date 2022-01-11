@@ -174,10 +174,10 @@ def test_yuv(file_name, height, width, conf_thres, iou_thres, class_names, devic
 
 
 def acquire_model():
-    from nano.models.model_zoo.nano_ghost import GhostNano_3x3_s32
+    from nano.models.model_zoo.nano_ghost import GhostNano_3x3_m96
 
-    model = GhostNano_3x3_s32(num_classes=3)
-    model.load_state_dict(torch.load("release/GhostNano_3x3_s32/GhostNano_3x3_s32.pt", map_location="cpu"))
+    model = GhostNano_3x3_m96(num_classes=3)
+    model.load_state_dict(torch.load("release/GhostNano_3x3_m96/GhostNano_3x3_m96.pt", map_location="cpu"))
     return model
 
 
