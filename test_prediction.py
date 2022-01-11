@@ -7,6 +7,7 @@ from nano.datasets.coco_box2d import MSCOCO
 from nano.datasets.coco_box2d_transforms import SizeLimit, ToTensor
 from nano.datasets.coco_box2d_visualize import draw_bounding_boxes
 from nano.datasets.coco_box2d import letterbox_collate_fn
+from nano.ops.box2d import non_max_suppression
 
 
 # preset configurations
@@ -18,9 +19,6 @@ names = ["person", "bike", "car"]
 def test_objectness(model, device):
     base = MSCOCO(imgs_root=img_root, annotations_root=label_root, max_size=416)
     base = SizeLimit(base, 100)
-    # base = Affine(base, horizontal_flip=0.5, perspective=0.3, max_perspective=0.2)
-    # base = Albumentations(base, "random_blind")
-    # base = Mosaic4(base, img_size=448)
     trainset = ToTensor(base)
 
     train_loader = DataLoader(trainset, batch_size=1, num_workers=8, pin_memory=False, collate_fn=letterbox_collate_fn)
@@ -57,6 +55,36 @@ def test_objectness(model, device):
             return
 
 
+def test_after_nms(model, device):
+    base = MSCOCO(imgs_root=img_root, annotations_root=label_root, max_size=416)
+    base = SizeLimit(base, 100)
+    trainset = ToTensor(base)
+
+    train_loader = DataLoader(trainset, batch_size=1, num_workers=8, pin_memory=False, collate_fn=letterbox_collate_fn)
+    model = model.eval().to(device)
+
+    i = 0
+    for img, _ in train_loader:
+        img = img.to(device)
+        # targets = targets.to(device)
+        with torch.no_grad():
+            pred = model(img)
+            pred = non_max_suppression(pred, 0.2, 0.45)[0]
+
+            # draw lobj centers
+            box_pred = pred[:, :4]
+            alp_pred = pred[:, 4]
+            cls_pred = pred[:, 5]
+            label_pred = [f'{names[int(x)]} conf={alp_pred[int(x)]:.2f}' for x in cls_pred.cpu()]
+
+            cv_img = img[0].cpu() * 0.4
+            cv_img = draw_bounding_boxes(cv_img, boxes=box_pred.cpu(), boxes_label=label_pred, alphas=alp_pred)
+            cv2.imwrite(f"docs/test_raw_nms_{i}.png", cv_img)
+
+        i += 1
+        if i >= 10:
+            return
+
 if __name__ == "__main__":
     from nano.models.model_zoo.nano_ghost import GhostNano_3x3_m96
 
@@ -64,4 +92,4 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load("runs/train/exp123/last.pt", map_location="cpu")["state_dict"])
     model.train().to("cpu")
 
-    test_objectness(model, "cpu")
+    test_after_nms(model, "cpu")
