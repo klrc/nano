@@ -20,11 +20,11 @@ def cv2_draw_bbox(frame, x, class_names):
     )
 
 
-def detection(conf_thres, iou_thres, target_shape, device, capture_queue, bbox_queue):
+def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue):
     model = acquire_model()
     model.eval().to(device)
     print("> model online.")
-    transforms = T.Compose([T.ToPILImage(), T.Resize(target_shape), T.ToTensor()])
+    transforms = T.Compose([T.ToPILImage(), T.Resize(inf_size), T.ToTensor()])
     while True:
         if not capture_queue.empty():
             frame = capture_queue.get()
@@ -39,18 +39,21 @@ def detection(conf_thres, iou_thres, target_shape, device, capture_queue, bbox_q
             bbox_queue.put(out)
 
 
-def test_video(cap_h, cap_w, capture_fn, conf_thres, iou_thres, class_names, device="cpu"):
-    ratio = 416 / max(cap_h, cap_w)  # h, w <= 416
-    canvas_h = np.ceil(cap_h * ratio // 32) * 32  # (padding for Thinkpad-P51 front camera)
-    canvas_w = np.ceil(cap_w * ratio // 32) * 32  # (padding for Thinkpad-P51 front camera)
-    border_h = int((canvas_h - cap_h) // 2)
-    border_w = int((canvas_w - cap_w) // 2)
+def test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_names, device="cpu"):
+    cap_h, cap_w = capture_size
+    ratio = 416 / max(capture_size)  # h, w <= 416
+    inf_h = np.ceil(cap_h * ratio // 32) * 32  # (padding for Thinkpad-P51 front camera)
+    inf_w = np.ceil(cap_w * ratio // 32) * 32  # (padding for Thinkpad-P51 front camera)
+    border_h = int((inf_h/ratio - cap_h) // 2)
+    border_w = int((inf_w/ratio - cap_w) // 2)
+    inference_size = (inf_h, inf_w)
+    print(inf_h, inf_w, border_h, border_w, capture_size)
     capture_queue = Queue(maxsize=1)
     result_queue = Queue(maxsize=64)
     bbox_set = []
 
     # inference process --------------
-    proc_1 = Process(target=detection, args=[conf_thres, iou_thres, (canvas_h, canvas_w), device, capture_queue, result_queue])
+    proc_1 = Process(target=detection, args=[conf_thres, iou_thres, inference_size, device, capture_queue, result_queue])
     proc_1.daemon = True
     proc_1.start()
 
@@ -82,6 +85,7 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
         capture = cv2.VideoCapture(0)  # VideoCapture 读取本地视频和打开摄像头
         cap_h = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)  # 计算视频的高
         cap_w = capture.get(cv2.CAP_PROP_FRAME_WIDTH)  # 计算视频的宽
+        capture_size = (cap_h, cap_w)
 
         def capture_fn():
             ret, frame = capture.read()
@@ -89,7 +93,7 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
                 return None
             return cv2.flip(frame, 1)  # cv2.flip 图像翻转
 
-        test_video(cap_h, cap_w, capture_fn, conf_thres, iou_thres, class_names, device)
+        test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_names, device)
     except Exception as e:
         capture.release()
         cv2.destroyAllWindows()
