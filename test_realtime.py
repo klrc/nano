@@ -115,15 +115,10 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
             frame = capture.grab(capture_range)
             frame = np.array(frame)
             frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
-
-            ret, frame = capture.read()
-            if ret is False:
-                return None
-            return cv2.flip(frame, 1)  # cv2.flip 图像翻转
+            return frame
 
         test_with_capture_fn(capture_fn, capture_size, conf_thres, iou_thres, class_names, device)
     except Exception as e:
-        capture.release()
         cv2.destroyAllWindows()
         raise e
 
