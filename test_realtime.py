@@ -16,7 +16,7 @@ def cv2_draw_bbox(frame, x, class_names):
         image=frame,
         boxes=x[..., :4],
         boxes_label=box_labels,
-        alphas=x[..., 4]**2,
+        alphas=x[..., 4],
     )
 
 
@@ -170,7 +170,7 @@ def acquire_model():
 
 
 if __name__ == "__main__":
-    test_yuv(
+    test_front_camera(
         0.2,
         0.45,
         ["person", "bike", "car"],
