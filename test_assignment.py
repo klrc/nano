@@ -26,6 +26,7 @@ def test_backward(model, device):
     base = Mosaic4(base, img_size=448)
     trainset = ToTensor(base)
 
+    model.train().to(device)
     train_loader = DataLoader(trainset, batch_size=16, num_workers=8, pin_memory=False, collate_fn=collate_fn)
     assigner = SimOTA(num_classes=3, compute_loss=True)
 
@@ -50,6 +51,7 @@ def test_assignment(model, device):
     base = Mosaic4(base, img_size=448)
     trainset = ToTensor(base)
 
+    model.train().to(device)
     train_loader = DataLoader(trainset, batch_size=1, num_workers=8, pin_memory=False, collate_fn=collate_fn)
     assigner = SimOTA(num_classes=3, compute_loss=False)
 
@@ -61,8 +63,7 @@ def test_assignment(model, device):
             result = model(img)
             pred, grid_mask, stride_mask = result
             match_mask, box_target, obj_target, cls_target = assigner(result, target)
-            label_target = cls_target[cls_target > 0] - 1
-            label_target = [names[int(x)] for x in label_target.cpu()]
+            label_target = [names[int(x)] for x in cls_target.cpu() if x < len(names)]
 
             # draw matched targets
             center_targets = (grid_mask[0, match_mask] + 0.5) * stride_mask[0, match_mask].unsqueeze(-1)
@@ -84,11 +85,10 @@ def test_assignment(model, device):
 
 
 if __name__ == "__main__":
-    from nano.models.model_zoo.nano_ghost import GhostNano_3x3_s32
+    from nano.models.model_zoo.nano_ghost import GhostNano_4x4_l128
 
-    model = GhostNano_3x3_s32(num_classes=3)
-    # model.load_state_dict(torch.load("runs/train/exp91/last.pt", map_location='cpu')["state_dict"])
-    model.train().to("cuda")
+    model = GhostNano_4x4_l128(num_classes=3)
+    model.load_state_dict(torch.load("runs/train/exp125/last.pt", map_location='cpu')["state_dict"])
 
-    test_assignment(model, "cuda")
+    test_assignment(model, "cpu")
     # test_backward(model, 'cuda')

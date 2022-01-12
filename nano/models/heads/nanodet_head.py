@@ -14,6 +14,7 @@ class NanoHead(nn.Module):
         self.convs = nn.ModuleList()
         self.strides = strides
         self.debug = False
+        assert len(strides) == len(in_channels)
 
         for i in range(len(in_channels)):
             assert in_channels[i] == hidden_channels

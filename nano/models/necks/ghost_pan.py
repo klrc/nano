@@ -5,160 +5,53 @@ from ..multiplex.conv import pointwise_conv, depthwise_conv
 from ..multiplex.ghostnet import GhostBlock
 
 
+def dp_block(channels, kernel_size, stride):
+    return nn.Sequential(
+        depthwise_conv(channels, kernel_size, stride),
+        pointwise_conv(channels, channels),
+    )
+
 # GhostPAN from NanoDet-plus
 # https://github.com/RangiLyu/nanodet/blob/main/nanodet/model/fpn/ghost_pan.py
 # https://zhuanlan.zhihu.com/p/449912627
-class GhostPAN_3x3(nn.Module):
+class GhostPAN(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
-        self.pw_fs1 = pointwise_conv(in_channels[0], out_channels)
-        self.pw_fs2 = pointwise_conv(in_channels[1], out_channels)
-        self.pw_fs3 = pointwise_conv(in_channels[2], out_channels)
+        oc = out_channels[0]
+        assert all([x == oc for x in out_channels])
 
-        self.in_csp_fs1 = GhostBlock(out_channels * 2, out_channels, 5)
-        self.in_csp_fs2 = GhostBlock(out_channels * 2, out_channels, 5)
+        self.encoder = nn.ModuleList()
+        for ic in in_channels:
+            self.encoder.append(pointwise_conv(ic, oc))
 
-        self.out_csp_fs2 = GhostBlock(out_channels * 2, out_channels, 5)
-        self.out_csp_fs3 = GhostBlock(out_channels * 2, out_channels, 5)
+        self.compressor_topdown = nn.ModuleList()
+        for _ in in_channels[:-1]:
+            self.compressor_topdown.append(GhostBlock(oc * 2, oc, 5))
 
-        self.dp_fs1 = nn.Sequential(
-            depthwise_conv(out_channels, 5, 2),
-            pointwise_conv(out_channels, out_channels),
-        )
-        self.dp_fs2 = nn.Sequential(
-            depthwise_conv(out_channels, 5, 2),
-            pointwise_conv(out_channels, out_channels),
-        )
+        self.compressor_bottomup = nn.ModuleList()
+        for _ in in_channels[1:]:
+            self.compressor_bottomup.append(GhostBlock(oc * 2, oc, 5))
 
-    def forward(self, x):
-        fs1, fs2, fs3 = x
+        self.downsample = nn.ModuleList()
+        for _ in in_channels[1:]:
+            self.downsample.append(dp_block(oc, 5, 2))
+
+
+    def forward(self, xs):        
         # channel compression
-        fs1, fs2, fs3 = self.pw_fs1(fs1), self.pw_fs2(fs2), self.pw_fs3(fs3)
+        reshaped = [encoder(x) for encoder, x in zip(self.encoder, xs)]
         # top-down pathway
-        fs3 = fs3
-        fs2 = torch.cat([fs2, F.interpolate(fs3, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
-        fs2 = self.in_csp_fs2(fs2)
-        fs1 = torch.cat([fs1, F.interpolate(fs2, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
-        fs1 = self.in_csp_fs1(fs1)
+        for i in range(len(reshaped)-2, 0, -1):
+            xcur = reshaped[i]
+            xprev = reshaped[i+1]
+            xcur = torch.cat([xcur, F.interpolate(xprev, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
+            xcur = self.compressor_topdown[i](xcur)
+            reshaped[i] = xcur
         # bottom-up pathway
-        fs1 = fs1
-        fs2 = torch.cat([fs2, self.dp_fs1(fs1)], dim=1)
-        fs2 = self.out_csp_fs2(fs2)
-        fs3 = torch.cat([fs3, self.dp_fs2(fs2)], dim=1)
-        fs3 = self.out_csp_fs3(fs3)
-        return [fs1, fs2, fs3]
-
-
-class GhostPAN_4x3(nn.Module):
-    def __init__(self, in_channels, out_channels):
-        super().__init__()
-        self.pw_fs0 = pointwise_conv(in_channels[0], out_channels)
-        self.pw_fs1 = pointwise_conv(in_channels[1], out_channels)
-        self.pw_fs2 = pointwise_conv(in_channels[2], out_channels)
-        self.pw_fs3 = pointwise_conv(in_channels[3], out_channels)
-
-        self.in_csp_fs0 = GhostBlock(out_channels * 2, out_channels, 5)
-        self.in_csp_fs1 = GhostBlock(out_channels * 2, out_channels, 5)
-        self.in_csp_fs2 = GhostBlock(out_channels * 2, out_channels, 5)
-
-        self.out_csp_fs1 = GhostBlock(out_channels * 2, out_channels, 5)
-        self.out_csp_fs2 = GhostBlock(out_channels * 2, out_channels, 5)
-        self.out_csp_fs3 = GhostBlock(out_channels * 2, out_channels, 5)
-
-        self.dp_fs0 = nn.Sequential(
-            depthwise_conv(out_channels, 5, 2),
-            pointwise_conv(out_channels, out_channels),
-        )
-        self.dp_fs1 = nn.Sequential(
-            depthwise_conv(out_channels, 5, 2),
-            pointwise_conv(out_channels, out_channels),
-        )
-        self.dp_fs2 = nn.Sequential(
-            depthwise_conv(out_channels, 5, 2),
-            pointwise_conv(out_channels, out_channels),
-        )
-
-    def forward(self, x):
-        fs0, fs1, fs2, fs3 = x
-        # channel compression
-        fs0, fs1, fs2, fs3 = self.pw_fs0(fs0), self.pw_fs1(fs1), self.pw_fs2(fs2), self.pw_fs3(fs3)
-        # top-down pathway
-        fs3 = fs3
-        fs2 = torch.cat([fs2, F.interpolate(fs3, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
-        fs2 = self.in_csp_fs2(fs2)
-        fs1 = torch.cat([fs1, F.interpolate(fs2, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
-        fs1 = self.in_csp_fs1(fs1)
-        fs0 = torch.cat([fs0, F.interpolate(fs1, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
-        fs0 = self.in_csp_fs0(fs0)
-        # bottom-up pathway
-        fs0 = fs0
-        fs1 = torch.cat([fs1, self.dp_fs0(fs0)], dim=1)
-        fs1 = self.out_csp_fs1(fs1)
-        fs2 = torch.cat([fs2, self.dp_fs1(fs1)], dim=1)
-        fs2 = self.out_csp_fs2(fs2)
-        fs3 = torch.cat([fs3, self.dp_fs2(fs2)], dim=1)
-        fs3 = self.out_csp_fs3(fs3)
-        return [fs1, fs2, fs3]
-
-
-class GhostPAN_4x4(nn.Module):
-    def __init__(self, in_channels, out_channels):
-        super().__init__()
-        self.pw_fs0 = pointwise_conv(in_channels[0], out_channels)
-        self.pw_fs1 = pointwise_conv(in_channels[1], out_channels)
-        self.pw_fs2 = pointwise_conv(in_channels[2], out_channels)
-        self.pw_fs3 = pointwise_conv(in_channels[3], out_channels)
-
-        self.in_csp_fs0 = GhostBlock(out_channels * 2, out_channels, 5)
-        self.in_csp_fs1 = GhostBlock(out_channels * 2, out_channels, 5)
-        self.in_csp_fs2 = GhostBlock(out_channels * 2, out_channels, 5)
-
-        self.out_csp_fs1 = GhostBlock(out_channels * 2, out_channels, 5)
-        self.out_csp_fs2 = GhostBlock(out_channels * 2, out_channels, 5)
-        self.out_csp_fs3 = GhostBlock(out_channels * 2, out_channels, 5)
-
-        self.dp_fs0 = nn.Sequential(
-            depthwise_conv(out_channels, 5, 2),
-            pointwise_conv(out_channels, out_channels),
-        )
-        self.dp_fs1 = nn.Sequential(
-            depthwise_conv(out_channels, 5, 2),
-            pointwise_conv(out_channels, out_channels),
-        )
-        self.dp_fs2 = nn.Sequential(
-            depthwise_conv(out_channels, 5, 2),
-            pointwise_conv(out_channels, out_channels),
-        )
-        self.dp_fs3 = nn.Sequential(
-            depthwise_conv(out_channels, 5, 2),
-            pointwise_conv(out_channels, out_channels),
-        )
-        self.dp_fs4 = nn.Sequential(
-            depthwise_conv(out_channels, 5, 2),
-            pointwise_conv(out_channels, out_channels),
-        )
-        
-    def forward(self, x):
-        fs0, fs1, fs2, fs3 = x
-        # channel compression
-        fs0, fs1, fs2, fs3 = self.pw_fs0(fs0), self.pw_fs1(fs1), self.pw_fs2(fs2), self.pw_fs3(fs3)
-        # top-down pathway
-        fs3 = fs3
-        fs2 = torch.cat([fs2, F.interpolate(fs3, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
-        fs2 = self.in_csp_fs2(fs2)
-        fs1 = torch.cat([fs1, F.interpolate(fs2, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
-        fs1 = self.in_csp_fs1(fs1)
-        fs0 = torch.cat([fs0, F.interpolate(fs1, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
-        fs0 = self.in_csp_fs0(fs0)
-        # bottom-up pathway
-        fs0 = fs0
-        fs1 = torch.cat([fs1, self.dp_fs0(fs0)], dim=1)
-        fs1 = self.out_csp_fs1(fs1)
-        fs2 = torch.cat([fs2, self.dp_fs1(fs1)], dim=1)
-        fs2 = self.out_csp_fs2(fs2)
-        # additional_fs4
-        fs4 = self.dp_fs4(fs3)
-        fs3 = torch.cat([fs3, self.dp_fs2(fs2)], dim=1)
-        fs3 = self.out_csp_fs3(fs3)
-        fs4 = fs4 + self.dp_fs3(fs3)
-        return [fs1, fs2, fs3, fs4]
+        for i in range(len(reshaped)-1):
+            xcur = reshaped[i+1]
+            xprev = reshaped[i]
+            xcur = torch.cat([xcur, self.downsample[i](xprev)], dim=1)
+            xcur = self.compressor_bottomup[i](xcur)
+            reshaped[i] = xcur
+        return reshaped
