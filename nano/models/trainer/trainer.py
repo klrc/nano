@@ -147,8 +147,8 @@ def run(
     criteria,
     device,
     batch_size=32,
-    patience=4,
-    epochs=50,
+    patience=16,
+    epochs=300,
     lr0=0.001,
     momentum=0.85,
     weight_decay=0.0005,
@@ -159,13 +159,15 @@ def run(
     warmup_bias_lr=0.1,
     warmup_momentum=0.5,
     load_optimizer=False,
-    verbose=True,
+    wandb_logger=None,
 ):
-    if verbose:
-        logger = wandb.init(project="nano", dir="./runs")
 
     # Directories
     w = increment_path(Path("runs/train") / "exp", exist_ok=False)
+
+    if wandb_logger is not None:
+        wandb_logger.config.save_path = str(w)
+
     w.mkdir(parents=True, exist_ok=True)  # make dir
     last, best = w / "last.pt", w / "best.pt"
 
@@ -223,8 +225,8 @@ def run(
                 optimizer.load_state_dict(optimizer_state_dict)
         if "epoch" in ckpt:
             start_epoch = ckpt["epoch"]
-        if verbose:
-            logger.log(ckpt)
+        if wandb_logger is not None:
+            wandb_logger.log(ckpt)
 
     # Anchors
     model.half().float()  # pre-reduce anchor precision
@@ -318,8 +320,8 @@ def run(
             "train_loss_qfl": mloss[1].item(),
             "train_loss": mloss.sum().item(),
         }
-        if verbose:
-            logger.log(log_vals)
+        if wandb_logger is not None:
+            wandb_logger.log(log_vals)
 
         # Save model
         ckpt = {
@@ -341,6 +343,4 @@ def run(
         # end epoch ----------------------------------------------------------------------------------------------------
     # end training -----------------------------------------------------------------------------------------------------
     torch.cuda.empty_cache()
-    if verbose:
-        logger.finish()
     return best

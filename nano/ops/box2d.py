@@ -115,7 +115,7 @@ def non_max_suppression(
                 inter = (xx2-xx1).clamp(min=0) * (yy2-yy1).clamp(min=0)   # [N-1,]
                 iou = inter / (areas[i]+areas[order[1:]]-inter)  # [N-1,]
 
-                beta = max((iou > iou_thres+0.4).nonzero().size(0), 1)
+                beta = max((iou > 0.8).nonzero().size(0), 1)
                 scores[i] = 1 - math.pow(1-scores[i], beta)
 
                 idx = (iou <= iou_thres).nonzero().squeeze() # 注意此时idx为[N-1,] 而order为[N,]

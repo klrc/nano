@@ -40,18 +40,19 @@ class GhostPAN(nn.Module):
     def forward(self, xs):        
         # channel compression
         reshaped = [encoder(x) for encoder, x in zip(self.encoder, xs)]
+        N = len(reshaped)
         # top-down pathway
-        for i in range(len(reshaped)-2, 0, -1):
+        for i in range(N-2, -1, -1):
             xcur = reshaped[i]
             xprev = reshaped[i+1]
             xcur = torch.cat([xcur, F.interpolate(xprev, scale_factor=2, mode="bilinear", align_corners=True)], dim=1)
             xcur = self.compressor_topdown[i](xcur)
             reshaped[i] = xcur
         # bottom-up pathway
-        for i in range(len(reshaped)-1):
-            xcur = reshaped[i+1]
-            xprev = reshaped[i]
-            xcur = torch.cat([xcur, self.downsample[i](xprev)], dim=1)
-            xcur = self.compressor_bottomup[i](xcur)
+        for i in range(1, N-1):
+            xcur = reshaped[i]
+            xprev = reshaped[i-1]
+            xcur = torch.cat([xcur, self.downsample[i-1](xprev)], dim=1)
+            xcur = self.compressor_bottomup[i-1](xcur)
             reshaped[i] = xcur
         return reshaped

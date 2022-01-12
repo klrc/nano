@@ -16,7 +16,7 @@ if __name__ == "__main__":
     from nano.models.model_zoo.nano_ghost import GhostNano_3x3_m96
 
     model = GhostNano_3x3_m96(num_classes=3)
-    model.load_state_dict(torch.load("runs/train/exp123/last.pt", map_location="cpu")["state_dict"])
+    model.load_state_dict(torch.load("runs/train/?", map_location="cpu")["state_dict"])
     model.head = NanoHeadless(model.head)
     print("adjust model..")
     for m in model.modules():

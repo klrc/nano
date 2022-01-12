@@ -69,7 +69,7 @@ def test_after_nms(model, device):
         # targets = targets.to(device)
         with torch.no_grad():
             pred = model(img)
-            pred = non_max_suppression(pred, 0.2, 0.45)[0]
+            pred = non_max_suppression(pred, 0.1, 0.45, focal_nms=False)[0]
 
             # draw lobj centers
             box_pred = pred[:, :4]
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     from nano.models.model_zoo.nano_ghost import GhostNano_3x3_m96
 
     model = GhostNano_3x3_m96(num_classes=3)
-    model.load_state_dict(torch.load("runs/train/exp123/last.pt", map_location="cpu")["state_dict"])
+    model.load_state_dict(torch.load("release/GhostNano_3x3_m96/GhostNano_3x3_m96.pt", map_location="cpu"))
     model.train().to("cpu")
 
     test_after_nms(model, "cpu")

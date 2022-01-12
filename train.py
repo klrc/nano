@@ -4,11 +4,11 @@ from nano.models.assigners.simota import (
     SimOTA,
 )
 from nano.models.model_zoo.nano_ghost import (
-    GhostNano_3x3_m96,
     GhostNano_3x3_s32,
+    GhostNano_3x3_s64,
+    GhostNano_3x3_m96,
+    GhostNano_3x4_m96,
     GhostNano_4x3_m96,
-    GhostNano_4x4_l128,
-    GhostNano_4x4_m96,
 )
 from nano.datasets.coco_box2d import MSCOCO, collate_fn, letterbox_collate_fn
 from nano.datasets.coco_box2d_transforms import (
@@ -21,17 +21,17 @@ from nano.datasets.coco_box2d_transforms import (
     ToTensor,
 )
 from nano.models.trainer import trainer, load_device
-
+import wandb
 
 if __name__ == "__main__":
     # ========================================================================
 
     for model_type, batch_size in (
-        # (GhostNano_3x3_s32, 64),
-        # (GhostNano_3x3_m96, 16),
-        # (GhostNano_4x3_m96, 16),
-        (GhostNano_4x4_l128, 16),
-        (GhostNano_4x4_m96, 16),
+        (GhostNano_3x4_m96, 32), 
+        (GhostNano_4x3_m96, 32),
+        (GhostNano_3x3_s32, 64), 
+        (GhostNano_3x3_s64, 64), 
+        (GhostNano_3x3_m96, 32),
     ):
         # --------------------------------------------------
         try:
@@ -58,11 +58,13 @@ if __name__ == "__main__":
             class_names = ["person", "bike", "car"]
             criteria = SimOTA(3, True)
 
-            trainer.run(model, train_loader, val_loader, class_names, criteria, device, batch_size=batch_size)
+            logger = wandb.init(project="nano", dir="./runs")
+            trainer.run(model, train_loader, val_loader, class_names, criteria, device, batch_size=batch_size, patience=4, epochs=50, wandb_logger=logger)
             del model, criteria, train_loader, val_loader, trainset, valset
-            torch.cuda.empty_cache()
         except Exception as e:
-            torch.cuda.empty_cache()
             print(e)
+        finally:
+            torch.cuda.empty_cache()
+            logger.finish()
     # --------------------------------------------------
     # ========================================================================
