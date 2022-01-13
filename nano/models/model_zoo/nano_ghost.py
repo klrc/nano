@@ -107,7 +107,7 @@ if __name__ == "__main__":
     from nano.models.utils import check_size
 
     model = GhostNano_3x4_m96(3)
-    x = torch.rand(4, 3, 224, 416)
+    x = torch.rand(1, 3, 224, 416)
     model.eval()
     y = model(x)
     print(y[0][100])

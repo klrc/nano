@@ -25,17 +25,24 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
     model.eval().to(device)
     print("> model online.")
     transforms = T.Compose([T.ToPILImage(), T.Resize(inf_size), T.ToTensor()])
-    while True:
-        if not capture_queue.empty():
-            frame = capture_queue.get()
-            # process image
-            x = transforms(frame)
-            x = x.unsqueeze(0).to(device)
-            with torch.no_grad():
-                # Run model
-                results = model(x)  # inference and training outputs
-                # Run NMS
-                out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=True, focal_gamma=1)[0]  # batch 0
+    with torch.no_grad():
+        while True:
+            if not capture_queue.empty():
+                frame = capture_queue.get()
+                # process image
+                x = transforms(frame).to(device)
+                ch, cw = x.size(-2)//2, x.size(-1)//2
+                out = []
+                for offset_h, offset_w in ( (0, 0),(cw, 0),(0, ch), (cw, ch)):
+                    _sliced = x[:,offset_h:offset_h+ch, offset_w:offset_w+cw].unsqueeze(0)
+                    _sr = model(_sliced)  # inference and training outputs
+                    _sr[:, 0] += offset_w
+                    _sr[:, 1] += offset_h
+                    _sr[:, 2] += offset_w
+                    _sr[:, 3] += offset_h
+                    # Run NMS
+                    _sout = non_max_suppression(_sr, conf_thres, iou_thres, focal_nms=True, focal_gamma=1)[0]  # batch 0
+                    out.append(_sout)
             bbox_queue.put(out)
 
 

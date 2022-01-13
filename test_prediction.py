@@ -69,6 +69,7 @@ def test_nms(model, device, focal_nms=True):
         img = img.to(device)
         # targets = targets.to(device)
         with torch.no_grad():
+            
             pred = model(img)
             pred = non_max_suppression(pred, 0.25, 0.45, focal_nms=focal_nms)[0]
 
@@ -93,6 +94,6 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load("release/GhostNano_3x4_m96/GhostNano_3x4_m96.pt", map_location="cpu"))
     model.train().to("cpu")
 
-    test_prediction(model, "cpu")
-    test_nms(model, 'cpu', focal_nms=True)
+    # test_prediction(model, "cpu")
+    # test_nms(model, 'cpu', focal_nms=True)
     test_nms(model, 'cpu', focal_nms=False)
