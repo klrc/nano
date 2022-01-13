@@ -36,10 +36,10 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
                 for offset_h, offset_w in ((0, 0),  (0, cw), (ch, 0), (ch, cw)):
                     _sliced = x[:,offset_h:offset_h+ch, offset_w:offset_w+cw].unsqueeze(0)
                     _sr = model(_sliced)  # inference and training outputs
-                    _sr[:, 0] += offset_w
-                    _sr[:, 1] += offset_h
-                    _sr[:, 2] += offset_w
-                    _sr[:, 3] += offset_h
+                    _sr[..., 0] += offset_w
+                    _sr[..., 1] += offset_h
+                    _sr[..., 2] += offset_w
+                    _sr[..., 3] += offset_h
                     results.append(_sr)
                 results = torch.cat(results, 1)
                 print(results.shape)
