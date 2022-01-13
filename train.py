@@ -27,8 +27,8 @@ if __name__ == "__main__":
     # ========================================================================
 
     for model_type, batch_size in (
-        (GhostNano_3x4_m96, 32), 
-        (GhostNano_4x3_m96, 32),
+        # (GhostNano_3x4_m96, 32), 
+        (GhostNano_4x3_m96, 16),
         (GhostNano_3x3_s32, 64), 
         (GhostNano_3x3_s64, 64), 
         (GhostNano_3x3_m96, 32),

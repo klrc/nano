@@ -44,7 +44,6 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
                     _sr[..., 3] += offset_h
                     results.append(_sr)
                 results = torch.cat(results, 1)
-                print(results.shape)
                 # Run NMS
                 out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=True, focal_gamma=1)[0]  # batch 0
             bbox_queue.put(out)
