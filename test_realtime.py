@@ -35,7 +35,7 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
                 # Run model
                 results = model(x)  # inference and training outputs
                 # Run NMS
-                out = non_max_suppression(results, conf_thres, iou_thres)[0]  # batch 0
+                out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=True)[0]  # batch 0
             bbox_queue.put(out)
 
 
