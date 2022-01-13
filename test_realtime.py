@@ -33,7 +33,7 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
                 x = transforms(frame).to(device)
                 ch, cw = x.size(-2)//2, x.size(-1)//2
                 out = []
-                for offset_h, offset_w in ( (0, 0),(cw, 0),(0, ch), (cw, ch)):
+                for offset_h, offset_w in ((0, 0),  (0, cw), (ch, 0), (ch, cw)):
                     _sliced = x[:,offset_h:offset_h+ch, offset_w:offset_w+cw].unsqueeze(0)
                     print(_sliced.shape)
                     _sr = model(_sliced)  # inference and training outputs
