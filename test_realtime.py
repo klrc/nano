@@ -31,10 +31,12 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
                 frame = capture_queue.get()
                 # process image
                 x = transforms(frame).to(device)
-                ch, cw = x.size(-2)//2, x.size(-1)//2
+                h, w = x.size(-2), x.size(-1)
+                overlap = 64
+                sh, sw = h + overlap, w + overlap
                 results = []
-                for offset_h, offset_w in ((0, 0),  (0, cw), (ch, 0), (ch, cw)):
-                    _sliced = x[:,offset_h:offset_h+ch, offset_w:offset_w+cw].unsqueeze(0)
+                for offset_h, offset_w in ((0, 0), (0, w-sw), (h-sh, 0), (h-sw, w-sw)):
+                    _sliced = x[:, offset_h : offset_h + sh, offset_w : offset_w + sw].unsqueeze(0)
                     _sr = model(_sliced)  # inference and training outputs
                     _sr[..., 0] += offset_w
                     _sr[..., 1] += offset_h
@@ -111,19 +113,20 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
 def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
     from mss import mss
     import pyautogui as pag
+
     capture_range = {"top": 0, "left": 0, "width": 448, "height": 448}
 
     try:
         capture = mss()
         cap_h = capture_range["height"]
         cap_w = capture_range["width"]
-        capture_size = (cap_h*2, cap_w*2)
+        capture_size = (cap_h * 2, cap_w * 2)
 
         def capture_fn():
             while True:
-                x, y = pag.position() #返回鼠标的坐标
-                capture_range['top'] = y - capture_range['height']//2
-                capture_range['left'] = x - capture_range['width']//2
+                x, y = pag.position()  # 返回鼠标的坐标
+                capture_range["top"] = y - capture_range["height"] // 2
+                capture_range["left"] = x - capture_range["width"] // 2
                 frame = capture.grab(capture_range)
                 frame = np.array(frame)
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
@@ -133,8 +136,6 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
     except Exception as e:
         cv2.destroyAllWindows()
         raise e
-
-
 
 
 def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
@@ -165,9 +166,6 @@ def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
     except Exception as e:
         cv2.destroyAllWindows()
         raise e
-
-
-
 
 
 def acquire_model():
