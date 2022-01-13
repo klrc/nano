@@ -162,10 +162,10 @@ def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
 
 
 def acquire_model():
-    from nano.models.model_zoo.nano_ghost import GhostNano_3x3_m96
+    from nano.models.model_zoo.nano_ghost import GhostNano_3x4_m96
 
-    model = GhostNano_3x3_m96(num_classes=3)
-    model.load_state_dict(torch.load("release/GhostNano_3x3_m96/GhostNano_3x3_m96.pt", map_location="cpu"))
+    model = GhostNano_3x4_m96(num_classes=3)
+    model.load_state_dict(torch.load("release/GhostNano_3x4_m96/GhostNano_3x4_m96.pt", map_location="cpu"))
     return model
 
 
