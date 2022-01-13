@@ -35,6 +35,7 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
                 out = []
                 for offset_h, offset_w in ( (0, 0),(cw, 0),(0, ch), (cw, ch)):
                     _sliced = x[:,offset_h:offset_h+ch, offset_w:offset_w+cw].unsqueeze(0)
+                    print(_sliced.shape)
                     _sr = model(_sliced)  # inference and training outputs
                     _sr[:, 0] += offset_w
                     _sr[:, 1] += offset_h
@@ -43,6 +44,7 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
                     # Run NMS
                     _sout = non_max_suppression(_sr, conf_thres, iou_thres, focal_nms=True, focal_gamma=1)[0]  # batch 0
                     out.append(_sout)
+                    print(len(out), '-----------')
             bbox_queue.put(out)
 
 
