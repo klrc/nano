@@ -9,15 +9,14 @@ class NanoHead(nn.Module):
     NanoDet head with QFL only (coupled)
     """
 
-    def __init__(self, in_channels=(96, 96, 96), hidden_channels=96, strides=(8, 16, 32), num_classes=80):
+    def __init__(self, in_channels=96, hidden_channels=96, strides=(8, 16, 32), num_classes=80):
         super().__init__()
         self.convs = nn.ModuleList()
         self.strides = strides
         self.debug = False
-        assert len(strides) == len(in_channels)
+        assert in_channels == hidden_channels
 
-        for i in range(len(in_channels)):
-            assert in_channels[i] == hidden_channels
+        for i in range(len(strides)):
             out_channels = 4 + num_classes
             self.convs.append(
                 nn.Sequential(

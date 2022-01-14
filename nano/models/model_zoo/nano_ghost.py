@@ -9,15 +9,14 @@ from nano.models.heads.nanodet_head import NanoHead
 
 
 
-# Params size (MB): 3.03
+# Params size (MB): 3.12
 class GhostNano_3x4_m96(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
-        model_width = (24, 96, 192, 288, 96, 96, 96, 96, 96)
-        strides = (8, 16, 32, 64)
-        self.backbone = EnhancedShuffleNetv2_3x(model_width[:4])
-        self.neck = GhostPAN(model_width[1:4], model_width[4:-1])
-        self.head = NanoHead(model_width[4:-1], model_width[-1], strides, num_classes)
+        backbone_width, neck_width, strides = ((24, 96, 192, 288), 96, (8, 16, 32, 64))
+        self.backbone = EnhancedShuffleNetv2_3x(backbone_width)
+        self.neck = GhostPAN(backbone_width[1:], neck_width, len(strides))
+        self.head = NanoHead(neck_width, neck_width, strides, num_classes)
         self.num_classes = num_classes
         self.strides = strides
 
@@ -32,11 +31,10 @@ class GhostNano_3x4_m96(nn.Module):
 class GhostNano_4x3_m96(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
-        model_width = (24, 48, 96, 192, 288, 96, 96, 96, 96)
-        strides = (8, 16, 32)
-        self.backbone = EnhancedShuffleNetv2_4x(model_width[:5])
-        self.neck = GhostPAN(model_width[1:5], model_width[5:-1])
-        self.head = NanoHead(model_width[5:-1], model_width[-1], strides, num_classes)
+        backbone_width, neck_width, strides = ((24, 48, 96, 192, 288), 96, (8, 16, 32))
+        self.backbone = EnhancedShuffleNetv2_4x(backbone_width)
+        self.neck = GhostPAN(backbone_width[1:], neck_width, len(strides))
+        self.head = NanoHead(neck_width, neck_width, strides, num_classes)
         self.num_classes = num_classes
         self.strides = strides
 
@@ -51,11 +49,10 @@ class GhostNano_4x3_m96(nn.Module):
 class GhostNano_3x3_m96(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
-        model_width = (24, 96, 192, 288, 96, 96, 96, 96)
-        strides = (8, 16, 32)
-        self.backbone = EnhancedShuffleNetv2_3x(model_width[:4])
-        self.neck = GhostPAN(model_width[1:4], model_width[4:-1])
-        self.head = NanoHead(model_width[4:-1], model_width[-1], strides, num_classes)
+        backbone_width, neck_width, strides = ((24, 96, 192, 288), 96, (8, 16, 32))
+        self.backbone = EnhancedShuffleNetv2_3x(backbone_width)
+        self.neck = GhostPAN(backbone_width[1:], neck_width, len(strides))
+        self.head = NanoHead(neck_width, neck_width, strides, num_classes)
         self.num_classes = num_classes
         self.strides = strides
 
@@ -70,11 +67,10 @@ class GhostNano_3x3_m96(nn.Module):
 class GhostNano_3x3_s64(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
-        model_width = (24, 64, 128, 192, 64, 64, 64, 64)
-        strides = (8, 16, 32)
-        self.backbone = EnhancedShuffleNetv2_3x(model_width[:4])
-        self.neck = GhostPAN(model_width[1:4], model_width[4:-1])
-        self.head = NanoHead(model_width[4:-1], model_width[-1], strides, num_classes)
+        backbone_width, neck_width, strides = ((24, 64, 128, 192), 64, (8, 16, 32))
+        self.backbone = EnhancedShuffleNetv2_3x(backbone_width)
+        self.neck = GhostPAN(backbone_width[1:], neck_width, len(strides))
+        self.head = NanoHead(neck_width, neck_width, strides, num_classes)
         self.num_classes = num_classes
         self.strides = strides
 
@@ -88,11 +84,10 @@ class GhostNano_3x3_s64(nn.Module):
 class GhostNano_3x3_s32(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
-        model_width = (24, 64, 128, 192, 32, 32, 32, 32)
-        strides = (8, 16, 32)
-        self.backbone = EnhancedShuffleNetv2_3x(model_width[:4])
-        self.neck = GhostPAN(model_width[1:4], model_width[4:-1])
-        self.head = NanoHead(model_width[4:-1], model_width[-1], strides, num_classes)
+        backbone_width, neck_width, strides = ((24, 64, 128, 192), 32, (8, 16, 32))
+        self.backbone = EnhancedShuffleNetv2_3x(backbone_width)
+        self.neck = GhostPAN(backbone_width[1:], neck_width, len(strides))
+        self.head = NanoHead(neck_width, neck_width, strides, num_classes)
         self.num_classes = num_classes
         self.strides = strides
 
@@ -110,5 +105,6 @@ if __name__ == "__main__":
     x = torch.rand(1, 3, 224, 416)
     model.eval()
     y = model(x)
-    print(y[0][100])
+    for yi in y:
+        print(yi.shape)
     check_size(model)

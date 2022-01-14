@@ -27,11 +27,11 @@ if __name__ == "__main__":
     # ========================================================================
 
     for model_type, batch_size in (
-        # (GhostNano_3x4_m96, 32), 
+        (GhostNano_3x4_m96, 16),
         (GhostNano_4x3_m96, 16),
+        (GhostNano_3x3_m96, 16),
+        (GhostNano_3x3_s64, 64),
         (GhostNano_3x3_s32, 64), 
-        (GhostNano_3x3_s64, 64), 
-        (GhostNano_3x3_m96, 32),
     ):
         # --------------------------------------------------
         try:
@@ -39,7 +39,7 @@ if __name__ == "__main__":
             annotations_root = "/home/sh/Datasets/coco3/labels/train"
             base = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, min_size=416)
             base = SizeLimit(base, 50000)
-            base = RandomScale(base, p=0.2)
+            base = RandomScale(base, p=0.5)
             base = Affine(base, p_flip=0.5, p_shear=0.2)
             base = HSVTransform(base, p=0.2)
             base = Albumentations(base, "random_blind")
