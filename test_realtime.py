@@ -96,6 +96,7 @@ def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_nam
         else:
             x = bbox_set.clone()
             x[..., :4] /= ratio  # rescale to raw image size
+            centers /= ratio  # rescale to raw image size
             frame = draw_center_points(frame, centers, alphas=alphas)
             frame = cv2_draw_bbox(frame, x, class_names)
         cv2.imshow("frame", frame)
