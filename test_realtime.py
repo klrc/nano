@@ -90,14 +90,14 @@ def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_nam
             # print("put frame", capture_queue.qsize())
             capture_queue.put(frame)
         if not result_queue.empty():  # update bbox_set
-            bbox_set, centers, alphas = result_queue.get()
+            bbox_set, centers, _ = result_queue.get()
         if len(bbox_set) == 0:
             print("nothing detected")
         else:
             x = bbox_set.clone()
             x[..., :4] /= ratio  # rescale to raw image size
             centers /= ratio  # rescale to raw image size
-            frame = draw_center_points(frame, centers, alphas=alphas)
+            frame = draw_center_points(frame, centers, thickness=1)
             frame = cv2_draw_bbox(frame, x, class_names)
         cv2.imshow("frame", frame)
         if always_on_top:
