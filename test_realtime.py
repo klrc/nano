@@ -62,7 +62,6 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
                 center_canvas = frame.copy()
                 center_canvas = draw_center_points(center_canvas, centers, alphas)
                 cv2.imshow("centers", center_canvas)
-                results = model(x.unsqueeze(0))
                 # Run NMS
                 out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=True)[0]  # batch 0
             bbox_queue.put(out)
