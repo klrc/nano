@@ -57,7 +57,7 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, result_que
                 results, grid_mask, stride_mask = model(x.unsqueeze(0))
                 centers = (grid_mask[0] + 0.5) * stride_mask[0].unsqueeze(-1)
                 alphas = results[0, :, 4:].max(dim=-1).values
-                mask = alphas > iou_thres
+                mask = alphas >= iou_thres
                 centers, alphas = centers[mask], alphas[mask]
                 # Run NMS
                 out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=True)[0]  # batch 0
