@@ -9,6 +9,9 @@ from nano.ops.box2d import non_max_suppression
 
 
 def cv2_draw_bbox(frame, x, class_names):
+    """
+    draw bounding boxes with builtin opencv2 fuction
+    """
     # xyxy-conf-cls
     box_classes = [class_names[n] for n in x[..., 5].cpu().int()]
     box_labels = [f"{cname} {conf:.2f}" for cname, conf in zip(box_classes, x[..., 4])]
@@ -20,7 +23,25 @@ def cv2_draw_bbox(frame, x, class_names):
     )
 
 
-def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue):
+def overlap_split(x, model):
+    """
+    split the canvas into tl, tr, bl, br for high-resolution detection
+    """
+    h, w = x.size(-2), x.size(-1)
+    sh, sw = h + 64, w + 64
+    results = []
+    for offset_h, offset_w in ((0, 0), (0, w - sw), (h - sh, 0), (h - sw, w - sw)):
+        _sliced = x[:, offset_h : offset_h + sh, offset_w : offset_w + sw].unsqueeze(0)
+        _sr = model(_sliced)  # inference and training outputs
+        _sr[..., 0] += offset_w
+        _sr[..., 1] += offset_h
+        _sr[..., 2] += offset_w
+        _sr[..., 3] += offset_h
+        results.append(_sr)
+    return torch.cat(results, 1)
+
+
+def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue, overlap=False):
     model = acquire_model()
     model.eval().to(device)
     print("> model online.")
@@ -31,29 +52,21 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
                 frame = capture_queue.get()
                 # process image
                 x = transforms(frame).to(device)
-                h, w = x.size(-2), x.size(-1)
-                overlap = 64
-                sh, sw = h + overlap, w + overlap
-                results = []
-                for offset_h, offset_w in ((0, 0), (0, w-sw), (h-sh, 0), (h-sw, w-sw)):
-                    _sliced = x[:, offset_h : offset_h + sh, offset_w : offset_w + sw].unsqueeze(0)
-                    _sr = model(_sliced)  # inference and training outputs
-                    _sr[..., 0] += offset_w
-                    _sr[..., 1] += offset_h
-                    _sr[..., 2] += offset_w
-                    _sr[..., 3] += offset_h
-                    results.append(_sr)
-                results = torch.cat(results, 1)
+                if overlap:
+                    results = overlap_split(x, model)
+                else:
+                    results = model(x.unsqueeze(0))
                 # Run NMS
                 out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=True, focal_gamma=1)[0]  # batch 0
             bbox_queue.put(out)
 
 
-def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu", always_on_top=False):
+def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu", overlap=True, always_on_top=False):
     cap_h, cap_w = capture_size
-    ratio = 832 / max(capture_size)  # h, w <= 416
-    inf_h = int(np.ceil(cap_h * ratio / 64) * 64)  # (padding for Thinkpad-P51 front camera)
-    inf_w = int(np.ceil(cap_w * ratio / 64) * 64)  # (padding for Thinkpad-P51 front camera)
+    detect_res = 416 * 2 + 64 if overlap else 416
+    ratio = detect_res / max(capture_size)  # h, w <= 416
+    inf_h = int(np.ceil(cap_h * ratio / 32) * 32)  # (padding for Thinkpad-P51 front camera)
+    inf_w = int(np.ceil(cap_w * ratio / 32) * 32)  # (padding for Thinkpad-P51 front camera)
     border_h = int((inf_h / ratio - cap_h) // 2)
     border_w = int((inf_w / ratio - cap_w) // 2)
     inference_size = (inf_h, inf_w)
@@ -62,7 +75,7 @@ def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_nam
     bbox_set = []
 
     # inference process --------------
-    proc_1 = Process(target=detection, args=[conf_thres, iou_thres, inference_size, device, capture_queue, result_queue])
+    proc_1 = Process(target=detection, args=[conf_thres, iou_thres, inference_size, device, capture_queue, result_queue, overlap])
     proc_1.daemon = True
     proc_1.start()
 
@@ -137,7 +150,7 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
         raise e
 
 
-def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
+def test_yuv(conf_thres, iou_thres, class_names, device="cpu",  overlap=True):
     import os
     import time
 
@@ -161,7 +174,7 @@ def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
                     yield frame
                     time.sleep(1 / fps)
 
-        test_video(capture_fn(), capture_size, conf_thres, iou_thres, class_names, device)
+        test_video(capture_fn(), capture_size, conf_thres, iou_thres, class_names, device, overlap)
     except Exception as e:
         cv2.destroyAllWindows()
         raise e
@@ -176,7 +189,7 @@ def acquire_model():
 
 
 if __name__ == "__main__":
-    test_front_camera(
+    test_yuv(
         0.25,
         0.45,
         ["person", "bike", "car"],
