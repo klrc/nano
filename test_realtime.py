@@ -3,7 +3,7 @@ import torch
 import torchvision.transforms as T
 from multiprocessing import Queue, Process
 import numpy as np
-from nano.datasets.coco_box2d_visualize import draw_bounding_boxes
+from nano.datasets.coco_box2d_visualize import draw_bounding_boxes, draw_center_points
 
 from nano.ops.box2d import non_max_suppression
 
@@ -44,6 +44,7 @@ def overlap_split(x, model):
 def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue):
     model = acquire_model()
     model.eval().to(device)
+    model.head.debug = True
     print("> model online.")
     transforms = T.Compose([T.ToPILImage(), T.Resize(inf_size), T.ToTensor()])
     with torch.no_grad():
@@ -53,6 +54,14 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
                 # process image
                 x = transforms(frame).to(device)
                 # results = overlap_split(x, model)
+                results, grid_mask, stride_mask = model(x.unsqueeze(0))
+                centers = (grid_mask[0] + 0.5) * stride_mask[0].unsqueeze(-1)
+                alphas = results[0, :, 4:].max(dim=-1).values
+                centers, alphas = centers[mask], alphas[mask]
+                mask = alphas > iou_thres
+                center_canvas = frame.copy()
+                center_canvas = draw_center_points(center_canvas, centers, alphas)
+                cv2.imshow("centers", center_canvas)
                 results = model(x.unsqueeze(0))
                 # Run NMS
                 out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=True)[0]  # batch 0
