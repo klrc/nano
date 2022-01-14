@@ -60,7 +60,7 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, result_que
                 mask = alphas >= iou_thres
                 centers, alphas = centers[mask], alphas[mask]
                 # Run NMS
-                out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=True)[0]  # batch 0
+                out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=False)[0]  # batch 0
                 result_queue.put((out, centers, alphas))
 
 
