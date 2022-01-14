@@ -91,7 +91,7 @@ if __name__ == "__main__":
     from nano.models.model_zoo.nano_ghost import GhostNano_3x4_m96
 
     model = GhostNano_3x4_m96(num_classes=3)
-    model.load_state_dict(torch.load("release/GhostNano_3x4_m96/GhostNano_3x4_m96.pt", map_location="cpu"))
+    model.load_state_dict(torch.load("?", map_location="cpu"))
     model.train().to("cpu")
 
     # test_prediction(model, "cpu")
