@@ -112,7 +112,7 @@ def draw_center_points(image, centers, color=None, thickness=3, alphas=None):
     color = rand_default_color(color)
     # set alphas
     if alphas is None:
-        alphas = [None for _ in len(centers)]
+        alphas = [None for _ in range(len(centers))]
     # draw points
     for center, alpha in zip(centers, alphas):
         image = draw_center_point(image, center, color, thickness, alpha)
