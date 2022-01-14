@@ -57,8 +57,8 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
                 results, grid_mask, stride_mask = model(x.unsqueeze(0))
                 centers = (grid_mask[0] + 0.5) * stride_mask[0].unsqueeze(-1)
                 alphas = results[0, :, 4:].max(dim=-1).values
-                centers, alphas = centers[mask], alphas[mask]
                 mask = alphas > iou_thres
+                centers, alphas = centers[mask], alphas[mask]
                 center_canvas = frame.copy()
                 center_canvas = draw_center_points(center_canvas, centers, alphas)
                 cv2.imshow("centers", center_canvas)
