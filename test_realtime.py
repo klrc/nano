@@ -55,6 +55,7 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, result_que
                 x = transforms(frame).to(device)
                 # results = overlap_split(x, model)
                 results, grid_mask, stride_mask = model(x.unsqueeze(0))
+                print(grid_mask.shape, stride_mask.shape)
                 centers = (grid_mask[0] + 0.5) * stride_mask[0].unsqueeze(-1)
                 alphas = results[0, :, 4:].max(dim=-1).values
                 mask = alphas >= iou_thres
