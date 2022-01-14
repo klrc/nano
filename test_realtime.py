@@ -141,7 +141,7 @@ def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
     import os
     import time
 
-    yuv_file = "1280x720_2.yuv"
+    yuv_file = "1280x720_5.yuv"
     yuv_h, yuv_w = 720, 1280
 
     try:
