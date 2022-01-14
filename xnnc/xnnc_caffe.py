@@ -2,6 +2,8 @@ import onnx
 from onnx import numpy_helper
 import caffe
 
+from xnnc.layers.slice import slice_killer
+
 from .layers._layer import parse_attribute
 from .layers.channel_shuffle import ShuffleChannel
 from .layers.resize import Resize
@@ -40,6 +42,7 @@ def export(onnx_path):
     prototxt_path = onnx_path.replace(".onnx", ".prototxt")
     caffemodel_path = onnx_path.replace(".onnx", ".caffemodel")
     graph = onnx.load(onnx_path).graph
+    slice_killer(graph)
     # model = shape_inference.infer_shapes(model)
     constant_dict = {str(n.output[0]): parse_attribute(n)["value"] for n in graph.node if n.op_type == "Constant"}
     tensor_dict = {t.name: numpy_helper.to_array(t) for t in graph.initializer}
@@ -54,11 +57,12 @@ def export(onnx_path):
         register_shape(layer, shape_dict, input_mode=True)
         layer_list.append(layer)
     # append main nodes
-    for node in graph.node:
+    num_total_nodes = len(graph.node)
+    for _it, node in enumerate(graph.node):
         if node.op_type == "Constant":
             continue
         node.name = iid(node.op_type)
-        print(f"processing node [{node.name}]")
+        print(f"INFO: Processing node ({_it/num_total_nodes:.0%}):", node.name)
         if node.op_type == "Conv":
             layer = Conv2d(node, tensor_dict, shape_dict)
         elif node.op_type == "Relu":
@@ -79,7 +83,7 @@ def export(onnx_path):
             layer = Relu6(node, constant_dict)
         elif node.op_type == "Resize":
             layer = Resize(node, tensor_dict, shape_dict)
-        elif node.op_type == "Slice":
+        elif node.op_type == "MergedSlice":
             layer = Slice(node, constant_dict)
         elif node.op_type == "channel_shuffle":
             layer = ShuffleChannel(node, constant_dict)

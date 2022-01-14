@@ -4,7 +4,7 @@ from . import xnnc_caffe
 from torch.onnx import OperatorExportTypes
 
 
-def make(model, model_name, cache_dir, output_names, dummy_input_shape=(1, 3, 224, 416)):
+def build(model, model_name, cache_dir, output_names, dummy_input_shape=(1, 3, 224, 416)):
     # create dirs
     for _dir in [cache_dir]:
         if not os.path.exists(_dir):

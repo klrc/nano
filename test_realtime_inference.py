@@ -8,39 +8,6 @@ from nano.datasets.coco_box2d_visualize import draw_bounding_boxes, draw_center_
 from nano.ops.box2d import non_max_suppression
 
 
-def cv2_draw_bbox(frame, x, class_names):
-    """
-    draw bounding boxes with builtin opencv2 fuction
-    """
-    # xyxy-conf-cls
-    box_classes = [class_names[n] for n in x[..., 5].cpu().int()]
-    box_labels = [f"{cname} {conf:.2f}" for cname, conf in zip(box_classes, x[..., 4])]
-    return draw_bounding_boxes(
-        image=frame,
-        boxes=x[..., :4],
-        boxes_label=box_labels,
-        alphas=x[..., 4],
-    )
-
-
-def overlap_split(x, model):
-    """
-    split the canvas into tl, tr, bl, br for high-resolution detection
-    """
-    h, w = x.size(-2), x.size(-1)
-    sh, sw = h + 64, w + 64
-    results = []
-    for offset_h, offset_w in ((0, 0), (0, w - sw), (h - sh, 0), (h - sw, w - sw)):
-        _sliced = x[:, offset_h : offset_h + sh, offset_w : offset_w + sw].unsqueeze(0)
-        _sr = model(_sliced)  # inference and training outputs
-        _sr[..., 0] += offset_w
-        _sr[..., 1] += offset_h
-        _sr[..., 2] += offset_w
-        _sr[..., 3] += offset_h
-        results.append(_sr)
-    return torch.cat(results, 1)
-
-
 def detection(conf_thres, iou_thres, inf_size, device, capture_queue, result_queue):
     model = acquire_model()
     model.eval().to(device)
@@ -52,10 +19,9 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, result_que
             if not capture_queue.empty():
                 frame = capture_queue.get()
                 # process image
-                x = transforms(frame).to(device)
+                x = transforms(frame).to(device).unsqueeze(0)
                 print(x.shape)
-                # results = overlap_split(x, model)
-                results, grid_mask, stride_mask = model(x.unsqueeze(0))
+                results, grid_mask, stride_mask = model(x)
                 centers = (grid_mask[0] + 0.5) * stride_mask[0].unsqueeze(-1)
                 alphas = results[0, :, 4:].max(dim=-1).values
                 mask = alphas >= iou_thres
@@ -67,7 +33,6 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, result_que
 
 def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu", always_on_top=False):
     cap_h, cap_w = capture_size
-    # ratio = (416 * 2 + 64) / max(capture_size)  # h, w <= 416
     ratio = 416 / max(capture_size)  # h, w <= 416
     inf_h = int(np.ceil(cap_h * ratio / 32) * 32)  # (padding for Thinkpad-P51 front camera)
     inf_w = int(np.ceil(cap_w * ratio / 32) * 32)  # (padding for Thinkpad-P51 front camera)
@@ -88,7 +53,6 @@ def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_nam
     for frame in capture_generator:
         frame = cv2.copyMakeBorder(frame, border_h, border_h, border_w, border_w, cv2.BORDER_CONSTANT, value=(114, 114, 114))
         if capture_queue.empty():
-            # print("put frame", capture_queue.qsize())
             capture_queue.put(frame)
         if not result_queue.empty():  # update bbox_set
             bbox_set, centers, _ = result_queue.get()
@@ -97,9 +61,12 @@ def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_nam
         else:
             x = bbox_set.clone()
             x[..., :4] /= ratio  # rescale to raw image size
-            centers /= ratio  # rescale to raw image size
+            centers /= ratio  # rescale to raw image sizection
+            box_classes = [class_names[n] for n in x[..., 5].cpu().int()]  # xyxy-conf-cls
+            box_labels = [f"{cname} {conf:.2f}" for cname, conf in zip(box_classes, x[..., 4])]
+            # draw bounding boxes with builtin opencv2 fu
             frame = draw_center_points(frame, centers, thickness=5)
-            frame = cv2_draw_bbox(frame, x, class_names)
+            frame = draw_bounding_boxes(frame, boxes=x[..., :4], boxes_label=box_labels, alphas=x[..., 4])
         cv2.imshow("frame", frame)
         if always_on_top:
             cv2.setWindowProperty("frame", cv2.WND_PROP_TOPMOST, 1)
@@ -190,14 +157,10 @@ def acquire_model():
     from nano.models.model_zoo.nano_ghost import GhostNano_3x4_m96
 
     model = GhostNano_3x4_m96(num_classes=3)
-    model.load_state_dict(torch.load("release/GhostNano_3x4_m96/GhostNano_3x4_m96.pt", map_location="cpu"))
     return model
 
 
 if __name__ == "__main__":
-    test_front_camera(
-        0.25,
-        0.45,
-        ["person", "bike", "car"],
-        device="cpu",
-    )
+    test_front_camera(0.25, 0.45, ["person", "bike", "car"], device="cpu")
+    # test_screenshot(0.25, 0.45, ["person", "bike", "car"], device="cpu")
+    # test_yuv(0.25, 0.45, ["person", "bike", "car"], device="cpu")

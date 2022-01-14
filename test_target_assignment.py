@@ -85,10 +85,9 @@ def test_assignment(model, device):
 
 
 if __name__ == "__main__":
-    from nano.models.model_zoo.nano_ghost import GhostNano_4x4_l128
+    from nano.models.model_zoo.nano_ghost import GhostNano_3x4_m96
 
-    model = GhostNano_4x4_l128(num_classes=3)
-    model.load_state_dict(torch.load("runs/train/exp125/last.pt", map_location='cpu')["state_dict"])
+    model = GhostNano_3x4_m96(num_classes=3)
 
     test_assignment(model, "cpu")
     # test_backward(model, 'cuda')

@@ -101,7 +101,7 @@ class GhostNano_3x3_s32(nn.Module):
 if __name__ == "__main__":
     from nano.models.utils import check_size
 
-    model = GhostNano_3x4_m96(3)
+    model = GhostNano_3x3_m96(3)
     x = torch.rand(1, 3, 224, 416)
     model.eval()
     y = model(x)

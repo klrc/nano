@@ -12,14 +12,15 @@ import xnnc
 
 if __name__ == "__main__":
     # model setup ===========================================
-    print("\n[model setup]")
+    print("INFO: Loading pytorch neural network model")
     from nano.models.model_zoo.nano_ghost import GhostNano_3x4_m96
 
     model_stamp = "GhostNano_3x4_m96"
     model = GhostNano_3x4_m96(num_classes=3)
-    model.load_state_dict(torch.load("runs/train/exp139/best.pt", map_location="cpu")["state_dict"])
+    model.load_state_dict(torch.load("runs/train/exp147/best.pt", map_location="cpu")["state_dict"])
     model.head = NanoHeadless(model.head)
-    print("adjust model..")
+
+    print("INFO: Replacing layer for support: ChannelShuffle")
     for m in model.modules():
         if isinstance(m, ESBlockS1):
             m.channel_shuffle = nn.ChannelShuffle(2)
@@ -27,15 +28,15 @@ if __name__ == "__main__":
 
     output_names = ["output_0", "output_1", "output_2"]
     class_names = ["person", "bike", "car"]
-    forced_export = False
-    print("start exporting", model_stamp, "..")
+    forced_export = True
+    print("INFO: Exporting model as", model_stamp, "..")
 
     # Copy source file for backup ===========================
-    print("build release dir ..")
     root = f"release/{model_stamp}"
+    print("INFO: Build release dir:", root)
     if os.path.exists(root):
         if forced_export:
-            # print("rm", root)
+            print("INFO: Forced exporting, removing", root)
             shutil.rmtree(root)
         else:
             raise FileExistsError("please check your release model stamp.")
@@ -44,20 +45,19 @@ if __name__ == "__main__":
     # Save .pt file =========================================
     target_pt = f"{root}/{model_stamp}.pt"
     torch.save(model.state_dict(), target_pt)  # save .pt file
-    print("saving pt file as", target_pt)
+    print("INFO: Saving pt file as", target_pt)
 
-    # Save .yaml configuration ==============================
-    print("\n[build release]")
+    # Save .txt configuration ==============================
     target_readme = f"{root}/readme.txt"
-    print("generate", target_readme)
+    print("INFO: Generate release information:", target_readme)
     with open(target_readme, "w") as f:  # save readme.txt configuration file
         f.write(f"build_time: {time.asctime(time.localtime(time.time()))}\n")
         f.write(f"output_names: {output_names}\n")
         f.write(f"class_names: {class_names}\n")
 
     # # Generate onnx & caffe models ==========================
-    print("\n[build onnx & caffe model]")
-    onnx_path, caffemodel_path, prototxt_path = xnnc.make(
+    print("INFO: Build onnx & caffe model")
+    onnx_path, caffemodel_path, prototxt_path = xnnc.build(
         model,
         model_stamp,
         cache_dir=root,
