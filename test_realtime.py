@@ -41,7 +41,7 @@ def overlap_split(x, model):
     return torch.cat(results, 1)
 
 
-def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue, overlap=False):
+def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue):
     model = acquire_model()
     model.eval().to(device)
     print("> model online.")
@@ -52,19 +52,17 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
                 frame = capture_queue.get()
                 # process image
                 x = transforms(frame).to(device)
-                if overlap:
-                    results = overlap_split(x, model)
-                else:
-                    results = model(x.unsqueeze(0))
+                # results = overlap_split(x, model)
+                results = model(x.unsqueeze(0))
                 # Run NMS
-                out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=True, focal_gamma=1)[0]  # batch 0
+                out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=True, focal_gamma=1.5)[0]  # batch 0
             bbox_queue.put(out)
 
 
-def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu", overlap=True, always_on_top=False):
+def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu", always_on_top=False):
     cap_h, cap_w = capture_size
-    detect_res = 416 * 2 + 64 if overlap else 416
-    ratio = detect_res / max(capture_size)  # h, w <= 416
+    # ratio = (416 * 2 + 64) / max(capture_size)  # h, w <= 416
+    ratio = 416 / max(capture_size)  # h, w <= 416
     inf_h = int(np.ceil(cap_h * ratio / 32) * 32)  # (padding for Thinkpad-P51 front camera)
     inf_w = int(np.ceil(cap_w * ratio / 32) * 32)  # (padding for Thinkpad-P51 front camera)
     border_h = int((inf_h / ratio - cap_h) // 2)
@@ -75,7 +73,7 @@ def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_nam
     bbox_set = []
 
     # inference process --------------
-    proc_1 = Process(target=detection, args=[conf_thres, iou_thres, inference_size, device, capture_queue, result_queue, overlap])
+    proc_1 = Process(target=detection, args=[conf_thres, iou_thres, inference_size, device, capture_queue, result_queue])
     proc_1.daemon = True
     proc_1.start()
 
@@ -150,7 +148,7 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
         raise e
 
 
-def test_yuv(conf_thres, iou_thres, class_names, device="cpu",  overlap=True):
+def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
     import os
     import time
 
@@ -174,7 +172,7 @@ def test_yuv(conf_thres, iou_thres, class_names, device="cpu",  overlap=True):
                     yield frame
                     time.sleep(1 / fps)
 
-        test_video(capture_fn(), capture_size, conf_thres, iou_thres, class_names, device, overlap)
+        test_video(capture_fn(), capture_size, conf_thres, iou_thres, class_names, device)
     except Exception as e:
         cv2.destroyAllWindows()
         raise e
