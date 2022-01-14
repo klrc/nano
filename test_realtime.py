@@ -52,8 +52,8 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
                 frame = capture_queue.get()
                 # process image
                 x = transforms(frame).to(device)
-                # results = overlap_split(x, model)
-                results = model(x.unsqueeze(0))
+                results = overlap_split(x, model)
+                # results = model(x.unsqueeze(0))
                 # Run NMS
                 out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=True, focal_gamma=1)[0]  # batch 0
             bbox_queue.put(out)
@@ -61,8 +61,8 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
 
 def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu", always_on_top=False):
     cap_h, cap_w = capture_size
-    # ratio = (416 * 2 + 64) / max(capture_size)  # h, w <= 416
-    ratio = 416 / max(capture_size)  # h, w <= 416
+    ratio = (416 * 2 + 64) / max(capture_size)  # h, w <= 416
+    # ratio = 416 / max(capture_size)  # h, w <= 416
     inf_h = int(np.ceil(cap_h * ratio / 32) * 32)  # (padding for Thinkpad-P51 front camera)
     inf_w = int(np.ceil(cap_w * ratio / 32) * 32)  # (padding for Thinkpad-P51 front camera)
     border_h = int((inf_h / ratio - cap_h) // 2)
