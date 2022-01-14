@@ -41,7 +41,7 @@ def overlap_split(x, model):
     return torch.cat(results, 1)
 
 
-def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue):
+def detection(conf_thres, iou_thres, inf_size, device, capture_queue, result_queue):
     model = acquire_model()
     model.eval().to(device)
     model.head.debug = True
@@ -59,12 +59,9 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, bbox_queue
                 alphas = results[0, :, 4:].max(dim=-1).values
                 mask = alphas > iou_thres
                 centers, alphas = centers[mask], alphas[mask]
-                center_canvas = frame.copy()
-                center_canvas = draw_center_points(center_canvas, centers, alphas=alphas)
-                cv2.imshow("centers", center_canvas)
                 # Run NMS
                 out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=True)[0]  # batch 0
-            bbox_queue.put(out)
+                result_queue.put((out, centers, alphas))
 
 
 def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu", always_on_top=False):
@@ -93,12 +90,13 @@ def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_nam
             # print("put frame", capture_queue.qsize())
             capture_queue.put(frame)
         if not result_queue.empty():  # update bbox_set
-            bbox_set = result_queue.get()
+            bbox_set, centers, alphas = result_queue.get()
         if len(bbox_set) == 0:
             print("nothing detected")
         else:
             x = bbox_set.clone()
             x[..., :4] /= ratio  # rescale to raw image size
+            frame = draw_center_points(frame, centers, alphas=alphas)
             frame = cv2_draw_bbox(frame, x, class_names)
         cv2.imshow("frame", frame)
         if always_on_top:
