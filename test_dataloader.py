@@ -10,8 +10,8 @@ from nano.datasets.coco_box2d_visualize import draw_bounding_boxes
 
 
 # preset configurations
-img_root = "/home/sh/Datasets/coco3/images/train"
-label_root = "/home/sh/Datasets/coco3/labels/train"
+img_root = "../datasets/coco3/images/train"
+label_root = "../datasets/coco3/labels/train"
 names = ["person", "bike", "car"]
 
 

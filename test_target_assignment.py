@@ -13,8 +13,8 @@ from nano.datasets.coco_box2d import collate_fn
 
 
 # preset configurations
-img_root = "/home/sh/Datasets/coco3/images/val"
-label_root = "/home/sh/Datasets/coco3/labels/val"
+img_root = "../datasets/coco3/images/val"
+label_root = "../datasets/coco3/labels/val"
 names = ["person", "bike", "car"]
 
 

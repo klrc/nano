@@ -35,8 +35,8 @@ if __name__ == "__main__":
     ):
         # --------------------------------------------------
         try:
-            imgs_root = "/home/sh/Datasets/coco3/images/train"
-            annotations_root = "/home/sh/Datasets/coco3/labels/train"
+            imgs_root = "../datasets/coco3/images/train"
+            annotations_root = "../datasets/coco3/labels/train"
             base = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, min_size=416)
             base = SizeLimit(base, 50000)
             base = RandomScale(base, p=0.5)
@@ -45,8 +45,8 @@ if __name__ == "__main__":
             base = Albumentations(base, "random_blind")
             base = Mosaic4(base, img_size=448)
             trainset = ToTensor(base)
-            imgs_root = "/home/sh/Datasets/coco3/images/val"
-            annotations_root = "/home/sh/Datasets/coco3/labels/val"
+            imgs_root = "../datasets/coco3/images/val"
+            annotations_root = "../datasets/coco3/labels/val"
             base = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, max_size=416)
             valset = ToTensor(base)
 

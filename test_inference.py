@@ -7,12 +7,11 @@ from nano.datasets.coco_box2d import MSCOCO
 from nano.datasets.coco_box2d_transforms import SizeLimit, ToTensor
 from nano.datasets.coco_box2d_visualize import draw_bounding_boxes
 from nano.datasets.coco_box2d import letterbox_collate_fn
-from nano.ops.box2d import non_max_suppression
 
 
 # preset configurations
-img_root = "/home/sh/Datasets/coco3/images/val"
-label_root = "/home/sh/Datasets/coco3/labels/val"
+img_root = "../datasets/coco3/images/val"
+label_root = "../datasets/coco3/labels/val"
 names = ["person", "bike", "car"]
 
 
