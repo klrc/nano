@@ -58,7 +58,7 @@ if __name__ == "__main__":
             class_names = ["person", "bike", "car"]
             criteria = SimOTA(3, True)
 
-            logger = wandb.init(project="nano", dir="./runs")
+            logger = wandb.init(project="nano", dir="./runs", mode='offline')
             trainer.run(model, train_loader, val_loader, class_names, criteria, device, batch_size=batch_size, patience=4, epochs=50, wandb_logger=logger)
             del model, criteria, train_loader, val_loader, trainset, valset
         except Exception as e:

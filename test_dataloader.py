@@ -4,7 +4,6 @@ import random
 from torch.utils import data
 
 
-
 from nano.datasets.coco_box2d import MSCOCO
 from nano.datasets.coco_box2d_transforms import Affine, Albumentations, ClassMapping, HSVTransform, RandomScale, SizeLimit, ToTensor, Mosaic4
 from nano.datasets.coco_box2d_visualize import draw_bounding_boxes
@@ -24,6 +23,7 @@ def test_load():
     str_labels = [names[x] for x in labels[..., 0].cpu().int()]
     cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
     cv2.imwrite("test_load.png", cv_img)
+
 
 def test_hsvtransform():
     dataset = MSCOCO(img_root, label_root)
@@ -48,12 +48,13 @@ def test_randomscale():
         cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
         cv2.imwrite(f"test_randomscale_{i}.png", cv_img)
 
+
 def test_classmapping():
     img_root_cm = "/home/sh/Datasets/coco128/images/train2017"
     label_root_cm = "/home/sh/Datasets/coco128/labels/train2017"
-    names_cm = ['person', 'bike', 'car']
+    names_cm = ["person", "bike", "car"]
     dataset = MSCOCO(img_root_cm, label_root_cm)
-    dataset = ClassMapping(dataset, {0:0, 1:1, 2:2, 3:1, 5:2, 7:2})
+    dataset = ClassMapping(dataset, {0: 0, 1: 1, 2: 2, 3: 1, 5: 2, 7: 2})
     dataset = SizeLimit(dataset, limit=10)
     dataset = ToTensor(dataset)
     for i in range(10):
@@ -62,6 +63,7 @@ def test_classmapping():
         str_labels = [names_cm[x] for x in labels[..., 0].cpu().int()]
         cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
         cv2.imwrite(f"test_classmapping_{i}.png", cv_img)
+
 
 def test_mosaic4():
     dataset = MSCOCO(img_root, label_root, 416)
@@ -115,7 +117,7 @@ def test_combination():
     dataset = Affine(dataset)
     dataset = RandomScale(dataset, p=0.2)
     dataset = HSVTransform(dataset, p=0.2)
-    dataset = Albumentations(dataset, 'random_blind')
+    dataset = Albumentations(dataset, "random_blind")
     dataset = Mosaic4(dataset, 448)
     dataset = ToTensor(dataset)
     for i in range(10):
@@ -124,6 +126,23 @@ def test_combination():
         str_labels = [names[x] for x in labels[..., 0].cpu().int()]
         cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
         cv2.imwrite(f"test_combination_{i}.png", cv_img)
+
+
+def summary_bbox_size():
+    import tqdm
+    dataset = MSCOCO(img_root, label_root, min_size=416)
+    dataset = SizeLimit(dataset, limit=20000)
+    ratios = {}
+    for i in tqdm.tqdm(range(len(dataset))):
+        img, labels = dataset.__getitem__(i)
+        for c, x1, y1, x2, y2 in labels:
+            ratio = (y2 - y1) / (x2 - x1)
+            if c not in ratios:
+                ratios[c] = []
+            ratios[c].append(ratio)
+
+    for c, rarray in ratios.items():
+        print(c, sum(rarray) / len(rarray))
 
 
 if __name__ == "__main__":
@@ -135,4 +154,5 @@ if __name__ == "__main__":
     # test_affine()
     # test_albumentations()
     # test_sizelimit()
-    test_combination()
+    # test_combination()
+    summary_bbox_size()

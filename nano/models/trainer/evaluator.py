@@ -5,7 +5,6 @@ Validate a trained YOLOv5 model accuracy on a custom dataset
 
 import numpy as np
 import torch
-from torch.utils.data import dataloader
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
@@ -59,10 +58,11 @@ def run(model, class_names, dataloader, device, half=False, conf_thres=0.01, iou
     seen = 0
     names = {k: v for k, v in enumerate(class_names)}
     s = ("%20s" + "%11s" * 6) % ("Class", "Images", "Labels", "P", "R", "mAP@.5", "mAP@.5:.95")
+    print(s)
     p, r, f1, mp, mr, map50, map = [torch.zeros(1) for _ in range(7)]
     stats, ap, ap_class = [], [], []
 
-    for img, targets in tqdm(dataloader, desc=s):
+    for img, targets in tqdm(dataloader):
         img = img.to(device, non_blocking=True)
         img = img.half() if half else img.float()  # uint8 to fp16/32
         targets = targets.to(device)
