@@ -20,7 +20,6 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, result_que
                 frame = capture_queue.get()
                 # process image
                 x = transforms(frame).to(device).unsqueeze(0)
-                print(x.shape)
                 results, grid_mask, stride_mask = model(x)
                 centers = (grid_mask[0] + 0.5) * stride_mask[0].unsqueeze(-1)
                 alphas = results[0, :, 4:].max(dim=-1).values
@@ -34,8 +33,8 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, result_que
 def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu", always_on_top=False):
     cap_h, cap_w = capture_size
     ratio = 416 / max(capture_size)  # h, w <= 416
-    inf_h = int(np.ceil(cap_h * ratio / 32) * 32)  # (padding for Thinkpad-P51 front camera)
-    inf_w = int(np.ceil(cap_w * ratio / 32) * 32)  # (padding for Thinkpad-P51 front camera)
+    inf_h = int(np.ceil(cap_h * ratio / 64) * 64)  # (padding for Thinkpad-P51 front camera)
+    inf_w = int(np.ceil(cap_w * ratio / 64) * 64)  # (padding for Thinkpad-P51 front camera)
     border_h = int((inf_h / ratio - cap_h) // 2)
     border_w = int((inf_w / ratio - cap_w) // 2)
     inference_size = (inf_h, inf_w)
@@ -65,7 +64,7 @@ def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_nam
             box_classes = [class_names[n] for n in x[..., 5].cpu().int()]  # xyxy-conf-cls
             box_labels = [f"{cname} {conf:.2f}" for cname, conf in zip(box_classes, x[..., 4])]
             # draw bounding boxes with builtin opencv2 fu
-            frame = draw_center_points(frame, centers, thickness=5)
+            frame = draw_center_points(frame, centers, thickness=3)
             frame = draw_bounding_boxes(frame, boxes=x[..., :4], boxes_label=box_labels, alphas=x[..., 4])
         cv2.imshow("frame", frame)
         if always_on_top:
@@ -157,10 +156,11 @@ def acquire_model():
     from nano.models.model_zoo.nano_ghost import GhostNano_3x4_m96
 
     model = GhostNano_3x4_m96(num_classes=3)
+    model.load_state_dict(torch.load("release/GhostNano_3x4_m96/GhostNano_3x4_m96.pt", map_location="cpu"))
     return model
 
 
 if __name__ == "__main__":
-    test_front_camera(0.25, 0.45, ["person", "bike", "car"], device="cpu")
+    test_front_camera(0.25, 0.45, ["person", "bike", "car"], device="cuda")
     # test_screenshot(0.25, 0.45, ["person", "bike", "car"], device="cpu")
     # test_yuv(0.25, 0.45, ["person", "bike", "car"], device="cpu")

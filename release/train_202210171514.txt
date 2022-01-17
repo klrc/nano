@@ -1,0 +1,44 @@
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       5823       6391       0.34     0.0175    0.00123   0.000207
+              person       5823       4372     0.0188     0.0526    0.00322   0.000533
+                bike       5823        714          1          0   0.000398   7.81e-05
+                 car       5823       1305          0          0   6.69e-05      1e-05
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       5823       6391     0.0126      0.192    0.00328   0.000515
+              person       5823       4372    0.00274       0.46    0.00351   0.000507
+                bike       5823        714     0.0251      0.021    0.00384   0.000655
+                 car       5823       1305     0.0101      0.095    0.00248   0.000384
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       5823       6391    0.00348      0.279    0.00137   0.000212
+              person       5823       4372    0.00226      0.543    0.00197   0.000298
+                bike       5823        714    0.00624      0.133     0.0017   0.000272
+                 car       5823       1305    0.00193      0.161    0.00044   6.67e-05
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       5823       6391      0.669     0.0374    0.00105   0.000154
+              person       5823       4372    0.00763      0.112    0.00255   0.000372
+                bike       5823        714          1          0   5.05e-05    6.8e-06
+                 car       5823       1305          1          0   0.000544   8.17e-05
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       5823       6391      0.684     0.0234    0.00653    0.00106
+              person       5823       4372     0.0507     0.0702     0.0126    0.00199
+                bike       5823        714          1          0    0.00353   0.000556
+                 car       5823       1305          1          0     0.0034   0.000644
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       5823       6391     0.0326      0.217     0.0185    0.00332
+              person       5823       4372     0.0101      0.489     0.0324    0.00564
+                bike       5823        714      0.051     0.0658     0.0109     0.0021
+                 car       5823       1305     0.0366     0.0966     0.0123    0.00221
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2

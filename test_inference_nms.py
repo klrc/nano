@@ -17,7 +17,7 @@ names = ["person", "bike", "car"]
 
 
 def test_nms(model, device, focal_nms=True):
-    base = MSCOCO(imgs_root=img_root, annotations_root=label_root, max_size=416)
+    base = MSCOCO(imgs_root=img_root, annotations_root=label_root, max_size=448)
     base = SizeLimit(base, 100)
     trainset = ToTensor(base)
 
@@ -49,9 +49,10 @@ def test_nms(model, device, focal_nms=True):
             return
 
 if __name__ == "__main__":
-    from nano.models.model_zoo.nano_ghost import GhostNano_3x4_m96
+    from nano.models.model_zoo.nano_ghost import GhostNano_3x3_m96
 
-    model = GhostNano_3x4_m96(num_classes=3)
+    model = GhostNano_3x3_m96(num_classes=3)
+    model.load_state_dict(torch.load("release/GhostNano_3x3_m96/GhostNano_3x3_m96.pt", map_location="cpu"))
     model.train().to("cpu")
 
     test_nms(model, 'cpu', focal_nms=True)

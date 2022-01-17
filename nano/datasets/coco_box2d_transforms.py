@@ -303,50 +303,18 @@ class Albumentations(DatasetLayer):
         return img, label
 
 
-class ClassMapping(DatasetLayer):
-    """
-    map dataset label classes
-    """
-
-    def __init__(self, base=None, map_dict=None) -> None:
-        super().__init__(base, MSCOCO)
-        assert isinstance(map_dict, dict)
-        self.mapping = map_dict
-        self.data = self.base.data
-
-    def __len__(self):
-        return len(self.base)
-
-    def _yield_labels(self, index):
-        for lb in self.base._yield_labels(index):
-            cid = int(lb[0])
-            if cid in self.mapping:
-                lb[0] = self.mapping[cid]
-                yield lb
-
-    def __getitem__(self, index):
-        img, labels = self.base.__getitem__(index)
-        new_labels = []
-        for lb in labels:
-            cid = lb[0]
-            if cid in self.mapping:
-                lb[0] = self.mapping[cid]
-                new_labels.append(lb)
-        new_labels = np.array(new_labels)
-        return img, new_labels
-
-
 class SizeLimit(DatasetLayer):
     """
     limit the dataset size for quick scratch-training
     """
 
-    def __init__(self, base, limit=50000, sort_only=False) -> None:
-        super().__init__(base, MSCOCO, ClassMapping)
+    def __init__(self, base, limit=50000, sort_only=False, targets=None) -> None:
+        super().__init__(base, MSCOCO)
         if sort_only:
             limit = len(self.base)
         self.limit = min(limit, len(self.base))
         self.data = []
+        self.targets = targets
 
     def __len__(self):
         return self.limit
@@ -357,7 +325,8 @@ class SizeLimit(DatasetLayer):
             for i in tqdm(range(len(self.base)), desc="prepare for size limit"):
                 box_cids = []
                 for c, _, _, _, _ in self.base._yield_labels(i):
-                    box_cids.append(c)
+                    if self.targets is None or int(c) in self.targets:
+                        box_cids.append(c)
                 diversity = len(set(box_cids))
                 self.data.append((i, diversity))
             self.data = sorted(self.data, key=lambda x: x[1], reverse=True)

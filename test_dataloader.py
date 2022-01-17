@@ -5,7 +5,7 @@ from torch.utils import data
 
 
 from nano.datasets.coco_box2d import MSCOCO
-from nano.datasets.coco_box2d_transforms import Affine, Albumentations, ClassMapping, HSVTransform, RandomScale, SizeLimit, ToTensor, Mosaic4
+from nano.datasets.coco_box2d_transforms import Affine, Albumentations, HSVTransform, RandomScale, SizeLimit, ToTensor, Mosaic4
 from nano.datasets.coco_box2d_visualize import draw_bounding_boxes
 
 
@@ -23,6 +23,25 @@ def test_load():
     str_labels = [names[x] for x in labels[..., 0].cpu().int()]
     cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
     cv2.imwrite("test_load.png", cv_img)
+
+
+def test_classmapping():
+    img_root_cm = "../datasets/VOC/images/train2012"
+    label_root_cm = "../datasets/VOC/labels/train2012"
+    from nano.datasets.class_utils import voc_classes, c26_classes, _voc_to_c26, create_class_mapping
+
+    class_mapping = create_class_mapping(voc_classes, c26_classes, _voc_to_c26)
+
+    names_cm = c26_classes
+    dataset = MSCOCO(img_root_cm, label_root_cm, class_map=class_mapping)
+    dataset = SizeLimit(dataset, limit=10, targets=(0, 1, 2))
+    dataset = ToTensor(dataset)
+    for i in range(10):
+        rand = random.randint(0, len(dataset) - 1)
+        img, labels = dataset.__getitem__(rand)
+        str_labels = [names_cm[x] for x in labels[..., 0].cpu().int()]
+        cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
+        cv2.imwrite(f"test_classmapping_{i}.png", cv_img)
 
 
 def test_hsvtransform():
@@ -47,22 +66,6 @@ def test_randomscale():
         str_labels = [names[x] for x in labels[..., 0].cpu().int()]
         cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
         cv2.imwrite(f"test_randomscale_{i}.png", cv_img)
-
-
-def test_classmapping():
-    img_root_cm = "/home/sh/Datasets/coco128/images/train2017"
-    label_root_cm = "/home/sh/Datasets/coco128/labels/train2017"
-    names_cm = ["person", "bike", "car"]
-    dataset = MSCOCO(img_root_cm, label_root_cm)
-    dataset = ClassMapping(dataset, {0: 0, 1: 1, 2: 2, 3: 1, 5: 2, 7: 2})
-    dataset = SizeLimit(dataset, limit=10)
-    dataset = ToTensor(dataset)
-    for i in range(10):
-        rand = random.randint(0, len(dataset) - 1)
-        img, labels = dataset.__getitem__(rand)
-        str_labels = [names_cm[x] for x in labels[..., 0].cpu().int()]
-        cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
-        cv2.imwrite(f"test_classmapping_{i}.png", cv_img)
 
 
 def test_mosaic4():
@@ -130,6 +133,7 @@ def test_combination():
 
 def summary_bbox_size():
     import tqdm
+
     dataset = MSCOCO(img_root, label_root, min_size=416)
     dataset = SizeLimit(dataset, limit=20000)
     ratios = {}
@@ -149,10 +153,10 @@ if __name__ == "__main__":
     # test_load()
     # test_hsvtransform()
     # test_randomscale()
-    # test_classmapping()
+    test_classmapping()
     # test_mosaic4()
     # test_affine()
     # test_albumentations()
     # test_sizelimit()
     # test_combination()
-    summary_bbox_size()
+    # summary_bbox_size()

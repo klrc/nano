@@ -19,7 +19,7 @@ class MSCOCO(DatasetLayer):
         class_id, x, y, w, h
     """
 
-    def __init__(self, imgs_root=None, annotations_root=None, min_size=None, max_size=None, logger=None) -> None:
+    def __init__(self, imgs_root=None, annotations_root=None, min_size=None, max_size=None, class_map=None) -> None:
         super().__init__()
         self.data = []
         # load & check annotation exists
@@ -35,18 +35,7 @@ class MSCOCO(DatasetLayer):
         assert min_size is None or max_size is None, 'only 1 of min/max can be set'
         self.min_size = min_size
         self.max_size = max_size
-
-        # set logger
-        if logger is not None:
-            assert hasattr(logger, "log")
-        self.logger = logger
-
-    def log(self, msg):
-        # print log message to stdout or logger
-        if self.logger is not None:
-            self.logger.log(msg)
-        else:
-            print(msg)
+        self.map_dict = class_map
 
     def __add__(self, other):
         assert isinstance(other, MSCOCO)
@@ -64,7 +53,7 @@ class MSCOCO(DatasetLayer):
                 for x in f.readlines():
                     assert len(x.strip().split(" ")) == 5, x
         except Exception as e:
-            self.log(f"WARNING: Ignoring corrupted image and/or label {image_path}: {e}")
+            print(f"WARNING: Ignoring corrupted image and/or label {image_path}: {e}")
             return False
         return True
 
@@ -74,8 +63,16 @@ class MSCOCO(DatasetLayer):
         '''
         _, annotation_path = self.data[index]
         with open(annotation_path, "r") as f:
-            for x in f.readlines():
-                yield x.strip().split(" ")
+            if self.map_dict is not None:
+                for x in f.readlines():
+                    lb = x.strip().split(" ")
+                    cid = int(lb[0])
+                    if cid in self.map_dict:
+                        lb[0] = self.map_dict[cid]
+                        yield lb
+            else:
+                for x in f.readlines():
+                    yield x.strip().split(" ")
 
     def __getitem__(self, index):
         """
@@ -123,7 +120,18 @@ class MSCOCO(DatasetLayer):
             if len(labels) > 0:
                 labels[:, 1:] = xywh2xyxy(labels[:, 1:])
             self.label_cache[index] = labels
-        return img, labels.copy()
+        labels = labels.copy()
+        if self.map_dict is None:
+            return img, labels
+        else:
+            new_labels = []
+            for lb in labels:
+                cid = lb[0]
+                if cid in self.map_dict:
+                    lb[0] = self.map_dict[cid]
+                    new_labels.append(lb)
+            new_labels = np.array(new_labels)
+            return img, new_labels
 
     def __len__(self):
         return len(self.data)

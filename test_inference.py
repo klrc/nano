@@ -16,7 +16,7 @@ names = ["person", "bike", "car"]
 
 
 def test_prediction(model, device):
-    base = MSCOCO(imgs_root=img_root, annotations_root=label_root, max_size=416)
+    base = MSCOCO(imgs_root=img_root, annotations_root=label_root, max_size=448)
     base = SizeLimit(base, 100)
     trainset = ToTensor(base)
 
