@@ -4,11 +4,9 @@ from nano.models.assigners.simota import (
     SimOTA,
 )
 from nano.models.model_zoo.nano_ghost import (
-    GhostNano_3x3_s32,
-    GhostNano_3x3_s64,
-    GhostNano_3x3_m96,
     GhostNano_3x4_m96,
-    GhostNano_4x3_m96,
+    GhostNano_3x3_s64,
+    GhostNano_3x3_s32,
 )
 from nano.datasets.class_utils import (
     coco_classes,

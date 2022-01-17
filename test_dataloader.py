@@ -1,9 +1,6 @@
 import cv2
 import random
 
-from torch.utils import data
-
-
 from nano.datasets.coco_box2d import MSCOCO
 from nano.datasets.coco_box2d_transforms import Affine, Albumentations, HSVTransform, RandomScale, SizeLimit, ToTensor, Mosaic4
 from nano.datasets.coco_box2d_visualize import draw_bounding_boxes

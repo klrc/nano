@@ -8,7 +8,6 @@ from nano.models.necks.ghost_pan import GhostPAN
 from nano.models.heads.nanodet_head import NanoHead
 
 
-
 # Params size (MB): 3.12
 class GhostNano_3x4_m96(nn.Module):
     def __init__(self, num_classes):
@@ -79,6 +78,7 @@ class GhostNano_3x3_s64(nn.Module):
         x = self.neck(x)
         x = self.head(x)
         return x
+
 
 # Params size (MB): 1.13
 class GhostNano_3x3_s32(nn.Module):

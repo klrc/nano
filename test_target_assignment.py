@@ -1,5 +1,4 @@
 import cv2
-import random
 import torch
 
 from torch.utils.data.dataloader import DataLoader
@@ -7,7 +6,7 @@ from torch.utils.data.dataloader import DataLoader
 
 from nano.datasets.coco_box2d import MSCOCO
 from nano.datasets.coco_box2d_transforms import Affine, Albumentations, SizeLimit, ToTensor, Mosaic4
-from nano.datasets.coco_box2d_visualize import draw_bounding_boxes, draw_center_points
+from nano.datasets.coco_box2d_visualize import draw_bounding_boxes
 from nano.models.assigners.simota import SimOTA
 from nano.datasets.coco_box2d import collate_fn
 

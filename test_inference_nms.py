@@ -30,7 +30,7 @@ def test_nms(model, device, focal_nms=True):
         img = img.to(device)
         # targets = targets.to(device)
         with torch.no_grad():
-            
+
             pred = model(img)
             pred = non_max_suppression(pred, 0.25, 0.45, focal_nms=focal_nms)[0]
 
@@ -47,6 +47,7 @@ def test_nms(model, device, focal_nms=True):
         i += 1
         if i >= 20:
             return
+
 
 if __name__ == "__main__":
     from nano.models.model_zoo.nano_ghost import GhostNano_3x3_m96

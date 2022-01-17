@@ -169,13 +169,13 @@ def letterbox_collate_fn(batch):
     max_w = math.ceil(max([x.shape[-1] for x in img_batch]) / 32) * 32
     img_batch = torch.ones((len(img_batch), img_batch[0].size(0), max_h, max_w)) * 114
     targets = []
-    for i, (img, l) in enumerate(batch):
+    for i, (img, _l) in enumerate(batch):
         _, h, w = img.shape
         pad_h = (max_h - h) // 2
         pad_w = (max_w - w) // 2
-        img_batch[i, :, pad_h : pad_h + h, pad_w : pad_w + w] = img
+        img_batch[i, :, pad_h: pad_h + h, pad_w: pad_w + w] = img
         pads = torch.tensor([0, pad_w, pad_h, pad_w, pad_h])
-        l = l + pads  # after padding
-        li = torch.ones((l.size(0), 1)) * i  # add target image index for build_targets()
-        targets.append(torch.cat([li, l], dim=1))
+        _l = _l + pads  # after padding
+        li = torch.ones((_l.size(0), 1)) * i  # add target image index for build_targets()
+        targets.append(torch.cat([li, _l], dim=1))
     return img_batch, torch.cat(targets, 0)

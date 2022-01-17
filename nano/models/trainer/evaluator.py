@@ -120,12 +120,9 @@ def run(model, class_names, dataloader, device, half=False, conf_thres=0.01, iou
 
 
 if __name__ == "__main__":
-    from nano.datasets.coco_box2d import MSCOCO, collate_fn, letterbox_collate_fn
+    from nano.datasets.coco_box2d import MSCOCO, letterbox_collate_fn
     from nano.models.model_zoo.nano_ghost import GhostNano_3x3_s32
-    from nano.datasets.coco_box2d_transforms import (
-        ToTensor,
-    )
-    from nano.models.trainer import load_device
+    from nano.datasets.coco_box2d_transforms import ToTensor
 
     imgs_root = "/home/sh/Datasets/coco3/images/val"
     annotations_root = "/home/sh/Datasets/coco3/labels/val"
