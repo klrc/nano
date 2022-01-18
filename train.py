@@ -57,7 +57,7 @@ if __name__ == "__main__":
             voc = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, min_size=416, class_map=voc_c26_mapping)
             base = coco + voc
 
-            # base = SizeLimit(base, 80000, targets=(0, 1, 2))
+            base = SizeLimit(base, 80000, targets=(0, 1, 2))
             base = RandomScale(base, p=1)
             base = Affine(base, p_flip=0.5, p_shear=0.2)
             base = HSVTransform(base, p=0.2)

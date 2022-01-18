@@ -71,7 +71,7 @@ def demo_fasterrcnn_test():
 
 def yolox_test():
     with docker_shell(root="/xnnc/Example/yolox-series") as s:
-        for custom_layer in ['yoloxpp',]:
+        for custom_layer in ['yoloxpp', 'slice']:
             s.exec_run(f"rm layers/{custom_layer}/CMakeCache.txt", stream=True)
             s.exec_run(f"rm -r layers/{custom_layer}/CMakeFiles", stream=True)
             s.exec_run(f"rm layers/{custom_layer}/Makefile", stream=True)
@@ -87,8 +87,8 @@ def yolox_test():
 
 
 if __name__ == "__main__":
-    demo_cadencenet_test()
+    # demo_cadencenet_test()
     # demo_resnet50_test()
     # yolov5_test()
     # custom_layer_test()
-    # yolox_test()
+    yolox_test()

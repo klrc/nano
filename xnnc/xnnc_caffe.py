@@ -2,7 +2,7 @@ import onnx
 from onnx import numpy_helper
 import caffe
 
-from xnnc.layers.slice import slice_killer
+from xnnc.layers.slice import slice_killer, Slice
 
 from .layers._layer import parse_attribute
 from .layers.channel_shuffle import ShuffleChannel
@@ -83,7 +83,7 @@ def export(onnx_path):
             layer = Relu6(node, constant_dict)
         elif node.op_type == "Resize":
             layer = Resize(node, tensor_dict, shape_dict)
-        elif node.op_type == "MergedSlice":
+        elif node.op_type == "UnifiedSlice":
             layer = Slice(node, constant_dict)
         elif node.op_type == "channel_shuffle":
             layer = ShuffleChannel(node, constant_dict)

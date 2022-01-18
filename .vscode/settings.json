@@ -6,4 +6,7 @@
         "--line-length",
         "160"
     ],
+    "files.associations": {
+        "vector": "cpp"
+    },
 }

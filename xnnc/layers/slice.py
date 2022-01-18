@@ -16,7 +16,7 @@ def slice_killer(graph):
     for data, layers in slice_groups.items():
         # generate a caffe slice layer
         # data starts ends axes steps
-        data = str(layers[0].input[0]) # data
+        data = str(layers[0].input[0])  # data
         axes = layers[0].input[3]  # axes
         assert all([data == layer.input[0] for layer in layers])
         inputs = [data]  # input blobs
@@ -54,15 +54,20 @@ class Slice:
         attrs = parse_attribute(node)
         self.axis = constant_dict[str(int(attrs["axes"]))][0]
         self.slice_points = [constant_dict[str(int(x))][0] for x in attrs["slice_points"]]
-        
+        self.max_axis = None
 
     def reshape(self, bottom_shapes):  # -> top_shapes
         bottom_shape = list(bottom_shapes[0])
-        # TODO： FIX THIS
-        # top_shapes = 
-        # top_shape[self.dim] = top_shape[self.dim] // self.chunks
-        # top_shapes = [top_shape for _ in range(self.chunks)]
-        # return top_shapes
+        self.max_axis = bottom_shape[self.axis]
+        # prepare start & end of each sliced outputs
+        top_shapes = []
+        slice_points = [0] + self.slice_points + [self.max_axis]
+        for i in range(len(slice_points) - 1):
+            start, end = slice_points[i], slice_points[i + 1]
+            top_shape = [int(x) for x in bottom_shape]
+            top_shape[self.axis] = end - start  # resize sliced dimension
+            top_shapes.append(top_shape)
+        return top_shapes
 
     def shadow_proto(self):
         return CaffeLayer(
@@ -71,22 +76,25 @@ class Slice:
             self.input_names,
             self.output_names,
             slice_param=dict(
-                axis=self.axes,
-                slice_point=[self.starts, self.ends],
+                axis=self.axis,
+                slice_point=self.slice_points,
             ),
         )._to_proto()
 
     def to_proto(self):
         # XNNC mResize layer definition.
+        slice_points = [0] + self.slice_points + [self.max_axis]
         txt_proto = ""
-        txt_proto += "layer {\n"
-        txt_proto += '  name: "{}"\n'.format(self.node_name)
-        txt_proto += '  type: "CppCustom"\n'
-        txt_proto += '  bottom: "{}"\n'.format(self.input_names[0])
-        txt_proto += '  top: "{}"\n'.format(self.output_names[0])
-        txt_proto += "  cpp_custom_param {\n"
-        txt_proto += '    module: "mSlice"\n'
-        txt_proto += '    param_map_str: "scaleX:{} scaleY:{} align_corners:1"\n'.format(int(self.scale_factor[0]), int(self.scale_factor[1]))
-        txt_proto += "  }\n"
-        txt_proto += "}\n"
+        for i in range(len(slice_points) - 1):
+            start, end = slice_points[i], slice_points[i + 1]
+            txt_proto += "layer {\n"
+            txt_proto += '  name: "{}_{}"\n'.format(self.node_name, i)
+            txt_proto += '  type: "CppCustom"\n'
+            txt_proto += '  bottom: "{}"\n'.format(self.input_names[0])
+            txt_proto += '  top: "{}"\n'.format(self.output_names[i])
+            txt_proto += "  cpp_custom_param {\n"
+            txt_proto += '    module: "slice"\n'
+            txt_proto += '    param_map_str: "axis:{} start:{} end:{}"\n'.format(int(self.axis), start, end)
+            txt_proto += "  }\n"
+            txt_proto += "}\n"
         return txt_proto
