@@ -12,13 +12,13 @@ from nano.datasets.class_utils import (
     coco_classes,
     voc_classes,
     c26_classes,
+    create_class_mapping,
     _coco_to_c26,
     _coco_to_c3,
     _voc_to_c26,
 )
 from nano.datasets.coco_box2d import (
     MSCOCO,
-    create_class_mapping,
     collate_fn,
     letterbox_collate_fn,
 )
@@ -47,8 +47,8 @@ if __name__ == "__main__":
 
             class_names = c26_classes
 
-            imgs_root = "../datasets/coco/images/train"
-            annotations_root = "../datasets/coco/labels/train"
+            imgs_root = "../datasets/coco/images/train2017"
+            annotations_root = "../datasets/coco/labels/train2017"
             coco_c26_mapping = create_class_mapping(coco_classes, c26_classes, _coco_to_c26)
             coco = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, min_size=416, class_map=coco_c26_mapping)
             imgs_root = "../datasets/VOC/images/train2012"
@@ -57,15 +57,15 @@ if __name__ == "__main__":
             voc = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, min_size=416, class_map=voc_c26_mapping)
             base = coco + voc
 
-            base = SizeLimit(base, 80000, targets=(0, 1, 2))
-            base = RandomScale(base, p=0.5)
+            # base = SizeLimit(base, 80000, targets=(0, 1, 2))
+            base = RandomScale(base, p=1)
             base = Affine(base, p_flip=0.5, p_shear=0.2)
             base = HSVTransform(base, p=0.2)
             base = Albumentations(base, "random_blind")
             base = Mosaic4(base, img_size=448)
             trainset = ToTensor(base)
-            imgs_root = "../datasets/coco/images/val"
-            annotations_root = "../datasets/coco/labels/val"
+            imgs_root = "../datasets/coco/images/val2017"
+            annotations_root = "../datasets/coco/labels/val2017"
             coco_c3_mapping = create_class_mapping(coco_classes, c26_classes, _coco_to_c3)
             base = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, max_size=448, class_map=coco_c3_mapping)
             valset = ToTensor(base)
@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
             model = model_type(num_classes=len(class_names))
             device = load_device("cuda:1")
-            criteria = SimOTA(3, True)
+            criteria = SimOTA(len(class_names), True)
 
             logger = wandb.init(project="nano", dir="./runs", mode="offline")
             trainer.run(model, train_loader, val_loader, class_names, criteria, device, batch_size=batch_size, patience=10, epochs=150, wandb_logger=logger)

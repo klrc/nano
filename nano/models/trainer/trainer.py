@@ -27,8 +27,11 @@ def load_device(device="cuda"):
         os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
     else:  # non-cpu device requested
         # check availability
+        if ':' in device:
+            device_id = device.split(':')[-1]
+            os.environ["CUDA_VISIBLE_DEVICES"] = device_id
         assert torch.cuda.is_available(), f"CUDA unavailable, invalid device {device} requested"
-    return torch.device(device)
+    return torch.device('cuda')
 
 
 def init_seeds(seed=0):

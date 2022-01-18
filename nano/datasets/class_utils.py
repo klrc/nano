@@ -259,8 +259,6 @@ _coco_to_c3 = {
     "bicycle": "bike",
     "car": "car",
     "motorcycle": "bike",
-    "airplane": "plane",
     "bus": "car",
-    "train": "train",
     "truck": "car",
 }

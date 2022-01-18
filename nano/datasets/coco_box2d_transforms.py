@@ -19,7 +19,7 @@ def center_crop(img, label, raw_size, croped_size, min_iou=0.4):
     ch, cw = croped_size
     border_h = (h - ch) // 2
     border_w = (w - cw) // 2
-    img = img[border_h : h - border_h, border_w : w - border_w]
+    img = img[border_h: h - border_h, border_w: w - border_w]
     if len(label) > 0:
         raw_boxsize = (label[:, 3] - label[:, 1]) * (label[:, 4] - label[:, 2])
         label[:, 1] = np.clip(label[:, 1] - border_w, 0, cw - 1)
@@ -42,7 +42,7 @@ def center_padding(img, label, raw_size, padded_size):
     border_h = (ph - h) // 2
     border_w = (pw - w) // 2
     new_img = np.ones((ph, pw, img.shape[-1]), img.dtype) * 114
-    new_img[border_h : h + border_h, border_w : w + border_w] = img
+    new_img[border_h: h + border_h, border_w: w + border_w] = img
     if len(label) > 0:
         # xyxy
         label[:, 1] += border_w
@@ -67,6 +67,7 @@ def augment_hsv(im, hgain=0.5, sgain=0.5, vgain=0.5):
         im_hsv = cv2.merge((cv2.LUT(hue, lut_hue), cv2.LUT(sat, lut_sat), cv2.LUT(val, lut_val)))
         im = cv2.cvtColor(im_hsv, cv2.COLOR_HSV2BGR)
     return im
+
 
 class HSVTransform(DatasetLayer):
     """
@@ -324,7 +325,7 @@ class SizeLimit(DatasetLayer):
             # for i in range(len(self.base)):
             for i in tqdm(range(len(self.base)), desc="prepare for size limit"):
                 box_cids = []
-                for c, _, _, _, _ in self.base._yield_labels(i):
+                for c, _, _, _, _ in self.base.data[i][1]:
                     if self.targets is None or int(c) in self.targets:
                         box_cids.append(c)
                 diversity = len(set(box_cids))

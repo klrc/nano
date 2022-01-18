@@ -24,26 +24,30 @@ class MSCOCO(DatasetLayer):
         self.data = []
         # load & check annotation exists
         if imgs_root is not None and annotations_root is not None:
+            corrupted = 0
             for img in tqdm(os.listdir(imgs_root), desc=f"verifying data from {imgs_root}"):
                 iid, suffix = img.split(".")
                 image_path = f"{imgs_root}/{iid}.{suffix}"
                 annotation_path = f"{annotations_root}/{iid}.txt"
-                if self.__verify__(image_path, annotation_path):
-                    self.data.append((image_path, annotation_path))
+                if self.verify(image_path, annotation_path):
+                    labels = self.cache_label(annotation_path, class_map)
+                    self.data.append((image_path, labels))
+                else:
+                    corrupted += 1
+            if corrupted > 0:
+                print(f'Warning: Ignored {corrupted} corrupted data.')
         # Cache labels into memory for faster training
-        self.label_cache = {}
-        assert min_size is None or max_size is None, 'only 1 of min/max can be set'
+        assert min_size is None or max_size is None, "only 1 of min/max can be set"
         self.min_size = min_size
         self.max_size = max_size
-        self.map_dict = class_map
 
     def __add__(self, other):
         assert isinstance(other, MSCOCO)
-        new_dataset = MSCOCO(max_size=self.max_size, logger=self.logger)
+        new_dataset = MSCOCO(min_size=None, max_size=None)
         new_dataset.data = self.data + other.data
         return new_dataset
 
-    def __verify__(self, image_path, annotation_path):
+    def verify(self, image_path, annotation_path):
         # check whether image & annotation is valid
         # self.log(f"verifying {image_path}")
         try:
@@ -52,27 +56,28 @@ class MSCOCO(DatasetLayer):
             with open(annotation_path, "r") as f:
                 for x in f.readlines():
                     assert len(x.strip().split(" ")) == 5, x
-        except Exception as e:
-            print(f"WARNING: Ignoring corrupted image and/or label {image_path}: {e}")
+        except Exception:
+            # print(f"WARNING: Ignoring corrupted label of image {image_path}")
             return False
         return True
 
-    def _yield_labels(self, index):
-        '''
+    def cache_label(self, annotation_path, class_map):
+        """
         yield label only
-        '''
-        _, annotation_path = self.data[index]
+        """
+        ret = []
         with open(annotation_path, "r") as f:
-            if self.map_dict is not None:
+            if class_map is None:
+                for x in f.readlines():
+                    ret.append(x.strip().split(" "))
+            else:
                 for x in f.readlines():
                     lb = x.strip().split(" ")
                     cid = int(lb[0])
-                    if cid in self.map_dict:
-                        lb[0] = self.map_dict[cid]
-                        yield lb
-            else:
-                for x in f.readlines():
-                    yield x.strip().split(" ")
+                    if cid in class_map:
+                        lb[0] = class_map[cid]
+                        ret.append(lb)
+        return tuple(ret)
 
     def __getitem__(self, index):
         """
@@ -82,10 +87,10 @@ class MSCOCO(DatasetLayer):
         """
         # get image & labels for sample i
         # load image & resize
-        image_path, annotation_path = self.data[index]
+        image_path, labels = self.data[index]
         img = cv2.imread(image_path)  # BGR
         height, width = img.shape[:2]  # orig hw
-        assert height*width > 0
+        assert height * width > 0
         if self.min_size is not None:
             ratio = self.min_size / min(height, width)
         elif self.max_size is not None:
@@ -99,39 +104,23 @@ class MSCOCO(DatasetLayer):
                 interpolation=cv2.INTER_AREA,
             )
         # load annotations
-        if index in self.label_cache:
-            labels = self.label_cache[index]  # load from cache
-        else:
-            labels = []
-            with open(annotation_path, "r") as f:
-                for x in f.readlines():
-                    c, x, y, w, h = x.strip().split(" ")
-                    labels.append(
-                        [
-                            int(c),
-                            float(x) * width * ratio,
-                            float(y) * height * ratio,
-                            float(w) * width * ratio,
-                            float(h) * height * ratio,
-                        ]
-                    )
-            labels = np.array(labels)
-            # normalized xywh to pixel xyxy format
-            if len(labels) > 0:
-                labels[:, 1:] = xywh2xyxy(labels[:, 1:])
-            self.label_cache[index] = labels
+        transformed_labels = []
+        for c, x, y, w, h in labels:
+            transformed_labels.append(
+                [
+                    int(c),
+                    float(x) * width * ratio,
+                    float(y) * height * ratio,
+                    float(w) * width * ratio,
+                    float(h) * height * ratio,
+                ]
+            )
+        labels = np.array(transformed_labels)
+        # normalized xywh to pixel xyxy format
+        if len(labels) > 0:
+            labels[:, 1:] = xywh2xyxy(labels[:, 1:])
         labels = labels.copy()
-        if self.map_dict is None:
-            return img, labels
-        else:
-            new_labels = []
-            for lb in labels:
-                cid = lb[0]
-                if cid in self.map_dict:
-                    lb[0] = self.map_dict[cid]
-                    new_labels.append(lb)
-            new_labels = np.array(new_labels)
-            return img, new_labels
+        return img, labels
 
     def __len__(self):
         return len(self.data)
