@@ -1,4 +1,4 @@
-from ._layer import CaffeLayer, parse_attribute
+from _layer import CaffeLayer, parse_attribute
 import onnx
 from caffe import params as P
 
@@ -22,6 +22,8 @@ class Add:
             #    (axis == 3 == -1)                                60
             # Furthermore, bottom[1] may have the empty shape (regardless of the value of
             # "axis") -- a scalar bias.
+            # print(shape_dict[self.input_names[0]], shape_dict[self.input_names[1]])
+            # raise NotImplementedError
             attrs = parse_attribute(node)
             self.axis = attrs.get("axis", 0)
             self.broadcast = True

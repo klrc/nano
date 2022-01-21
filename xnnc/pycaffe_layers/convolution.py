@@ -1,6 +1,6 @@
 import caffe
 from numpy import ceil
-from ._layer import CaffeLayer, parse_attribute
+from _layer import CaffeLayer, parse_attribute
 import onnx
 import numpy as np
 

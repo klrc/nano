@@ -1,4 +1,4 @@
-from ._layer import CaffeLayer
+from _layer import CaffeLayer
 import onnx
 
 

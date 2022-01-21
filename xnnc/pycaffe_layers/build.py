@@ -2,17 +2,17 @@ import onnx
 from onnx import numpy_helper
 import caffe
 
-from xnnc.layers.slice import slice_killer, Slice
+from slice import slice_killer, Slice
 
-from .layers._layer import parse_attribute
-from .layers.channel_shuffle import ShuffleChannel
-from .layers.resize import Resize
-from .layers.constant import CaffeInput
-from .layers.convolution import Conv2d
-from .layers.activation import Relu, LeakyRelu, Relu6
-from .layers.concat import Concat, constant_concat_killer
-from .layers.pooling import Maxpool2d, Avgpool2d, GlobalAvgpool2d
-from .layers.ffop import Add
+from _layer import parse_attribute
+from channel_shuffle import ShuffleChannel
+from resize import Resize
+from constant import CaffeInput
+from convolution import Conv2d
+from activation import Relu, LeakyRelu, Relu6
+from concat import Concat, constant_concat_killer
+from pooling import Maxpool2d, Avgpool2d, GlobalAvgpool2d
+from ffop import Add
 
 
 __iid = 0
@@ -114,3 +114,13 @@ def export(onnx_path):
             f.write(proto)
 
     return onnx_path, caffemodel_path, custom_prototxt_path
+
+
+
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Build .caffemodel/.prototxt from ONNX model.')
+    parser.add_argument('--onnx_file', help='onnx file')
+    args = parser.parse_args()
+    export(args.onnx_file)

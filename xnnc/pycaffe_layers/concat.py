@@ -1,4 +1,4 @@
-from ._layer import CaffeLayer, parse_attribute
+from _layer import CaffeLayer, parse_attribute
 import onnx
 import torch
 

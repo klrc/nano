@@ -1,0 +1,1102 @@
+Warning: Ignored 1021 corrupted data.
+Warning: Ignored 48 corrupted data.
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.407     0.0145    0.00151   0.000285
+              person       4952      10736     0.0343     0.0725    0.00644    0.00105
+                bike       4952        681          0          0   0.000196   3.48e-05
+                 car       4952       2615          0          0   0.000897   0.000343
+               plane       4952        143          1          0          0          0
+               train       4952        190          1          0   1.04e-05   1.76e-06
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365     0.0356     0.0862     0.0136    0.00324
+              person       4952      10736     0.0364      0.241     0.0385    0.00849
+                bike       4952        681     0.0148     0.0602    0.00234   0.000424
+                 car       4952       2615     0.0196     0.0493    0.00439     0.0012
+               plane       4952        143     0.0831     0.0699     0.0196    0.00531
+               train       4952        190     0.0241     0.0105     0.0032   0.000778
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.104      0.116     0.0392    0.00904
+              person       4952      10736      0.114      0.217     0.0855     0.0226
+                bike       4952        681      0.109     0.0426     0.0134    0.00396
+                 car       4952       2615     0.0726     0.0455     0.0115    0.00241
+               plane       4952        143       0.12      0.266      0.077     0.0148
+               train       4952        190      0.103     0.0105    0.00848    0.00144
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.147      0.121     0.0657     0.0174
+              person       4952      10736       0.23      0.196      0.124     0.0359
+                bike       4952        681       0.15     0.0646     0.0309    0.00716
+                 car       4952       2615      0.141      0.044     0.0243    0.00578
+               plane       4952        143      0.168      0.294      0.136     0.0359
+               train       4952        190     0.0456    0.00526     0.0133     0.0025
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.288      0.134      0.102     0.0308
+              person       4952      10736      0.315       0.22      0.177     0.0532
+                bike       4952        681      0.278     0.0734     0.0458     0.0144
+                 car       4952       2615      0.307     0.0589     0.0589     0.0181
+               plane       4952        143      0.365      0.259      0.192     0.0608
+               train       4952        190      0.177     0.0579     0.0375    0.00727
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.295      0.166      0.136     0.0435
+              person       4952      10736      0.331      0.265      0.221     0.0713
+                bike       4952        681      0.264      0.107     0.0773     0.0261
+                 car       4952       2615      0.329     0.0964     0.0836     0.0276
+               plane       4952        143      0.327      0.245      0.204     0.0671
+               train       4952        190      0.225      0.118      0.096     0.0255
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.312      0.211      0.171      0.062
+              person       4952      10736       0.37      0.308      0.273     0.0982
+                bike       4952        681      0.302      0.138      0.103     0.0354
+                 car       4952       2615      0.312      0.138      0.116     0.0402
+               plane       4952        143      0.332      0.245      0.232     0.0906
+               train       4952        190      0.244      0.226      0.129     0.0456
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.296      0.265      0.213     0.0806
+              person       4952      10736      0.364      0.364      0.322      0.126
+                bike       4952        681      0.274      0.168      0.131     0.0468
+                 car       4952       2615      0.302      0.189      0.151     0.0558
+               plane       4952        143      0.267      0.308      0.254     0.0951
+               train       4952        190      0.275      0.295      0.207     0.0796
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.381      0.285      0.253     0.0983
+              person       4952      10736      0.433      0.378      0.362      0.146
+                bike       4952        681      0.325       0.17      0.143     0.0473
+                 car       4952       2615      0.366      0.198      0.184     0.0735
+               plane       4952        143       0.41      0.315      0.285      0.128
+               train       4952        190      0.369      0.363      0.293     0.0974
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.451      0.306      0.288      0.115
+              person       4952      10736      0.521       0.38      0.394      0.166
+                bike       4952        681      0.393      0.192      0.174     0.0612
+                 car       4952       2615      0.445      0.215      0.221     0.0955
+               plane       4952        143      0.442      0.329      0.302       0.13
+               train       4952        190      0.452      0.416      0.351      0.124
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.485      0.304      0.309       0.13
+              person       4952      10736      0.558      0.391      0.419       0.18
+                bike       4952        681      0.448      0.176      0.188     0.0639
+                 car       4952       2615       0.49      0.225      0.244      0.109
+               plane       4952        143      0.462      0.315      0.327      0.149
+               train       4952        190      0.465      0.416      0.365      0.148
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.486      0.342      0.333      0.143
+              person       4952      10736      0.538      0.419      0.436       0.19
+                bike       4952        681      0.474      0.216      0.213     0.0769
+                 car       4952       2615      0.474      0.254      0.262      0.118
+               plane       4952        143      0.491      0.343      0.349      0.158
+               train       4952        190      0.454      0.479      0.403      0.171
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.527      0.346      0.352      0.153
+              person       4952      10736      0.586       0.41       0.45      0.199
+                bike       4952        681      0.489      0.216      0.224     0.0785
+                 car       4952       2615       0.52      0.254      0.275      0.127
+               plane       4952        143      0.522      0.371      0.378      0.175
+               train       4952        190      0.517      0.479      0.434      0.183
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.519       0.37      0.369      0.165
+              person       4952      10736      0.566      0.431       0.46      0.206
+                bike       4952        681      0.496      0.235      0.236     0.0851
+                 car       4952       2615      0.489      0.275      0.284      0.133
+               plane       4952        143      0.527      0.406        0.4      0.192
+               train       4952        190      0.519      0.505      0.468      0.208
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.536      0.371      0.379      0.169
+              person       4952      10736      0.595      0.431      0.471      0.211
+                bike       4952        681      0.483      0.239      0.243     0.0905
+                 car       4952       2615      0.528       0.28      0.296      0.138
+               plane       4952        143      0.499      0.406      0.385      0.187
+               train       4952        190      0.577        0.5      0.498      0.215
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.567      0.366      0.388      0.176
+              person       4952      10736      0.633      0.423       0.48      0.217
+                bike       4952        681      0.508      0.232      0.249     0.0935
+                 car       4952       2615      0.569       0.27        0.3      0.142
+               plane       4952        143      0.555      0.409      0.405      0.203
+               train       4952        190      0.573      0.495      0.507      0.224
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.653      0.344      0.393      0.178
+              person       4952      10736      0.708      0.401      0.486      0.221
+                bike       4952        681      0.588       0.21      0.256      0.095
+                 car       4952       2615      0.647      0.245      0.304      0.146
+               plane       4952        143      0.657      0.376      0.409      0.204
+               train       4952        190      0.664      0.489      0.508      0.226
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.605      0.363      0.395      0.182
+              person       4952      10736      0.671      0.422      0.491      0.224
+                bike       4952        681      0.538      0.228      0.263     0.0965
+                 car       4952       2615      0.606      0.267      0.309      0.148
+               plane       4952        143      0.624      0.399      0.404      0.208
+               train       4952        190      0.584        0.5      0.506      0.233
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.643      0.355        0.4      0.183
+              person       4952      10736      0.708      0.412      0.494      0.227
+                bike       4952        681      0.578       0.22      0.267      0.096
+                 car       4952       2615       0.66      0.261      0.313       0.15
+               plane       4952        143      0.629      0.385      0.411      0.204
+               train       4952        190      0.641      0.498      0.514       0.24
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.602      0.373        0.4      0.185
+              person       4952      10736      0.671      0.433      0.498      0.229
+                bike       4952        681      0.526      0.235      0.269     0.0965
+                 car       4952       2615      0.615       0.28      0.315      0.152
+               plane       4952        143      0.603      0.403      0.407      0.208
+               train       4952        190      0.593      0.516      0.513       0.24
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.691      0.346      0.404      0.186
+              person       4952      10736      0.751      0.401        0.5      0.231
+                bike       4952        681      0.613      0.214       0.27     0.0976
+                 car       4952       2615      0.705      0.252      0.316      0.155
+               plane       4952        143      0.678      0.385      0.407      0.206
+               train       4952        190      0.705      0.479      0.524      0.243
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.605      0.379      0.408       0.19
+              person       4952      10736      0.672      0.436      0.502      0.234
+                bike       4952        681      0.539      0.242      0.275     0.0995
+                 car       4952       2615      0.615       0.28      0.319      0.156
+               plane       4952        143      0.585      0.413      0.421      0.208
+               train       4952        190      0.617      0.526      0.524      0.252
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.634      0.375      0.414      0.192
+              person       4952      10736      0.693       0.43      0.504      0.235
+                bike       4952        681      0.571      0.238      0.277      0.101
+                 car       4952       2615       0.65      0.278      0.321      0.156
+               plane       4952        143      0.626      0.406      0.431      0.211
+               train       4952        190      0.631      0.522      0.536      0.256
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.587      0.391      0.417      0.193
+              person       4952      10736      0.649      0.449      0.506      0.237
+                bike       4952        681      0.521      0.253      0.283      0.103
+                 car       4952       2615      0.599      0.287      0.323      0.159
+               plane       4952        143      0.563      0.423      0.434      0.207
+               train       4952        190      0.602      0.542      0.541      0.258
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365       0.63      0.377       0.42      0.194
+              person       4952      10736      0.688      0.434      0.507      0.238
+                bike       4952        681      0.568      0.239      0.287      0.106
+                 car       4952       2615      0.652      0.279      0.326      0.159
+               plane       4952        143      0.618      0.399      0.437      0.206
+               train       4952        190      0.623      0.532      0.543      0.258
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.648      0.377      0.425      0.196
+              person       4952      10736      0.699      0.431       0.51       0.24
+                bike       4952        681      0.581      0.241      0.289      0.106
+                 car       4952       2615      0.667      0.274      0.327       0.16
+               plane       4952        143      0.654      0.413      0.449      0.212
+               train       4952        190      0.639      0.526      0.549      0.261
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365       0.66      0.377      0.429      0.198
+              person       4952      10736      0.705      0.433      0.513      0.242
+                bike       4952        681      0.591      0.239       0.29      0.107
+                 car       4952       2615      0.676      0.273      0.329      0.162
+               plane       4952        143      0.677      0.411      0.456      0.214
+               train       4952        190       0.65      0.526      0.555      0.264
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.668      0.381      0.433        0.2
+              person       4952      10736      0.706      0.434      0.514      0.243
+                bike       4952        681      0.606      0.242      0.297      0.109
+                 car       4952       2615      0.681      0.274      0.333      0.164
+               plane       4952        143      0.681       0.42      0.458      0.218
+               train       4952        190      0.665      0.537      0.565      0.267
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.669      0.382      0.435      0.203
+              person       4952      10736      0.702      0.437      0.516      0.244
+                bike       4952        681      0.594      0.236      0.296      0.113
+                 car       4952       2615      0.683      0.276      0.334      0.164
+               plane       4952        143      0.701      0.426      0.462      0.223
+               train       4952        190      0.664      0.537      0.567      0.274
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.706      0.373      0.438      0.206
+              person       4952      10736      0.741      0.424      0.519      0.246
+                bike       4952        681      0.628      0.228      0.296      0.113
+                 car       4952       2615      0.715      0.264      0.337      0.165
+               plane       4952        143      0.748      0.413      0.462      0.223
+               train       4952        190      0.699      0.537      0.575      0.281
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.662      0.389      0.439      0.206
+              person       4952      10736      0.699      0.446      0.521      0.248
+                bike       4952        681        0.6      0.238      0.297      0.113
+                 car       4952       2615      0.676      0.281       0.34      0.166
+               plane       4952        143      0.674      0.434      0.462      0.225
+               train       4952        190       0.66      0.547      0.577       0.28
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.687      0.382      0.442      0.209
+              person       4952      10736      0.719      0.437      0.523      0.249
+                bike       4952        681      0.632      0.232        0.3      0.117
+                 car       4952       2615      0.697      0.275      0.341      0.168
+               plane       4952        143      0.692      0.427      0.464      0.227
+               train       4952        190      0.696      0.541      0.582      0.284
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.632      0.403      0.446      0.213
+              person       4952      10736      0.671      0.463      0.525      0.251
+                bike       4952        681      0.573      0.253      0.304      0.118
+                 car       4952       2615      0.629      0.297      0.344      0.169
+               plane       4952        143      0.654      0.441      0.473      0.237
+               train       4952        190      0.633      0.562      0.586      0.289
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.648        0.4      0.449      0.215
+              person       4952      10736      0.691      0.456      0.527      0.252
+                bike       4952        681      0.593       0.25      0.304       0.12
+                 car       4952       2615      0.653       0.29      0.347       0.17
+               plane       4952        143       0.65      0.448      0.483       0.24
+               train       4952        190      0.654      0.558      0.586      0.294
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365       0.66      0.398      0.453      0.217
+              person       4952      10736      0.703      0.454       0.53      0.253
+                bike       4952        681      0.611      0.247      0.307      0.122
+                 car       4952       2615       0.66      0.285      0.348      0.171
+               plane       4952        143      0.652      0.448      0.487      0.243
+               train       4952        190      0.675      0.558      0.594      0.298
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.675      0.395      0.457       0.22
+              person       4952      10736       0.72      0.449      0.531      0.255
+                bike       4952        681      0.642      0.247      0.315      0.124
+                 car       4952       2615      0.672      0.281       0.35      0.171
+               plane       4952        143      0.652      0.446       0.49      0.251
+               train       4952        190      0.689      0.553      0.599        0.3
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.689      0.392       0.46      0.222
+              person       4952      10736      0.728      0.446      0.533      0.255
+                bike       4952        681       0.67      0.247      0.319      0.127
+                 car       4952       2615       0.68      0.279      0.352      0.172
+               plane       4952        143      0.648      0.441      0.493      0.251
+               train       4952        190      0.717      0.547      0.603      0.303
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365       0.62      0.421      0.461      0.223
+              person       4952      10736       0.66      0.476      0.533      0.257
+                bike       4952        681      0.581      0.263       0.32       0.13
+                 car       4952       2615      0.603      0.309      0.353      0.173
+               plane       4952        143      0.597      0.467      0.491      0.251
+               train       4952        190      0.661      0.589      0.608      0.304
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.647      0.413      0.464      0.224
+              person       4952      10736      0.687      0.467      0.536      0.258
+                bike       4952        681      0.622      0.261      0.323      0.132
+                 car       4952       2615      0.631      0.302      0.356      0.174
+               plane       4952        143      0.609      0.455      0.497      0.255
+               train       4952        190      0.686      0.579      0.607      0.302
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.691      0.401      0.467      0.227
+              person       4952      10736       0.73      0.451      0.538      0.259
+                bike       4952        681      0.686       0.25      0.325      0.135
+                 car       4952       2615      0.678      0.287      0.357      0.175
+               plane       4952        143      0.632      0.448      0.502       0.26
+               train       4952        190      0.731      0.572      0.616      0.305
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.687      0.405      0.472      0.229
+              person       4952      10736      0.726      0.452      0.539       0.26
+                bike       4952        681      0.667      0.251      0.326      0.137
+                 car       4952       2615      0.672      0.292      0.358      0.176
+               plane       4952        143      0.618      0.441      0.509      0.265
+               train       4952        190      0.751      0.588      0.627      0.309
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.732      0.394      0.475      0.231
+              person       4952      10736      0.764      0.437       0.54      0.261
+                bike       4952        681      0.726      0.245       0.33      0.136
+                 car       4952       2615      0.715      0.282      0.359      0.178
+               plane       4952        143      0.655      0.441      0.515       0.27
+               train       4952        190        0.8      0.563      0.631      0.311
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.725      0.397      0.477      0.232
+              person       4952      10736      0.759       0.44      0.541      0.262
+                bike       4952        681       0.72      0.246      0.327      0.137
+                 car       4952       2615      0.708      0.287      0.363      0.178
+               plane       4952        143      0.643      0.441      0.517      0.268
+               train       4952        190      0.793      0.574      0.637      0.315
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.731      0.398      0.479      0.233
+              person       4952      10736      0.765      0.439      0.542      0.263
+                bike       4952        681      0.717      0.242      0.326      0.137
+                 car       4952       2615      0.709      0.286      0.363      0.179
+               plane       4952        143      0.666      0.448      0.525      0.273
+               train       4952        190      0.796      0.576      0.638      0.313
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.706      0.407      0.481      0.235
+              person       4952      10736      0.746      0.452      0.544      0.265
+                bike       4952        681      0.695      0.253      0.329      0.139
+                 car       4952       2615      0.687      0.294      0.366       0.18
+               plane       4952        143      0.633      0.446      0.529      0.277
+               train       4952        190      0.767      0.589      0.639      0.313
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.712      0.407      0.484      0.238
+              person       4952      10736      0.752       0.45      0.545      0.266
+                bike       4952        681      0.695      0.254      0.332      0.142
+                 car       4952       2615      0.693      0.294      0.368      0.181
+               plane       4952        143      0.645      0.448      0.529       0.28
+               train       4952        190      0.778      0.589      0.643      0.321
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.704      0.411      0.486      0.241
+              person       4952      10736      0.746      0.456      0.547      0.267
+                bike       4952        681      0.688      0.257      0.334      0.143
+                 car       4952       2615      0.681        0.3      0.369      0.183
+               plane       4952        143      0.636      0.455      0.535      0.284
+               train       4952        190      0.771      0.589      0.645      0.326
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.699      0.413      0.489      0.243
+              person       4952      10736      0.739      0.459      0.548      0.267
+                bike       4952        681      0.681       0.26      0.339      0.145
+                 car       4952       2615      0.675      0.303      0.369      0.183
+               plane       4952        143      0.637      0.454       0.54      0.288
+               train       4952        190      0.765      0.589      0.648       0.33
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.684      0.422      0.491      0.244
+              person       4952      10736      0.725      0.466      0.549      0.268
+                bike       4952        681      0.665      0.271      0.337      0.145
+                 car       4952       2615      0.651       0.31      0.372      0.184
+               plane       4952        143      0.626      0.469      0.548      0.291
+               train       4952        190      0.754      0.595      0.648      0.333
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.691      0.422      0.491      0.245
+              person       4952      10736      0.729      0.465      0.551       0.27
+                bike       4952        681      0.679      0.275      0.339      0.146
+                 car       4952       2615      0.657       0.31      0.374      0.185
+               plane       4952        143      0.643      0.467      0.546      0.291
+               train       4952        190      0.748      0.594      0.643      0.333
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.678      0.427      0.493      0.248
+              person       4952      10736      0.722      0.471      0.552       0.27
+                bike       4952        681      0.645       0.28       0.34      0.148
+                 car       4952       2615      0.646      0.315      0.375      0.187
+               plane       4952        143      0.646      0.476      0.552      0.299
+               train       4952        190      0.733      0.593      0.645      0.336
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.679      0.426      0.494      0.248
+              person       4952      10736      0.725       0.47      0.553      0.271
+                bike       4952        681      0.646      0.282      0.339      0.149
+                 car       4952       2615       0.65      0.315      0.376      0.187
+               plane       4952        143      0.637      0.476      0.554        0.3
+               train       4952        190      0.738      0.589      0.646      0.334
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.669      0.431      0.495      0.248
+              person       4952      10736      0.719      0.475      0.554      0.272
+                bike       4952        681       0.64      0.283      0.341       0.15
+                 car       4952       2615      0.644      0.322      0.378      0.187
+               plane       4952        143      0.629      0.486      0.559      0.298
+               train       4952        190      0.713      0.588      0.643      0.332
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.665       0.44      0.498      0.249
+              person       4952      10736      0.711      0.478      0.555      0.273
+                bike       4952        681      0.639      0.289      0.342      0.149
+                 car       4952       2615      0.637      0.329       0.38      0.188
+               plane       4952        143      0.629       0.51      0.564      0.303
+               train       4952        190      0.707      0.595      0.652      0.334
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.664      0.448      0.503      0.249
+              person       4952      10736      0.709       0.48      0.555      0.273
+                bike       4952        681      0.641        0.3      0.344      0.149
+                 car       4952       2615       0.63      0.329      0.379      0.188
+               plane       4952        143      0.652      0.538      0.584      0.303
+               train       4952        190      0.689      0.595      0.652      0.334
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.714      0.432      0.504      0.252
+              person       4952      10736      0.757      0.462      0.556      0.273
+                bike       4952        681      0.706      0.276      0.348       0.15
+                 car       4952       2615      0.677       0.31      0.381      0.189
+               plane       4952        143      0.685      0.524      0.582      0.309
+               train       4952        190      0.746      0.589      0.654      0.338
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.697      0.439      0.504      0.252
+              person       4952      10736       0.75      0.468      0.557      0.274
+                bike       4952        681      0.695      0.285      0.349      0.152
+                 car       4952       2615      0.667      0.317      0.384       0.19
+               plane       4952        143      0.675      0.531      0.577      0.308
+               train       4952        190      0.697      0.592      0.652      0.338
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365        0.7      0.439      0.504      0.253
+              person       4952      10736      0.755      0.465      0.557      0.275
+                bike       4952        681      0.698      0.285      0.349      0.152
+                 car       4952       2615       0.67      0.316      0.385       0.19
+               plane       4952        143      0.677      0.531      0.581       0.31
+               train       4952        190      0.701      0.595      0.651      0.339
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.702      0.438      0.505      0.254
+              person       4952      10736      0.757      0.466      0.558      0.276
+                bike       4952        681      0.703      0.282      0.351      0.153
+                 car       4952       2615      0.668      0.316      0.385      0.191
+               plane       4952        143      0.678       0.53      0.582      0.312
+               train       4952        190      0.706      0.595      0.649      0.339
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.673      0.448      0.505      0.254
+              person       4952      10736       0.73      0.479      0.559      0.276
+                bike       4952        681       0.66      0.295      0.349      0.154
+                 car       4952       2615      0.644      0.329      0.386      0.192
+               plane       4952        143      0.654      0.538      0.585      0.312
+               train       4952        190      0.677        0.6      0.648      0.337
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.667       0.45      0.505      0.255
+              person       4952      10736      0.727      0.482       0.56      0.277
+                bike       4952        681      0.651      0.297      0.353      0.154
+                 car       4952       2615      0.638      0.331      0.386      0.192
+               plane       4952        143      0.644      0.545      0.581      0.318
+               train       4952        190      0.676      0.594      0.644      0.333
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.646      0.457      0.505      0.255
+              person       4952      10736      0.706      0.492      0.561      0.277
+                bike       4952        681      0.626      0.308      0.354      0.155
+                 car       4952       2615      0.617       0.34      0.385      0.192
+               plane       4952        143      0.624      0.545      0.582      0.321
+               train       4952        190      0.659        0.6      0.645      0.332
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.648      0.462      0.507      0.256
+              person       4952      10736      0.701      0.497      0.562      0.278
+                bike       4952        681      0.625      0.314      0.358      0.155
+                 car       4952       2615      0.611      0.343      0.387      0.193
+               plane       4952        143      0.642      0.552      0.582      0.325
+               train       4952        190      0.662      0.605      0.645      0.331
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.692      0.441      0.505      0.256
+              person       4952      10736       0.74      0.479      0.563      0.279
+                bike       4952        681      0.679      0.291      0.354      0.155
+                 car       4952       2615       0.66      0.327      0.387      0.193
+               plane       4952        143      0.678      0.531      0.586      0.322
+               train       4952        190      0.704      0.579      0.633      0.332
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.691      0.443      0.505      0.257
+              person       4952      10736       0.74      0.481      0.564      0.279
+                bike       4952        681      0.668      0.289      0.352      0.155
+                 car       4952       2615      0.659      0.327      0.388      0.194
+               plane       4952        143      0.678      0.531      0.587      0.326
+               train       4952        190      0.712      0.584      0.633      0.332
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.688      0.445      0.505      0.258
+              person       4952      10736      0.741      0.483      0.565       0.28
+                bike       4952        681      0.675      0.292      0.353      0.156
+                 car       4952       2615      0.655      0.328      0.388      0.194
+               plane       4952        143      0.669      0.531      0.584      0.328
+               train       4952        190        0.7      0.589      0.634      0.331
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.699       0.44      0.506      0.258
+              person       4952      10736      0.747      0.479      0.565      0.281
+                bike       4952        681      0.679      0.291      0.354      0.156
+                 car       4952       2615      0.671      0.326      0.389      0.194
+               plane       4952        143      0.687      0.524      0.583      0.327
+               train       4952        190       0.71      0.579      0.638       0.33
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.679      0.448      0.507      0.258
+              person       4952      10736      0.733      0.489      0.566      0.281
+                bike       4952        681      0.656      0.298      0.357      0.155
+                 car       4952       2615      0.649      0.334      0.389      0.195
+               plane       4952        143      0.678       0.53      0.583      0.328
+               train       4952        190      0.681      0.589      0.639      0.333
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.681      0.448      0.508      0.259
+              person       4952      10736      0.731      0.491      0.566      0.282
+                bike       4952        681      0.663      0.303      0.357      0.154
+                 car       4952       2615      0.656      0.335      0.392      0.195
+               plane       4952        143      0.679      0.517      0.584      0.328
+               train       4952        190      0.677      0.595      0.641      0.335
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.663      0.456      0.508       0.26
+              person       4952      10736      0.715      0.499      0.566      0.282
+                bike       4952        681      0.639      0.308      0.359      0.154
+                 car       4952       2615      0.637      0.343      0.391      0.196
+               plane       4952        143      0.666      0.531      0.583      0.327
+               train       4952        190      0.657        0.6      0.642      0.339
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.665      0.456      0.509      0.259
+              person       4952      10736      0.715        0.5      0.567      0.283
+                bike       4952        681      0.642      0.305      0.358      0.153
+                 car       4952       2615      0.636      0.343      0.391      0.196
+               plane       4952        143      0.678      0.531      0.584      0.327
+               train       4952        190      0.655        0.6      0.644      0.336
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365       0.67      0.456      0.509      0.258
+              person       4952      10736      0.717      0.498      0.568      0.283
+                bike       4952        681      0.655      0.307      0.361      0.153
+                 car       4952       2615      0.645      0.342      0.392      0.196
+               plane       4952        143      0.678      0.531      0.583      0.325
+               train       4952        190      0.654        0.6       0.64      0.335
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.677      0.454       0.51      0.259
+              person       4952      10736      0.724      0.497      0.569      0.284
+                bike       4952        681      0.679      0.308      0.363      0.153
+                 car       4952       2615      0.644      0.341      0.392      0.196
+               plane       4952        143      0.676      0.526      0.583      0.326
+               train       4952        190      0.661        0.6      0.642      0.337
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365       0.68      0.452       0.51      0.259
+              person       4952      10736      0.728      0.495      0.569      0.284
+                bike       4952        681      0.674      0.303      0.362      0.156
+                 car       4952       2615      0.649       0.34      0.392      0.197
+               plane       4952        143      0.682      0.524      0.581      0.321
+               train       4952        190      0.667        0.6      0.644      0.337
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.704      0.446      0.512       0.26
+              person       4952      10736      0.748      0.486       0.57      0.285
+                bike       4952        681      0.702      0.293      0.365      0.157
+                 car       4952       2615       0.67       0.33      0.393      0.198
+               plane       4952        143      0.694      0.522      0.587      0.321
+               train       4952        190      0.708      0.598      0.646      0.338
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.693      0.452      0.514      0.259
+              person       4952      10736      0.739      0.491      0.571      0.286
+                bike       4952        681      0.685      0.302      0.367      0.157
+                 car       4952       2615      0.663      0.336      0.395      0.198
+               plane       4952        143      0.688      0.524      0.588       0.32
+               train       4952        190      0.689      0.605       0.65      0.337
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.707      0.445      0.515      0.261
+              person       4952      10736      0.747      0.487      0.571      0.286
+                bike       4952        681      0.709      0.293      0.367      0.159
+                 car       4952       2615      0.672      0.332      0.395      0.199
+               plane       4952        143      0.705       0.51      0.588      0.322
+               train       4952        190      0.704        0.6      0.651       0.34
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.728      0.439      0.515      0.261
+              person       4952      10736      0.761      0.481      0.572      0.287
+                bike       4952        681       0.73      0.286      0.368      0.158
+                 car       4952       2615      0.686      0.324      0.397      0.199
+               plane       4952        143      0.734       0.51      0.587      0.322
+               train       4952        190      0.728      0.595      0.652      0.341
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365       0.73      0.439      0.515      0.262
+              person       4952      10736      0.761       0.48      0.573      0.287
+                bike       4952        681      0.734      0.285      0.367      0.157
+                 car       4952       2615      0.689      0.323      0.396      0.199
+               plane       4952        143      0.736       0.51      0.588      0.323
+               train       4952        190      0.729      0.595      0.651      0.343
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.742      0.434      0.517      0.262
+              person       4952      10736      0.769      0.477      0.573      0.287
+                bike       4952        681      0.738      0.279      0.368      0.157
+                 car       4952       2615      0.696      0.318      0.397      0.199
+               plane       4952        143      0.756      0.503      0.594      0.326
+               train       4952        190       0.75      0.589      0.652      0.342
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.732      0.436      0.516      0.263
+              person       4952      10736      0.763       0.48      0.573      0.287
+                bike       4952        681      0.726       0.28      0.368      0.157
+                 car       4952       2615      0.691      0.321      0.397      0.199
+               plane       4952        143      0.742      0.503      0.592      0.327
+               train       4952        190      0.738      0.594      0.652      0.346
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.706      0.446      0.517      0.264
+              person       4952      10736       0.74       0.49      0.573      0.287
+                bike       4952        681      0.709        0.3      0.369      0.159
+                 car       4952       2615      0.672      0.337      0.398        0.2
+               plane       4952        143      0.703       0.51      0.591      0.325
+               train       4952        190      0.707      0.595      0.654      0.346
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365       0.73      0.439      0.518      0.264
+              person       4952      10736      0.757      0.484      0.574      0.288
+                bike       4952        681      0.731      0.288      0.367      0.158
+                 car       4952       2615      0.685      0.329      0.398      0.201
+               plane       4952        143      0.731      0.503      0.594      0.326
+               train       4952        190      0.748      0.593      0.658      0.349
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.665      0.469       0.52      0.265
+              person       4952      10736      0.703       0.51      0.574      0.288
+                bike       4952        681      0.644       0.32      0.368      0.161
+                 car       4952       2615      0.628      0.352      0.399      0.201
+               plane       4952        143      0.678      0.545      0.593      0.326
+               train       4952        190      0.674      0.616      0.667       0.35
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.717      0.449      0.521      0.266
+              person       4952      10736      0.745      0.491      0.574      0.289
+                bike       4952        681      0.714      0.301      0.369      0.161
+                 car       4952       2615      0.668      0.334      0.399      0.201
+               plane       4952        143      0.721      0.517      0.595      0.327
+               train       4952        190      0.738        0.6      0.668       0.35
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.727      0.446      0.521      0.265
+              person       4952      10736      0.752      0.488      0.575      0.289
+                bike       4952        681       0.73      0.295      0.368      0.162
+                 car       4952       2615       0.68      0.331      0.399      0.201
+               plane       4952        143      0.734       0.52      0.594      0.326
+               train       4952        190      0.741      0.595      0.667      0.349
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.729      0.445      0.521      0.265
+              person       4952      10736      0.755      0.487      0.575      0.289
+                bike       4952        681      0.728      0.291      0.367      0.163
+                 car       4952       2615       0.68      0.331      0.398      0.202
+               plane       4952        143      0.731      0.517      0.594      0.327
+               train       4952        190       0.75        0.6      0.669      0.346
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.698      0.459      0.522      0.266
+              person       4952      10736      0.732      0.499      0.576      0.289
+                bike       4952        681      0.682       0.31      0.368      0.163
+                 car       4952       2615      0.656      0.342      0.399      0.202
+               plane       4952        143      0.707      0.531      0.598      0.328
+               train       4952        190      0.711      0.611      0.669      0.348
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.724      0.451      0.522      0.266
+              person       4952      10736      0.752       0.49      0.576      0.289
+                bike       4952        681      0.718      0.296       0.37      0.163
+                 car       4952       2615      0.677      0.334      0.398      0.202
+               plane       4952        143      0.728      0.524      0.597      0.327
+               train       4952        190      0.742      0.611      0.671       0.35
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.722      0.452      0.522      0.266
+              person       4952      10736      0.751      0.491      0.577      0.289
+                bike       4952        681      0.724      0.298       0.37      0.162
+                 car       4952       2615      0.678      0.332      0.398      0.202
+               plane       4952        143       0.72      0.524      0.599      0.327
+               train       4952        190      0.737      0.616      0.666       0.35
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.749      0.446      0.524      0.267
+              person       4952      10736      0.767      0.483      0.576       0.29
+                bike       4952        681      0.743      0.285      0.371      0.164
+                 car       4952       2615      0.702      0.325        0.4      0.203
+               plane       4952        143      0.783      0.531      0.605      0.328
+               train       4952        190      0.749      0.605      0.666      0.351
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.752      0.444      0.523      0.267
+              person       4952      10736      0.771       0.48      0.576       0.29
+                bike       4952        681      0.756      0.286      0.368      0.163
+                 car       4952       2615      0.702      0.323      0.399      0.202
+               plane       4952        143      0.778      0.524      0.605      0.328
+               train       4952        190      0.753      0.605      0.668      0.352
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.699      0.461      0.523      0.266
+              person       4952      10736      0.734      0.499      0.577       0.29
+                bike       4952        681      0.685      0.307      0.369      0.162
+                 car       4952       2615      0.657      0.341      0.399      0.202
+               plane       4952        143      0.704      0.538      0.603      0.327
+               train       4952        190      0.715      0.621      0.666      0.351
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.677       0.47      0.523      0.266
+              person       4952      10736      0.711      0.509      0.577       0.29
+                bike       4952        681      0.647      0.316      0.371      0.161
+                 car       4952       2615      0.627      0.352      0.399      0.202
+               plane       4952        143      0.694      0.545      0.602      0.327
+               train       4952        190      0.704      0.626      0.667      0.352
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.678      0.471      0.525      0.268
+              person       4952      10736      0.712      0.509      0.577      0.291
+                bike       4952        681       0.65      0.314      0.373      0.163
+                 car       4952       2615      0.626      0.353      0.399      0.202
+               plane       4952        143      0.691      0.546      0.605       0.33
+               train       4952        190      0.711      0.632      0.671      0.353
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.675      0.474      0.527      0.268
+              person       4952      10736      0.708      0.512      0.577      0.291
+                bike       4952        681      0.648      0.319      0.377      0.163
+                 car       4952       2615      0.622      0.356        0.4      0.203
+               plane       4952        143      0.698       0.55      0.614      0.329
+               train       4952        190      0.701      0.632      0.671      0.354
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.674      0.476      0.527      0.268
+              person       4952      10736      0.706      0.514      0.577      0.291
+                bike       4952        681      0.644       0.32      0.375      0.164
+                 car       4952       2615      0.618      0.358        0.4      0.203
+               plane       4952        143        0.7      0.554      0.612      0.328
+               train       4952        190      0.702      0.637      0.672      0.352
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.681       0.47      0.527      0.268
+              person       4952      10736      0.715      0.509      0.577      0.291
+                bike       4952        681      0.654      0.316      0.375      0.163
+                 car       4952       2615      0.632      0.354        0.4      0.203
+               plane       4952        143      0.699      0.545      0.613      0.329
+               train       4952        190      0.705      0.626      0.667      0.351
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.691      0.465      0.526      0.268
+              person       4952      10736      0.724      0.505      0.577      0.291
+                bike       4952        681      0.677      0.311      0.375      0.164
+                 car       4952       2615      0.641      0.348      0.401      0.203
+               plane       4952        143      0.701      0.541      0.615      0.328
+               train       4952        190      0.711      0.621      0.664      0.353
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.679      0.473      0.527      0.268
+              person       4952      10736      0.711      0.513      0.577      0.291
+                bike       4952        681      0.653      0.317      0.375      0.163
+                 car       4952       2615      0.631      0.357      0.401      0.204
+               plane       4952        143      0.711      0.559      0.616      0.328
+               train       4952        190      0.691      0.621      0.665      0.354
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.674      0.475      0.527      0.268
+              person       4952      10736      0.706      0.514      0.577      0.291
+                bike       4952        681      0.649      0.321      0.377      0.164
+                 car       4952       2615      0.624      0.357      0.401      0.204
+               plane       4952        143      0.704      0.559      0.615      0.327
+               train       4952        190      0.688      0.621      0.666      0.354
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.674      0.471      0.526      0.268
+              person       4952      10736      0.709      0.514      0.577      0.291
+                bike       4952        681      0.653      0.317      0.376      0.164
+                 car       4952       2615      0.629      0.354      0.401      0.204
+               plane       4952        143      0.697      0.552      0.608      0.327
+               train       4952        190      0.685      0.616      0.667      0.353
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.667      0.475      0.527      0.267
+              person       4952      10736        0.7      0.517      0.578      0.292
+                bike       4952        681      0.642      0.322      0.378      0.163
+                 car       4952       2615      0.624      0.359        0.4      0.203
+               plane       4952        143      0.683      0.552      0.611      0.324
+               train       4952        190      0.687      0.625      0.667      0.354
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.688      0.464      0.526      0.267
+              person       4952      10736      0.721      0.509      0.578      0.292
+                bike       4952        681      0.667      0.309      0.378      0.164
+                 car       4952       2615      0.638      0.348      0.401      0.203
+               plane       4952        143      0.702      0.545      0.606      0.325
+               train       4952        190      0.712      0.611      0.666      0.351
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.683      0.466      0.528      0.269
+              person       4952      10736      0.716      0.509      0.578      0.292
+                bike       4952        681      0.662      0.313      0.378      0.165
+                 car       4952       2615      0.635      0.348      0.401      0.203
+               plane       4952        143      0.697      0.552       0.61      0.329
+               train       4952        190      0.704      0.605      0.671      0.355
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.683      0.466      0.527      0.268
+              person       4952      10736      0.715       0.51      0.577      0.291
+                bike       4952        681      0.665      0.311      0.378      0.165
+                 car       4952       2615      0.635      0.348      0.401      0.203
+               plane       4952        143      0.694      0.552       0.61      0.325
+               train       4952        190      0.706      0.611       0.67      0.354
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.654      0.479      0.527      0.268
+              person       4952      10736      0.684      0.523      0.577      0.292
+                bike       4952        681      0.625      0.326      0.377      0.165
+                 car       4952       2615      0.609      0.366      0.401      0.203
+               plane       4952        143      0.663      0.559      0.605      0.326
+               train       4952        190      0.687      0.623      0.673      0.355
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.665      0.475      0.526      0.268
+              person       4952      10736      0.696      0.517      0.577      0.292
+                bike       4952        681      0.641      0.323      0.375      0.164
+                 car       4952       2615      0.622       0.36      0.401      0.203
+               plane       4952        143      0.671      0.559      0.607      0.326
+               train       4952        190      0.695      0.616       0.67      0.354
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.667      0.477      0.526      0.268
+              person       4952      10736      0.696      0.517      0.577      0.292
+                bike       4952        681      0.644      0.326      0.376      0.165
+                 car       4952       2615       0.62      0.359      0.401      0.204
+               plane       4952        143      0.675      0.566      0.607      0.326
+               train       4952        190      0.702      0.616      0.668      0.354
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365       0.66      0.479      0.527      0.267
+              person       4952      10736      0.689      0.521      0.577      0.292
+                bike       4952        681      0.631      0.326      0.375      0.164
+                 car       4952       2615      0.613      0.362      0.401      0.204
+               plane       4952        143      0.677      0.571      0.608      0.321
+               train       4952        190      0.692      0.616      0.672      0.354
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.694      0.464      0.527      0.267
+              person       4952      10736      0.722      0.505      0.577      0.292
+                bike       4952        681      0.673      0.313      0.376      0.163
+                 car       4952       2615      0.654      0.347      0.401      0.203
+               plane       4952        143      0.694      0.545       0.61      0.324
+               train       4952        190      0.729      0.608      0.672      0.353
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.691      0.467      0.528      0.267
+              person       4952      10736      0.717      0.507      0.576      0.292
+                bike       4952        681      0.669      0.313      0.376      0.163
+                 car       4952       2615       0.65       0.35      0.401      0.203
+               plane       4952        143      0.699      0.552      0.614      0.326
+               train       4952        190      0.719      0.611      0.672      0.353
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.695      0.466      0.528      0.269
+              person       4952      10736      0.718      0.505      0.576      0.293
+                bike       4952        681      0.672      0.311      0.377      0.164
+                 car       4952       2615      0.656      0.351      0.402      0.203
+               plane       4952        143      0.704      0.552      0.612      0.332
+               train       4952        190      0.724      0.611      0.671      0.353
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.687      0.467      0.527      0.269
+              person       4952      10736      0.714      0.508      0.576      0.293
+                bike       4952        681      0.663      0.316      0.376      0.165
+                 car       4952       2615      0.646      0.351      0.401      0.203
+               plane       4952        143      0.701      0.552      0.613      0.331
+               train       4952        190      0.713      0.611      0.668      0.351
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.716      0.455      0.528      0.269
+              person       4952      10736       0.74      0.496      0.577      0.293
+                bike       4952        681      0.698      0.298      0.376      0.165
+                 car       4952       2615      0.674      0.338      0.401      0.203
+               plane       4952        143      0.726      0.538      0.619      0.329
+               train       4952        190      0.739      0.605      0.668      0.353
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.721      0.454      0.528      0.269
+              person       4952      10736      0.745      0.493      0.577      0.293
+                bike       4952        681      0.704      0.297      0.375      0.165
+                 car       4952       2615      0.677      0.336        0.4      0.204
+               plane       4952        143      0.733      0.538      0.617      0.328
+               train       4952        190      0.747      0.605      0.669      0.354
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.701      0.462      0.528      0.269
+              person       4952      10736      0.728      0.503      0.578      0.293
+                bike       4952        681      0.678       0.31      0.376      0.164
+                 car       4952       2615      0.662      0.345      0.401      0.205
+               plane       4952        143      0.711      0.545      0.615      0.327
+               train       4952        190      0.724      0.605      0.671      0.355
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.701      0.463      0.528      0.269
+              person       4952      10736      0.724      0.505      0.578      0.293
+                bike       4952        681      0.681       0.31      0.376      0.164
+                 car       4952       2615      0.658      0.348      0.401      0.205
+               plane       4952        143      0.715      0.545      0.615      0.328
+               train       4952        190      0.729      0.605      0.672      0.356
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.702      0.464      0.529       0.27
+              person       4952      10736      0.722      0.506      0.578      0.293
+                bike       4952        681      0.688      0.311      0.376      0.164
+                 car       4952       2615      0.652       0.35      0.402      0.205
+               plane       4952        143      0.713      0.545      0.612      0.329
+               train       4952        190      0.733      0.605      0.676      0.358
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.701      0.463      0.529      0.269
+              person       4952      10736      0.722      0.506      0.578      0.293
+                bike       4952        681      0.689       0.31      0.376      0.164
+                 car       4952       2615      0.654      0.348      0.401      0.205
+               plane       4952        143       0.71      0.548      0.614      0.326
+               train       4952        190      0.733      0.605      0.674      0.359
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.697      0.465       0.53       0.27
+              person       4952      10736      0.717      0.509      0.578      0.293
+                bike       4952        681      0.672      0.311      0.375      0.163
+                 car       4952       2615      0.651      0.349      0.402      0.205
+               plane       4952        143      0.705      0.545      0.616      0.327
+               train       4952        190      0.741      0.611      0.679      0.363
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2
+               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95
+                 all       4952      14365      0.708      0.461       0.53      0.271
+              person       4952      10736      0.729      0.503      0.578      0.293
+                bike       4952        681      0.692      0.305      0.374      0.164
+                 car       4952       2615      0.662      0.346      0.402      0.205
+               plane       4952        143      0.705      0.538      0.615      0.327
+               train       4952        190      0.753      0.611      0.679      0.363
+
+     Epoch   gpu_mem       box   quality      topk       lr0       lr1       lr2

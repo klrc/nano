@@ -4,7 +4,7 @@ import torchvision.transforms as T
 from multiprocessing import Queue, Process
 import numpy as np
 from nano.datasets.coco_box2d_visualize import draw_bounding_boxes, draw_center_points
-
+from nano.datasets.class_utils import c26_classes
 from nano.ops.box2d import non_max_suppression
 
 
@@ -21,18 +21,19 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, result_que
                 # process image
                 x = transforms(frame).to(device).unsqueeze(0)
                 results, grid_mask, stride_mask = model(x)
+                results = results[..., :4+3]
                 centers = (grid_mask[0] + 0.5) * stride_mask[0].unsqueeze(-1)
                 alphas = results[0, :, 4:].max(dim=-1).values
                 mask = alphas >= iou_thres
                 centers, alphas = centers[mask], alphas[mask]
                 # Run NMS
-                out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=False)[0]  # batch 0
+                out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=True)[0]  # batch 0
                 result_queue.put((out, centers, alphas))
 
 
 def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu", always_on_top=False):
     cap_h, cap_w = capture_size
-    ratio = 416 / max(capture_size)  # h, w <= 416
+    ratio = 448 / max(capture_size)  # h, w <= 416
     inf_h = int(np.ceil(cap_h * ratio / 64) * 64)  # (padding for Thinkpad-P51 front camera)
     inf_w = int(np.ceil(cap_w * ratio / 64) * 64)  # (padding for Thinkpad-P51 front camera)
     border_h = int((inf_h / ratio - cap_h) // 2)
@@ -65,7 +66,8 @@ def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_nam
             box_labels = [f"{cname} {conf:.2f}" for cname, conf in zip(box_classes, x[..., 4])]
             # draw bounding boxes with builtin opencv2 fu
             frame = draw_center_points(frame, centers, thickness=3)
-            frame = draw_bounding_boxes(frame, boxes=x[..., :4], boxes_label=box_labels, alphas=x[..., 4])
+            frame = draw_bounding_boxes(frame, boxes=x[..., :4], boxes_label=box_labels)
+            # frame = draw_bounding_boxes(frame, boxes=x[..., :4], boxes_label=box_labels, alphas=x[..., 4])
         cv2.imshow("frame", frame)
         if always_on_top:
             cv2.setWindowProperty("frame", cv2.WND_PROP_TOPMOST, 1)
@@ -126,7 +128,7 @@ def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
     import os
     import time
 
-    yuv_file = "../datasets/1280x720_5.yuv"
+    yuv_file = "../datasets/1280x720_4.yuv"
     yuv_h, yuv_w = 720, 1280
 
     try:
@@ -155,12 +157,12 @@ def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
 def acquire_model():
     from nano.models.model_zoo.nano_ghost import GhostNano_3x4_m96
 
-    model = GhostNano_3x4_m96(num_classes=3)
-    model.load_state_dict(torch.load("release/GhostNano_3x4_m96/GhostNano_3x4_m96.pt", map_location="cpu"))
+    model = GhostNano_3x4_m96(num_classes=26)
+    model.load_state_dict(torch.load("runs/train/exp10/last.pt", map_location="cpu")['state_dict'])
     return model
 
 
 if __name__ == "__main__":
-    test_front_camera(0.25, 0.45, ["person", "bike", "car"], device="cuda")
+    test_front_camera(0.25, 0.45, c26_classes, device="cpu")
     # test_screenshot(0.25, 0.45, ["person", "bike", "car"], device="cpu")
-    # test_yuv(0.25, 0.45, ["person", "bike", "car"], device="cpu")
+    # test_yuv(0.3, 0.45, c26_classes, device="cpu")

@@ -1,5 +1,5 @@
 from numpy import ceil
-from ._layer import CaffeLayer, parse_attribute
+from _layer import CaffeLayer, parse_attribute
 from caffe import params as P
 import onnx
 
