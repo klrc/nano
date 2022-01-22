@@ -1,16 +1,15 @@
+from __future__ import annotations
 import cv2
 import random
+from torch.utils.data import DataLoader
+from torchaudio import datasets
 
-from nano.datasets.coco_box2d import MSCOCO
+from nano.datasets.coco_box2d import MSCOCO, collate_fn, letterbox_collate_fn
 from nano.datasets.coco_box2d_transforms import Affine, Albumentations, HSVTransform, RandomScale, SizeLimit, ToTensor, Mosaic4
 from nano.datasets.coco_box2d_visualize import draw_bounding_boxes
 from nano.datasets.class_utils import coco_classes, voc_classes, c26_classes, _coco_to_c26, _voc_to_c26, create_class_mapping
 
 
-# preset configurations
-img_root = "../datasets/coco3/images/train"
-label_root = "../datasets/coco3/labels/train"
-names = ["person", "bike", "car"]
 
 
 def test_load():
@@ -111,37 +110,40 @@ def test_sizelimit():
 
 def test_combination():
 
-    class_names = c26_classes
-    imgs_root = "../datasets/coco/images/train2017"
-    annotations_root = "../datasets/coco/labels/train2017"
-    coco_c26_mapping = create_class_mapping(coco_classes, c26_classes, _coco_to_c26)
-    coco = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, min_size=416, class_map=coco_c26_mapping)
+    # class_names = c26_classes
+    # imgs_root = "../datasets/coco/images/train2017"
+    # annotations_root = "../datasets/coco/labels/train2017"
+    # coco_c26_mapping = create_class_mapping(coco_classes, c26_classes, _coco_to_c26)
+    # coco = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, min_size=416, class_map=coco_c26_mapping)
     imgs_root = "../datasets/VOC/images/train2012"
     annotations_root = "../datasets/VOC/labels/train2012"
     voc_c26_mapping = create_class_mapping(voc_classes, c26_classes, _voc_to_c26)
     voc = MSCOCO(imgs_root=imgs_root, annotations_root=annotations_root, min_size=416, class_map=voc_c26_mapping)
-    base = coco + voc
+    # base = coco + voc
+    base = voc
 
-    base = SizeLimit(base, 80000, targets=(0, 1, 2))
+    base = SizeLimit(base, 200, targets=(0, 1, 2))
     base = RandomScale(base, p=1)
     base = Affine(base, p_flip=0.5, p_shear=0.2)
     base = HSVTransform(base, p=0.2)
     base = Albumentations(base, "random_blind")
     base = Mosaic4(base, img_size=448)
     dataset = ToTensor(base)
+    train_loader = DataLoader(dataset, batch_size=16, num_workers=8, pin_memory=False, shuffle=True, collate_fn=letterbox_collate_fn)
 
-    for i in range(10):
-        rand = random.randint(0, len(dataset) - 1)
-        img, labels = dataset.__getitem__(rand)
-        str_labels = [class_names[x] for x in labels[..., 0].cpu().int()]
-        cv_img = draw_bounding_boxes(img, boxes=labels[..., 1:], boxes_label=str_labels)
-        cv2.imwrite(f"test_combination_{i}.png", cv_img)
+    for imgs, labels in train_loader:
+        for i, (img, label) in enumerate(zip(imgs, labels)):
+            label = labels[labels[..., 0] == i]
+            str_label = [c26_classes[x] for x in label[..., 1].int()]
+            print(str_label)
+            cv_img = draw_bounding_boxes(img, boxes=label[..., 2:], boxes_label=str_label)
+            cv2.imwrite(f"test_combination_{i}_r.png", cv_img)
+        break
 
 
 def summary_bbox_size():
     import tqdm
-
-    dataset = MSCOCO(img_root, label_root, min_size=416)
+    dataset = MSCOCO(imgs_root, annotations_root, min_size=416)
     dataset = SizeLimit(dataset, limit=20000)
     ratios = {}
     for i in tqdm.tqdm(range(len(dataset))):
