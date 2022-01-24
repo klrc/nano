@@ -1,0 +1,9 @@
+# regular ignores
+.idea
+.DS_Store
+.vscode
+__pycache__
+runs
+xnnc/src
+*.yuv
+*.png
