@@ -30,7 +30,7 @@ class NanoHead(nn.Module):
 
     def make_grids(self, x):
         h, w = x.shape[-2:]
-        yv, xv = torch.meshgrid([torch.arange(h), torch.arange(w)])
+        yv, xv = torch.meshgrid([torch.arange(h), torch.arange(w)],  indexing='ij')
         grid = torch.stack((xv, yv), 2).view(1, -1, 2).to(x.device)
         return grid
 

@@ -77,9 +77,9 @@ class ESBlockS1(nn.Module):
 
 
 class EnhancedShuffleNetv2_4x(nn.Module):
-    def __init__(self, channels=(24, 48, 96, 192, 288)):
+    def __init__(self, channels=(24, 48, 96, 192, 288), s2_depth=7):
         super().__init__()
-        channels = [x if i==0 else make_divisible(x) for i, x in enumerate(channels)]
+        channels = [x if i == 0 else make_divisible(x) for i, x in enumerate(channels)]
 
         __inc, __mid = channels[0], channels[1]
         self.feature_s0 = nn.Sequential(
@@ -99,12 +99,7 @@ class EnhancedShuffleNetv2_4x(nn.Module):
         __inc, __mid = channels[2], channels[3]
         self.feature_s2 = nn.Sequential(
             ESBlockS2(__inc, __mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
+            *[ESBlockS1(__mid, __mid) for _ in range(s2_depth - 1)],
         )
         __inc, __mid = channels[3], channels[4]
         self.feature_s3 = nn.Sequential(
@@ -122,9 +117,9 @@ class EnhancedShuffleNetv2_4x(nn.Module):
 
 
 class EnhancedShuffleNetv2_3x(nn.Module):
-    def __init__(self, channels=(24, 96, 192, 384)):
+    def __init__(self, channels=(24, 96, 192, 384), s2_depth=7):
         super().__init__()
-        channels = [x if i==0 else make_divisible(x) for i, x in enumerate(channels)]
+        channels = [x if i == 0 else make_divisible(x) for i, x in enumerate(channels)]
 
         __inc = channels[0]
         self.feature_s0 = nn.Sequential(
@@ -142,12 +137,7 @@ class EnhancedShuffleNetv2_3x(nn.Module):
         __inc, __mid = channels[1], channels[2]
         self.feature_s2 = nn.Sequential(
             ESBlockS2(__inc, __mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
+            *[ESBlockS1(__mid, __mid) for _ in range(s2_depth - 1)],
         )
         __inc, __mid = channels[2], channels[3]
         self.feature_s3 = nn.Sequential(

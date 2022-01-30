@@ -1,5 +1,7 @@
 import os
 import random
+from loguru import logger
+from matplotlib.pyplot import cla
 import torch
 import numpy as np
 
@@ -257,164 +259,213 @@ class EarlyStopping:
         stop = delta >= self.patience  # stop training if patience exceeded
         return stop
 
-def training_layer(
-    dataloader,
-    model,
-    criteria,
-    device,
-    batch_size=64,
-    lr0=0.001,
-    momentum=0.85,
-    weight_decay=0.0005,
-    lrf=0.1,
-    optimizer="AdamW",
-    warmup_epochs=3,
-    warmup_bias_lr=0.1,
-    warmup_momentum=0.5,
-    start_epoch=0,
-    end_epoch=300,
-    iters=1000,
-):
 
-    # Config
-    assert isinstance(model, torch.nn.Module)
-    cuda = device.type != "cpu"
-    init_seeds(0)
+class Trainer:
+    def __init__(
+        self,
+        dataloader,
+        model,
+        criteria,
+        device,
+        batch_size=64,
+        lr0=0.01,
+        momentum=0.9,
+        weight_decay=0.0005,
+        lrf=0.1,
+        optimizer="AdamW",
+        warmup_epochs=3,
+        warmup_bias_lr=0.1,
+        warmup_momentum=0.5,
+        start_epoch=0,
+        end_epoch=300,
+    ):
+        self.check_device(model, device)
+        self.init_optimizer(optimizer, lr0, weight_decay, momentum, batch_size, warmup_epochs, warmup_bias_lr, warmup_momentum)
+        self.init_scheduler(lrf, start_epoch, end_epoch)
+        self.init_ema()
+        self.init_dataloader(dataloader)
+        self.init_criteria(criteria)
+        self.init_scaler()
 
-    # Optimizer
-    nbs = 64  # nominal batch size
-    accumulate = max(round(nbs / batch_size), 1)  # accumulate loss before optimizing
-    weight_decay *= batch_size * accumulate / nbs  # scale weight_decay
+    def check_device(self, model, device):
+        # Config
+        assert isinstance(model, torch.nn.Module)
+        self.model = model
+        self.device = load_device(device)
+        self.cuda = self.device.type != "cpu"
+        init_seeds(0)
+        logger.success("Device checked")
 
-    g0, g1, g2 = [], [], []  # optimizer parameter groups
-    for v in model.modules():
-        if hasattr(v, "bias") and isinstance(v.bias, nn.Parameter):  # bias
-            g2.append(v.bias)
-        if isinstance(v, nn.BatchNorm2d):  # weight (no decay)
-            g0.append(v.weight)
-        elif hasattr(v, "weight") and isinstance(v.weight, nn.Parameter):  # weight (with decay)
-            g1.append(v.weight)
-    g0 = filter(lambda x: x.requires_grad, g0)
-    g1 = filter(lambda x: x.requires_grad, g1)
-    g2 = filter(lambda x: x.requires_grad, g2)
+    def init_optimizer(
+        self,
+        optimizer,
+        lr0,
+        weight_decay,
+        momentum,
+        batch_size,
+        warmup_epochs,
+        warmup_bias_lr,
+        warmup_momentum,
+    ):
+        # Optimizer
+        self.nbs = nbs = 64  # nominal batch size
+        accumulate = max(round(nbs / batch_size), 1)  # accumulate loss before optimizing
+        weight_decay *= batch_size * accumulate / nbs  # scale weight_decay
 
-    if optimizer == "Adam":
-        optimizer = Adam(g0, lr=lr0, betas=(momentum, 0.999))  # adjust beta1 to momentum
-    elif optimizer == "AdamW":
-        optimizer = AdamW(g0, lr=lr0, betas=(momentum, 0.999))  # adjust beta1 to momentum
-    elif optimizer == "SGD":
-        optimizer = SGD(g0, lr=lr0, momentum=momentum, nesterov=True)
+        self.accumulate = accumulate
+        self.momentum = momentum
+        self.batch_size = batch_size
+        self.warmup_epochs = warmup_epochs
+        self.warmup_bias_lr = warmup_bias_lr
+        self.warmup_momentum = warmup_momentum
 
-    optimizer.add_param_group({"params": g1, "weight_decay": weight_decay})  # add g1 with weight_decay
-    optimizer.add_param_group({"params": g2})  # add g2 (biases)
-    del g0, g1, g2
+        g0, g1, g2 = [], [], []  # optimizer parameter groups
+        for v in self.model.modules():
+            if hasattr(v, "bias") and isinstance(v.bias, nn.Parameter):  # bias
+                g2.append(v.bias)
+            if isinstance(v, nn.BatchNorm2d):  # weight (no decay)
+                g0.append(v.weight)
+            elif hasattr(v, "weight") and isinstance(v.weight, nn.Parameter):  # weight (with decay)
+                g1.append(v.weight)
+        g0 = filter(lambda x: x.requires_grad, g0)
+        g1 = filter(lambda x: x.requires_grad, g1)
+        g2 = filter(lambda x: x.requires_grad, g2)
 
-    # Scheduler
-    lf = one_cycle(1, lrf, end_epoch)  # cosine 1->hyp['lrf']
-    scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)  # plot_lr_scheduler(optimizer, scheduler, epochs)
+        if optimizer == "Adam":
+            optimizer = Adam(g0, lr=lr0, betas=(momentum, 0.999))  # adjust beta1 to momentum
+        elif optimizer == "AdamW":
+            optimizer = AdamW(g0, lr=lr0, betas=(momentum, 0.999))  # adjust beta1 to momentum
+        elif optimizer == "SGD":
+            optimizer = SGD(g0, lr=lr0, momentum=momentum, nesterov=True)
 
-    # EMA
-    ema = ModelEMA(model)
+        optimizer.add_param_group({"params": g1, "weight_decay": weight_decay})  # add g1 with weight_decay
+        optimizer.add_param_group({"params": g2})  # add g2 (biases)
+        del g0, g1, g2
+        self.optimizer = optimizer
+        logger.success(f"Init optimizer as {self.optimizer}")
 
-    # Anchors
-    model.half().float()  # pre-reduce anchor precision
-    model.to(device)
+    def init_scheduler(self, lrf, start_epoch, end_epoch):
+        # Scheduler
+        self.lf = one_cycle(1, lrf, end_epoch)  # cosine 1->hyp['lrf']
+        self.scheduler = lr_scheduler.LambdaLR(self.optimizer, lr_lambda=self.lf)  # plot_lr_scheduler(optimizer, scheduler, epochs)
+        self.scheduler.last_epoch = start_epoch - 1  # do not move
+        self.start_epoch = start_epoch
+        self.end_epoch = end_epoch
+        logger.success(f"Init scheduler as {self.scheduler}")
 
-    # Start training
-    nw = max(round(warmup_epochs * iters), 1000)  # number of warmup iterations, max(3 epochs, 1k iterations)
-    last_opt_step = -1
-    scheduler.last_epoch = start_epoch - 1  # do not move
-    scaler = amp.GradScaler(enabled=cuda)
+    def init_ema(self):
+        # EMA
+        self.model.half().float()  # pre-reduce anchor precision
+        self.model.to(self.device)
+        self.ema = ModelEMA(self.model)
+        logger.success(f"Init model EMA as {self.ema}")
 
-    for epoch in range(start_epoch, end_epoch):
+    def init_scaler(self):
+        self.scaler = amp.GradScaler(enabled=self.cuda)
+        logger.success(f"Init amp.GradScaler with self.cuda = {self.cuda}")
 
-        model.train().float()
+    def init_dataloader(self, dataloader):
+        self.dataloader = dataloader
+        self.iters = len(dataloader)
+        self.nw = max(round(self.warmup_epochs * self.iters), 1000)  # number of warmup iterations, max(3 epochs, 1k iterations)
+        self.last_opt_step = -1
+        logger.success(f"Init dataloader with {len(self.dataloader)} batches x {self.batch_size} batch size")
 
-        mloss = torch.zeros(2, device=device)  # mean losses
-        pbar = enumerate(dataloader)
-        print(("\n" + "%10s" * 7) % ("Epoch", "gpu_mem", "box", "quality", "lr0", "lr1", "lr2"))
-        pbar = tqdm(pbar, total=iters)  # progress bar
-        optimizer.zero_grad()
+    def init_criteria(self, criteria):
+        self.criteria = criteria
+        logger.success(f"Init criteria as {self.criteria}")
 
-        for i, (imgs, targets) in pbar:  # batch -------------------------------------------------------------
-            if i >= iters:
-                break
-            ni = i + iters * epoch  # number integrated batches (since train start)
-            imgs = imgs.to(device, non_blocking=True)
+    def train_for_one_epoch(self, epoch):
+        # init model state
+        self.model.train().half().float()
+        mloss = torch.zeros(2, device=self.device)  # mean losses
+        logger.info(("%10s" * 7) % ("Epoch", "gpu_mem", "box", "quality", "lr0", "lr1", "lr2"))
+        self.optimizer.zero_grad()
+
+        for i, (imgs, targets) in enumerate(self.dataloader):  # batch -------------------------------------------------------------
+            ni = i + self.iters * epoch  # number integrated batches (since train start)
+            imgs = imgs.to(self.device, non_blocking=True)
 
             # Warmup
-            if ni <= nw:
-                xi = [0, nw]  # x interp
+            if ni <= self.nw:
+                xi = [0, self.nw]  # x interp
                 # compute_loss.gr = np.interp(ni, xi, [0.0, 1.0])  # iou loss ratio (obj_loss = 1.0 or iou)
-                accumulate = max(1, np.interp(ni, xi, [1, nbs / batch_size]).round())
-                for j, x in enumerate(optimizer.param_groups):
+                self.accumulate = max(1, np.interp(ni, xi, [1, self.nbs / self.batch_size]).round())
+                for j, x in enumerate(self.optimizer.param_groups):
                     # bias lr falls from 0.1 to lr0, all other lrs rise from 0.0 to lr0
-                    x["lr"] = np.interp(ni, xi, [warmup_bias_lr if j == 2 else 0.0, x["initial_lr"] * lf(epoch)])
+                    x["lr"] = np.interp(ni, xi, [self.warmup_bias_lr if j == 2 else 0.0, x["initial_lr"] * self.lf(epoch)])
                     if "momentum" in x:
-                        x["momentum"] = np.interp(ni, xi, [warmup_momentum, momentum])
+                        x["momentum"] = np.interp(ni, xi, [self.warmup_momentum, self.momentum])
 
             # Forward
-            with amp.autocast(enabled=cuda):
-                result = model(imgs)  # forward
-                loss, loss_items = criteria(result, targets.to(device))  # loss scaled by batch_size
+            with amp.autocast(enabled=self.cuda):
+                result = self.model(imgs)  # forward
+                loss, loss_items = self.criteria(result, targets.to(self.device))  # loss scaled by batch_size
 
             # Backward
-            scaler.scale(loss).backward()
+            self.scaler.scale(loss).backward()
 
             # Optimize
-            if ni - last_opt_step >= accumulate:
-                scaler.step(optimizer)  # optimizer.step
-                scaler.update()
-                optimizer.zero_grad()
-                if ema:
-                    ema.update(model)
-                last_opt_step = ni
+            if ni - self.last_opt_step >= self.accumulate:
+                self.scaler.step(self.optimizer)  # optimizer.step
+                self.scaler.update()
+                self.optimizer.zero_grad()
+                self.ema.update(self.model)
+                self.last_opt_step = ni
 
             # Log
-            lr_g0, lr_g1, lr_g2 = [x["lr"] for x in optimizer.param_groups]  # for loggers
+            lr_g0, lr_g1, lr_g2 = [x["lr"] for x in self.optimizer.param_groups]  # for loggers
             mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
             mem = f"{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G"  # (GB)
-            pbar.set_description(("%10s" * 2 + "%10.4f" * 5) % (f"{epoch}/{end_epoch}", mem, *mloss, lr_g0, lr_g1, lr_g2))
+            if i % 10 == 0:
+                logger.info(("%10s" * 2 + "%10.4f" * 5) % (f"{epoch}.{i}/{self.end_epoch}", mem, *mloss, lr_g0, lr_g1, lr_g2))
             # end batch ------------------------------------------------------------------------------------------------
-
         # Scheduler
-        scheduler.step()
-        yield epoch, ema.ema, mloss
+        self.scheduler.step()
+        self.ema.update_attr(self.model)
+        return mloss
 
 
-def validation_layer(_training_layer, dataloader, class_names, device, half=False, conf_thres=0.01, iou_thres=0.6):
+class Validator:
+    def __init__(self, dataloader, class_names, device, half=True, conf_thres=0.01, iou_thres=0.6):
+        self.dataloader = dataloader
+        self.class_names = class_names
+        self.device = torch.device(device)
+        self.half = half & (self.device.type != "cpu")  # half precision only supported on CUDA
+        self.conf_thres = conf_thres
+        self.iou_thres = iou_thres
 
-    for epoch, model, mloss in _training_layer:
+    @torch.no_grad()
+    def val_for_one_epoch(self, model):
+
+        logger.debug("start validation ----------------------------------")
+
         assert hasattr(model, "strides")
-
-        # Half
-        device = torch.device(device)
-        half &= device.type != "cpu"  # half precision only supported on CUDA
-        model.half() if half else model.float()
+        model.half() if self.half else model.float()
 
         # Configure
-        model = model.eval().to(device)  # double check
-        nc = len(class_names)  # number of classes
-        iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
+        model = model.eval().to(self.device)  # double check
+        nc = len(self.class_names)  # number of classes
+        iouv = torch.linspace(0.5, 0.95, 10).to(self.device)  # iou vector for mAP@0.5:0.95
         niou = iouv.numel()
 
         # Metrics
         seen = 0
-        names = {k: v for k, v in enumerate(class_names)}
-        print(("%20s" + "%11s" * 6) % ("Class", "Images", "Labels", "P", "R", "mAP@.5", "mAP@.5:.95"))
+        names = {k: v for k, v in enumerate(self.class_names)}
+        logger.debug(("%20s" + "%11s" * 6) % ("Class", "Images", "Labels", "P", "R", "mAP@.5", "mAP@.5:.95"))
         p, r, f1, mp, mr, map50, map = [torch.zeros(1) for _ in range(7)]
         stats, ap, ap_class = [], [], []
 
-        for img, targets in dataloader:
-            img = img.to(device, non_blocking=True)
-            img = img.half() if half else img.float()  # uint8 to fp16/32
-            targets = targets.to(device)
+        for img, targets in self.dataloader:
+            img = img.to(self.device, non_blocking=True)
+            img = img.half() if self.half else img.float()  # uint8 to fp16/32
+            targets = targets.to(self.device)
 
             # Run model
             out = model(img)  # inference and training outputs
 
             # Run NMS
-            out = non_max_suppression(out, conf_thres, iou_thres)
+            out = non_max_suppression(out, self.conf_thres, self.iou_thres)
 
             # Statistics per image
             for si, pred in enumerate(out):
@@ -437,7 +488,7 @@ def validation_layer(_training_layer, dataloader, class_names, device, half=Fals
                 else:
                     correct = torch.zeros(pred.shape[0], niou, dtype=torch.bool)
                 stats.append((correct.cpu(), pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))  # (correct, conf, pcls, tcls)
-            
+
         # Compute statistics
         stats = [np.concatenate(x, 0) for x in zip(*stats)]  # to numpy
         if len(stats) and stats[0].any():
@@ -450,63 +501,85 @@ def validation_layer(_training_layer, dataloader, class_names, device, half=Fals
 
         # Print results
         pf = "%20s" + "%11i" * 2 + "%11.3g" * 4  # print format
-        print(pf % ("all", seen, nt.sum(), mp, mr, map50, map))
+        logger.debug(pf % ("all", seen, nt.sum(), mp, mr, map50, map))
 
         # Print results per class
         if nc > 1 and len(stats):
             for i, c in enumerate(ap_class):
-                print(pf % (names[c], seen, nt[c], p[i], r[i], ap50[i], ap[i]))
+                logger.debug(pf % (names[c], seen, nt[c], p[i], r[i], ap50[i], ap[i]))
+
+        logger.debug("------------------------------------------------")
 
         # Return results
-        yield epoch, model, mloss, (mp, mr, map50, map)  # P, R, mAP@.5, mAP@.5-.95
+        return mp, mr, map50, map  # P, R, mAP@.5, mAP@.5-.95
 
 
-def log_layer(_validation_layer, patience=8):
-    # Directories
-    logger = wandb.init(project="nano", dir="./runs", mode="offline")
-    wandb_dir = './runs/wandb'
-    if not os.path.exists(wandb_dir):
-        os.makedirs(wandb_dir)
-    w = increment_path(Path("runs/train") / "exp", exist_ok=False)
-    logger.config.save_path = str(w)
-    w.mkdir(parents=True, exist_ok=True)  # make dir
-    last, best = w / "last.pt", w / "best.pt"
-    results = (0, 0, 0, 0, 0, 0, 0)  # P, R, mAP@.5, mAP@.5-.95, val_loss(box, obj, cls)
+class Controller:
+    def __init__(self, trainer: Trainer, validator: Validator, patience=8):
+        self.trainer = trainer
+        self.validator = validator
+        self.patience = patience
 
-    best_fitness = 0
-    for epoch, model, mloss, results in _validation_layer:
-        stopper = EarlyStopping(patience=patience)
-        # Update best mAP
-        fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
-        if fi > best_fitness:
-            best_fitness = fi
+        # Init wandb directories
+        wandb_dir = "./runs/wandb"
+        if not os.path.exists(wandb_dir):
+            os.makedirs(wandb_dir)
+        wandb_logger = wandb.init(project="nano", dir="./runs", mode="offline")
+        w = increment_path(Path("runs/train") / "exp", exist_ok=False)
+        wandb_logger.config.save_path = str(w)
+        w.mkdir(parents=True, exist_ok=True)  # make dir
+        self.w = w
+        self.wandb_logger = wandb_logger
 
-        # Upload logger
-        log_vals = {
-            "epoch": epoch,
-            "precision": results[0].item(),
-            "recall": results[1].item(),
-            "map@.5": results[2].item(),
-            "mAP@.5-.95": results[3].item(),
-            "train_loss_box": mloss[0].item(),
-            "train_loss_qfl": mloss[1].item(),
-            "train_loss": mloss.sum().item(),
-        }
-        logger.log(log_vals)
+    def run(self):
+        try:
+            # Start training
+            last, best = self.w / "last.pt", self.w / "best.pt"
 
-        # Save model
-        ckpt = {"state_dict": deepcopy(model).half().state_dict()}
-        ckpt.update(log_vals)
+            best_fitness = 0
+            stopper = EarlyStopping(patience=self.patience)
+            for epoch in range(self.trainer.start_epoch, self.trainer.end_epoch):
+                mloss = self.trainer.train_for_one_epoch(epoch)
+                model = deepcopy(self.trainer.ema.ema)
+                metrics = self.validator.val_for_one_epoch(model)
+                torch.cuda.empty_cache()
 
-        # Save last, best and delete
-        torch.save(ckpt, last)
-        if best_fitness == fi:
-            torch.save(ckpt, best)
-        del ckpt
+                # Update best mAP
+                fi = fitness(np.array(metrics).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
+                if fi > best_fitness:
+                    best_fitness = fi
+                logger.info(f"fitness = {fi}, best_fitness = {best_fitness}")
 
-        # Stop Single-GPU
-        if stopper(epoch=epoch, fitness=fi):
-            break
+                # Upload logger
+                log_vals = {
+                    "epoch": epoch,
+                    "precision": metrics[0].item(),
+                    "recall": metrics[1].item(),
+                    "map@.5": metrics[2].item(),
+                    "mAP@.5-.95": metrics[3].item(),
+                    "train_loss_box": mloss[0].item(),
+                    "train_loss_qfl": mloss[1].item(),
+                    "train_loss": mloss.sum().item(),
+                }
+                self.wandb_logger.log(log_vals)
 
-    torch.cuda.empty_cache()
-    return best
+                # Save model
+                ckpt = {"state_dict": model.half().state_dict()}
+                ckpt.update(log_vals)
+
+                # Save last, best and delete
+                torch.save(ckpt, last)
+                if best_fitness == fi:
+                    torch.save(ckpt, best)
+                    logger.info(f"saved ckpt as {best}")
+                del ckpt
+
+                # Stop Single-GPU
+                if stopper(epoch=epoch, fitness=fi):
+                    break
+            return best
+        except Exception as e:
+            logger.error(e)
+        finally:
+            self.wandb_logger.finish()
+            torch.cuda.empty_cache()
