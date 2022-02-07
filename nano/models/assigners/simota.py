@@ -46,7 +46,7 @@ def compute_loss(box_pred, quality_pred, box_target, quality_target, device):
     loss = torch.zeros(2, device=device)
     nt = box_target.size(0)
     lbox = 0 if nt == 0 else iou_loss(box_pred, box_target, reduction="mean")
-    lqfl = 0.4 * quality_focal_loss(quality_pred, quality_target, beta=2, reduction="sum") / max(nt, 1)
+    lqfl = quality_focal_loss(quality_pred, quality_target, beta=2, reduction="sum") / max(nt, 1)
     loss += torch.stack((lbox, lqfl))
     # loss, loss items (for printing)
     return lbox + lqfl, loss.detach()
