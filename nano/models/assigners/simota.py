@@ -19,15 +19,6 @@ def iou_loss(input, target, reduction="mean"):
     return loss
 
 
-def label_smoothing(target, eps, num_classes, inplace=False):
-    if not inplace:
-        target = target.clone()
-    label_indexes = target > 0
-    target[label_indexes] = 1 - eps
-    target[~label_indexes] = eps / (num_classes - 1)
-    return target
-
-
 def compute_loss(box_pred, quality_pred, box_target, quality_target, device):
     """
     compute loss from collected bbox, quality targets,
@@ -57,7 +48,6 @@ class SimOTA(nn.Module):
     https://github.com/Megvii-BaseDetection/YOLOX/blob/0cce4a6f4ed6b7772334a612cdcc51aa16eb0591/yolox/models/yolo_head.py#L425
     https://blog.csdn.net/Megvii_tech/article/details/120030518
     optimize with https://zhuanlan.zhihu.com/p/405789762?ivk_sa=1024320u
-    * Takes about (TODO: update this)680MiB CUDA Memory on batch_size=16
     """
 
     def __init__(self, num_classes, compute_loss=True):

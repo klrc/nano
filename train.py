@@ -1,6 +1,3 @@
-from loguru import logger
-from sklearn.utils import shuffle
-import torch
 from nano.data.dataset import detection_data_layer, Assembly
 from nano.data.dataset_info import coco_to_drive3, voc_to_drive3, drive3_names
 from nano.models.assigners.simota import SimOTA
