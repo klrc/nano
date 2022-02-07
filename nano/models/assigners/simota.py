@@ -44,8 +44,9 @@ def compute_loss(box_pred, quality_pred, box_target, quality_target, device):
     """
     # bbox regression loss, objectness loss, classification loss (batched)
     loss = torch.zeros(2, device=device)
-    lbox = 0.05 * iou_loss(box_pred, box_target, reduction="mean")
-    lqfl = (4 + 1 + 0.4) * quality_focal_loss(quality_pred, quality_target, beta=2, reduction="mean")
+    nt = box_target.size(0)
+    lbox = 0 if nt == 0 else iou_loss(box_pred, box_target, reduction="mean")
+    lqfl = 0.4 * quality_focal_loss(quality_pred, quality_target, beta=2, reduction="sum") / max(nt, 1)
     loss += torch.stack((lbox, lqfl))
     # loss, loss items (for printing)
     return lbox + lqfl, loss.detach()
