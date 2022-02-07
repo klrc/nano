@@ -16,9 +16,10 @@ if __name__ == "__main__":
     try:
         logger.debug("Assigner Test ------------------")
 
-        dataset1 = detection_data_layer("../datasets/VOC/images/train2012", "../datasets/VOC/labels/train2012")
+        dataset1 = detection_data_layer("../datasets/coco/images/train2017", "../datasets/coco/labels/train2017")
+        dataset2 = detection_data_layer("../datasets/VOC/images/train2012", "../datasets/VOC/labels/train2012")
         factory = Assembly()
-        factory.append_data(dataset1)
+        factory.append_data(dataset1, dataset2)
         factory.compose(
             T.ToNumpy(mark_source=True),
             T.IndexMapping(coco_to_drive3, pattern="/coco"),

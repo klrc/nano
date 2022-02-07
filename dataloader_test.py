@@ -11,7 +11,7 @@ if __name__ == "__main__":
         logger.debug("Dataloader Test ------------------")
 
         target_resolution = (224, 416)
-        dataset1 = detection_data_layer("/Volumes/ASM236X/coco/images/train2017", "/Volumes/ASM236X/coco/labels/train2017")
+        dataset1 = detection_data_layer("../datasets/coco/images/train2017", "../datasets/coco/labels/train2017")
         dataset2 = detection_data_layer("../datasets/VOC/images/train2012", "../datasets/VOC/labels/train2012")
         factory = Assembly()
         factory.append_data(dataset1, dataset2)

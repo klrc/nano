@@ -93,12 +93,15 @@ class IndexMapping(TransformFunction):
         self.pattern = pattern
 
     def __call__(self, data):
-        if self.pattern is not None and len(data) > 2:
+        if self.pattern is not None:  # pattern match mode
+            if len(data) <= 2:  # already processed
+                return data
             image, label, source = data
-            if self.pattern not in source:
+            if self.pattern not in source:  # pass
                 return data
         else:
-            image, label = data
+            image, label = data  # non-match mode
+        # ready to process
         new_label = []
         for lb in label:
             cid = int(lb[0])
