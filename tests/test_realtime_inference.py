@@ -3,8 +3,6 @@ import torch
 import torchvision.transforms as T
 from multiprocessing import Queue, Process
 import numpy as np
-from nano.datasets.coco_box2d_visualize import draw_bounding_boxes, draw_center_points
-from nano.datasets.class_utils import c26_classes
 from nano.ops.box2d import non_max_suppression
 
 
