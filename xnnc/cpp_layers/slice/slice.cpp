@@ -52,7 +52,11 @@ class CustomSliceLayer : public CppCustomLayer {
     }
 
     virtual void reshape(const std::vector<Tensor<float> *> &inputs, const std::vector<Tensor<float> *> &outputs) {
+        TensorShape input_shape = inputs[0]->getShape();
         TensorShape top_shape(4);
+        for(int i=0; i<4; i++){
+            top_shape[i] = input_shape[i];
+        }
         top_shape[this->axis] = this->end - this->start;
         outputs[0]->reshape(top_shape);
     }

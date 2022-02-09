@@ -1,6 +1,4 @@
 from _layer import CaffeLayer, parse_attribute
-import onnx
-import math
 from onnx import helper
 
 

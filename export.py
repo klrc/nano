@@ -28,8 +28,10 @@ if __name__ == "__main__":
     logger.debug("Replacing layer for support: ChannelShuffle")
     model.head = NanoHeadless(model.head)
     for m in model.modules():
-        if isinstance(m, ESBlockS1):
-            m.channel_shuffle = nn.ChannelShuffle(2)
+        for cname, c in m.named_children():
+            if isinstance(c, ESBlockS1):
+                # setattr(m, cname, nn.Identity())
+                c.channel_shuffle = nn.ChannelShuffle(2)
     model.eval()
     logger.success(f"Exporting model as {model_stamp}")
 
@@ -77,7 +79,7 @@ if __name__ == "__main__":
 
     # Generate Caffe models =============================================================================
     logger.debug("Build Caffe model & prototxt")
-    project_root = '/Users/sh/Projects/nano'
+    project_root = "/Users/sh/Projects/nano"
     with caffe_builder(
         working_dir="/script",
         build_path=f"{project_root}/{root}",
@@ -86,9 +88,9 @@ if __name__ == "__main__":
     ) as s:
         s.exec_run(f"python3 build.py --onnx_file {project_root}/{onnx_path}", stream=True)
 
-    assert os.path.exists(f'{root}/{model_stamp}.caffemodel')
-    assert os.path.exists(f'{root}/{model_stamp}-custom.prototxt')
-    logger.success(f'Saved {root}/{model_stamp}.caffemodel')
+    assert os.path.exists(f"{root}/{model_stamp}.caffemodel")
+    assert os.path.exists(f"{root}/{model_stamp}-custom.prototxt")
+    logger.success(f"Saved {root}/{model_stamp}.caffemodel")
 
     # Add final PP layer
     with open(f"{root}/{model_stamp}-custom.prototxt", "a") as f:
@@ -103,7 +105,7 @@ if __name__ == "__main__":
         f.write('    param_map_str: ""\n')
         f.write("  }\n")
         f.write("}\n")
-    logger.success(f'Saved {root}/{model_stamp}-custom.prototxt')
+    logger.success(f"Saved {root}/{model_stamp}-custom.prototxt")
 
     # Update XNNC source =====================================================================================
     logger.debug("Updating XNNC source ..")
@@ -116,6 +118,7 @@ if __name__ == "__main__":
         f"mkdir {xnnc_root}/Example/{xnnc_project}/layers",
         f"cp {root}/*-custom.prototxt {xnnc_root}/Example/{xnnc_project}/model/yolox.prototxt",
         f"cp {root}/*.caffemodel {xnnc_root}/Example/{xnnc_project}/model/yolox.caffemodel",
+        f"cp -r ../datasets/dataset {xnnc_root}/Example/{xnnc_project}/dataset",
         f"cp -r xnnc/cpp_layers/* {xnnc_root}/Example/{xnnc_project}/layers/",
         f"cp xnnc/yolox.cfg {xnnc_root}/Example/{xnnc_project}/",
     ]:
@@ -132,7 +135,7 @@ if __name__ == "__main__":
     logger.debug("Generating output_ctrl.txt")
     with open(f"{xnnc_root}/Example/{xnnc_project}/model/output_ctrl.txt", "w") as f:
         f.write("[detection_out:detection_out] save det dataset/voc2012_labels.txt dataset/")
-    logger.success(f'Update finished in {xnnc_root}')
+    logger.success(f"Update finished in {xnnc_root}")
 
     # Build DSP project =======================================================================================
     logger.debug("Build XNNC project ..")

@@ -20,11 +20,6 @@ using namespace std;
 #define INPUT_HEIGHT 224
 #define INPUT_WIDTH 416
 
-// find index in a tensor with (Anc, Attrs, H, W) shape
-// returns t * Attrs*H*W + k * H*W + h * W + w
-// also performs sigmoid() func on outputs
-#define SIGMOID_MEM(k) sigmoid(input_memory[(k * IN_H + h) * IN_W + w])
-
 typedef struct BoundingBox {
     int label;
     float score;
@@ -87,49 +82,65 @@ void detection_nms(vector<BoundingBox>& candidates) {
     }
 }
 
-void post_process(const std::vector<Tensor<float>*>& inputs, const std::vector<Tensor<float>*>& outputs) {
-    float* output_memory = outputs[0]->getMutableData();
-    vector<BoundingBox> results;
+inline float tensor_by_index(float* tensor, int n, int c, int h, int w, const int max_n, const int max_c,
+                             const int max_h) {
+    // read data in WHDN order
+    return tensor[max_n * (max_c * (max_h * w + h) + c) + n];
+}
+
+void check_dense_anchors(Tensor<float>* input, const int stride, vector<BoundingBox> results) {
     vector<float> cls_stack;
-
-    const int strides[] = {8, 16, 32, 64};
-
-    // select cadidates with obj_score > conf_thresh
-    for (int i = 0; i < NUM_STRIDES; i++) {
-        float* input_memory = inputs[i]->getMutableData();
-        const int IN_D = inputs[i]->getDepth();
-        const int IN_H = inputs[i]->getHeight();
-        const int IN_W = inputs[i]->getWidth();
-        // for all grids in data
-        for (int h = 0; h < IN_H; h++) {
-            for (int w = 0; w < IN_W; w++) {
-                // get object score & class score
-                cls_stack.clear();
-                for (int li = 4; li < 4 + NUM_CLASSES; li++) {
-                    cls_stack.push_back(SIGMOID_MEM(li));
-                }
-                int label = max_element(cls_stack.begin(), cls_stack.end()) - cls_stack.begin();  // 0, 1, 2, ...
-                float confidence = cls_stack[label];
-                if (confidence > CONFIDENCE_THRESH) {
-                    // get real-size x, y, w, h, class label, class score
-                    float _cx = (SIGMOID_MEM(0) * 7 - 3 + w) * strides[i];
-                    float _cy = (SIGMOID_MEM(1) * 7 - 3 + h) * strides[i];
-                    float _cw = fast_exp(SIGMOID_MEM(2) * 3) * strides[i];
-                    float _ch = fast_exp(SIGMOID_MEM(3) * 3) * strides[i];
-                    // Box (center x, center y, width, height) to (x1, y1, x2, y2)
-                    BoundingBox obj;
-                    obj.x1 = clip((_cx - _cw / 2.0) / INPUT_WIDTH, 0, 1);
-                    obj.y1 = clip((_cy - _ch / 2.0) / INPUT_HEIGHT, 0, 1);
-                    obj.x2 = clip((_cx + _cw / 2.0) / INPUT_WIDTH, 0, 1);
-                    obj.y2 = clip((_cy + _ch / 2.0) / INPUT_HEIGHT, 0, 1);
-                    obj.score = confidence;
-                    obj.label = label;
-                    results.push_back(obj);
-                    // printf("> %d, %f, %f, %f, %f, %f \n", obj.label, obj.x1, obj.y1, obj.x2, obj.y2, obj.score);
-                }
+    float* tensor = input->getMutableData();
+    const int IN_D = input->getDepth();
+    const int IN_H = input->getHeight();
+    const int IN_W = input->getWidth();
+    // currently support only N=1
+    for (int h = 0; h < IN_H; h++) {
+        for (int w = 0; w < IN_W; w++) {
+            // find anchor with confidence > threshold
+            cls_stack.clear();
+            for (int c = 4; c < 4 + NUM_CLASSES; c++) {
+                cls_stack.push_back(tensor_by_index(tensor, 0, c, h, w, 1, IN_D, IN_H));
+            }
+            int label = max_element(cls_stack.begin(), cls_stack.end()) - cls_stack.begin();  // 0, 1, 2, ...
+            float confidence = sigmoid(cls_stack[label]);
+            // collect data
+            if (confidence > CONFIDENCE_THRESH) {
+                // get real-size x, y, w, h, class label, class score
+                float _cx = sigmoid(tensor_by_index(tensor, 0, 0, h, w, 1, IN_D, IN_H));
+                float _cy = sigmoid(tensor_by_index(tensor, 0, 1, h, w, 1, IN_D, IN_H));
+                float _cw = sigmoid(tensor_by_index(tensor, 0, 2, h, w, 1, IN_D, IN_H));
+                float _ch = sigmoid(tensor_by_index(tensor, 0, 3, h, w, 1, IN_D, IN_H));
+                // scale to real size
+                _cx = (_cx * 7 - 3 + w) * stride;
+                _cy = (_cy * 7 - 3 + h) * stride;
+                _cw = fast_exp(_cw * 3) * stride;
+                _ch = fast_exp(_ch * 3) * stride;
+                // Box (center x, center y, width, height) to (x1, y1, x2, y2)
+                BoundingBox obj;
+                obj.x1 = clip((_cx - _cw / 2.0) / INPUT_WIDTH, 0, 1);
+                obj.y1 = clip((_cy - _ch / 2.0) / INPUT_HEIGHT, 0, 1);
+                obj.x2 = clip((_cx + _cw / 2.0) / INPUT_WIDTH, 0, 1);
+                obj.y2 = clip((_cy + _ch / 2.0) / INPUT_HEIGHT, 0, 1);
+                obj.score = confidence;
+                obj.label = label;
+                results.push_back(obj);
             }
         }
     }
+}
+
+void post_process(const std::vector<Tensor<float>*>& inputs, const std::vector<Tensor<float>*>& outputs) {
+    float* output_memory = outputs[0]->getMutableData();
+    vector<BoundingBox> results;
+    const int strides[] = {8, 16, 32, 64};
+    const int output_labels[] = {1, 2, 3};  // background-0, person-1, bike-2, car-3
+
+    // select cadidates with obj_score > conf_thresh
+    for (int i = 0; i < NUM_STRIDES; i++) {
+        check_dense_anchors(inputs[i], strides[i], results);
+    }
+
     // run nms
     detection_nms(results);
 
@@ -137,12 +148,11 @@ void post_process(const std::vector<Tensor<float>*>& inputs, const std::vector<T
     for (int i = 0; i < MAX_DETECTIONS * 6; i++) {
         output_memory[i] = 0.0f;
     }
-    int voc_map_labels[] = {1, 2, 3};  // background-0, person-1, bike-2, car-3
+
     for (int i = 0; i < results.size(); i++) {
-        // printf("[%d], %d, %f, %f, %f, %f, %f \n", i, voc_map_labels[results[i].label], results[i].score,
-        // results[i].x1,
-        //        results[i].y1, results[i].x2, results[i].y2);
-        output_memory[i * 6 + 0] = voc_map_labels[results[i].label];
+        printf("[%d], %d, %f, %f, %f, %f, %f \n", i, output_labels[results[i].label], results[i].score, results[i].x1,
+               results[i].y1, results[i].x2, results[i].y2);
+        output_memory[i * 6 + 0] = output_labels[results[i].label];
         output_memory[i * 6 + 1] = results[i].score;
         output_memory[i * 6 + 2] = results[i].x1;
         output_memory[i * 6 + 3] = results[i].y1;
