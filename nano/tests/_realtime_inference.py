@@ -3,14 +3,15 @@ import torch
 import torchvision.transforms as T
 from multiprocessing import Queue, Process
 import numpy as np
+from nano.data.visualize import Canvas
 from nano.ops.box2d import non_max_suppression
+from loguru import logger
 
 
-def detection(conf_thres, iou_thres, inf_size, device, capture_queue, result_queue):
-    model = acquire_model()
+def detection(model, conf_thres, iou_thres, inf_size, device, capture_queue, result_queue):
     model.eval().to(device)
     model.head.debug = True
-    print("> model online.")
+    logger.info("Model Online")
     transforms = T.Compose([T.ToPILImage(), T.Resize(inf_size), T.ToTensor()])
     with torch.no_grad():
         while True:
@@ -19,19 +20,18 @@ def detection(conf_thres, iou_thres, inf_size, device, capture_queue, result_que
                 # process image
                 x = transforms(frame).to(device).unsqueeze(0)
                 results, grid_mask, stride_mask = model(x)
-                results = results[..., :4+3]
                 centers = (grid_mask[0] + 0.5) * stride_mask[0].unsqueeze(-1)
                 alphas = results[0, :, 4:].max(dim=-1).values
-                mask = alphas >= iou_thres
+                mask = alphas >= conf_thres
                 centers, alphas = centers[mask], alphas[mask]
                 # Run NMS
-                out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=True)[0]  # batch 0
+                out = non_max_suppression(results, conf_thres, iou_thres, focal_nms=False)[0]  # batch 0
                 result_queue.put((out, centers, alphas))
 
 
-def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu", always_on_top=False):
+def test_video(model, capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu", always_on_top=False):
     cap_h, cap_w = capture_size
-    ratio = 448 / max(capture_size)  # h, w <= 416
+    ratio = 480 / max(capture_size)  # h, w <= 416
     inf_h = int(np.ceil(cap_h * ratio / 64) * 64)  # (padding for Thinkpad-P51 front camera)
     inf_w = int(np.ceil(cap_w * ratio / 64) * 64)  # (padding for Thinkpad-P51 front camera)
     border_h = int((inf_h / ratio - cap_h) // 2)
@@ -42,7 +42,7 @@ def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_nam
     bbox_set = []
 
     # inference process --------------
-    proc_1 = Process(target=detection, args=[conf_thres, iou_thres, inference_size, device, capture_queue, result_queue])
+    proc_1 = Process(target=detection, args=[model, conf_thres, iou_thres, inference_size, device, capture_queue, result_queue])
     proc_1.daemon = True
     proc_1.start()
 
@@ -53,19 +53,22 @@ def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_nam
         if capture_queue.empty():
             capture_queue.put(frame)
         if not result_queue.empty():  # update bbox_set
-            bbox_set, centers, _ = result_queue.get()
-        if len(bbox_set) == 0:
-            print("nothing detected")
-        else:
+            bbox_set, centers, alphas = result_queue.get()
+        if len(bbox_set) > 0:
+            logger.info(f"Receving frame with {len(bbox_set)} objects")
             x = bbox_set.clone()
             x[..., :4] /= ratio  # rescale to raw image size
             centers /= ratio  # rescale to raw image sizection
             box_classes = [class_names[n] for n in x[..., 5].cpu().int()]  # xyxy-conf-cls
             box_labels = [f"{cname} {conf:.2f}" for cname, conf in zip(box_classes, x[..., 4])]
-            # draw bounding boxes with builtin opencv2 fu
-            frame = draw_center_points(frame, centers, thickness=3)
-            frame = draw_bounding_boxes(frame, boxes=x[..., :4], boxes_label=box_labels)
-            # frame = draw_bounding_boxes(frame, boxes=x[..., :4], boxes_label=box_labels, alphas=x[..., 4])
+            # draw bounding boxes with builtin opencv2
+            canvas = Canvas(frame)
+            for box, label in zip(x[..., :4], box_labels):
+                canvas.draw_box(box)
+                canvas.draw_text_with_background(label, (box[0], box[1]))
+            for center, alpha in zip(centers, alphas):
+                canvas.draw_point(center, alpha=alpha)
+            frame = canvas.image
         cv2.imshow("frame", frame)
         if always_on_top:
             cv2.setWindowProperty("frame", cv2.WND_PROP_TOPMOST, 1)
@@ -73,7 +76,7 @@ def test_video(capture_generator, capture_size, conf_thres, iou_thres, class_nam
             return
 
 
-def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
+def test_front_camera(model, conf_thres, iou_thres, class_names, device="cpu"):
     try:
         capture = cv2.VideoCapture(0)  # VideoCapture 读取本地视频和打开摄像头
         cap_h = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)  # 计算视频的高
@@ -87,14 +90,14 @@ def test_front_camera(conf_thres, iou_thres, class_names, device="cpu"):
                     break
                 yield cv2.flip(frame, 1)  # cv2.flip 图像翻转
 
-        test_video(capture_fn(), capture_size, conf_thres, iou_thres, class_names, device)
+        test_video(model, capture_fn(), capture_size, conf_thres, iou_thres, class_names, device)
     except Exception as e:
         capture.release()
         cv2.destroyAllWindows()
         raise e
 
 
-def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
+def test_screenshot(model, conf_thres, iou_thres, class_names, device="cpu"):
     from mss import mss
     import pyautogui as pag
 
@@ -116,18 +119,17 @@ def test_screenshot(conf_thres, iou_thres, class_names, device="cpu"):
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
                 yield frame
 
-        test_video(capture_fn(), capture_size, conf_thres, iou_thres, class_names, device, always_on_top=True)
+        test_video(model, capture_fn(), capture_size, conf_thres, iou_thres, class_names, device, always_on_top=True)
     except Exception as e:
         cv2.destroyAllWindows()
         raise e
 
 
-def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
+def test_yuv(model, conf_thres, iou_thres, class_names, yuv_file, yuv_size=(720, 1280), fps=24, device="cpu"):
     import os
     import time
 
-    yuv_file = "../datasets/1280x720_4.yuv"
-    yuv_h, yuv_w = 720, 1280
+    yuv_h, yuv_w = yuv_size
 
     try:
         # Number of frames: in YUV420 frame size in bytes is width*height*1.5
@@ -135,7 +137,7 @@ def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
         n_frames = file_size // (yuv_w * yuv_h * 3 // 2)
         capture_size = (yuv_h, yuv_w)
 
-        def capture_fn(fps=24):
+        def capture_fn(fps=fps):
             with open(yuv_file, "rb") as f:
                 for _ in range(n_frames):
                     # Read Y, U and V color channels and reshape to height*1.5 x width numpy array
@@ -146,21 +148,7 @@ def test_yuv(conf_thres, iou_thres, class_names, device="cpu"):
                     yield frame
                     time.sleep(1 / fps)
 
-        test_video(capture_fn(), capture_size, conf_thres, iou_thres, class_names, device)
+        test_video(model, capture_fn(), capture_size, conf_thres, iou_thres, class_names, device, always_on_top=True)
     except Exception as e:
         cv2.destroyAllWindows()
         raise e
-
-
-def acquire_model():
-    from nano.models.model_zoo.nano_ghost import GhostNano_3x4_m96
-
-    model = GhostNano_3x4_m96(num_classes=26)
-    model.load_state_dict(torch.load("runs/train/exp10/last.pt", map_location="cpu")['state_dict'])
-    return model
-
-
-if __name__ == "__main__":
-    test_front_camera(0.25, 0.45, c26_classes, device="cpu")
-    # test_screenshot(0.25, 0.45, ["person", "bike", "car"], device="cpu")
-    # test_yuv(0.3, 0.45, c26_classes, device="cpu")

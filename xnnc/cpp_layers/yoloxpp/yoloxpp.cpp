@@ -9,7 +9,7 @@
 
 using namespace std;
 
-#define CONFIDENCE_THRESH 0.2
+#define CONFIDENCE_THRESH 0.25
 #define IOU_THRESH 0.45
 #define MAX_DETECTIONS 300
 #define MAX_NMS 30000  // maximum number of boxes into torchvision.ops.nms()
@@ -134,7 +134,7 @@ void post_process(const std::vector<Tensor<float>*>& inputs, const std::vector<T
     float* output_memory = outputs[0]->getMutableData();
     vector<BoundingBox> results;
     const int strides[] = {8, 16, 32, 64};
-    const int output_labels[] = {1, 2, 3};  // background-0, person-1, bike-2, car-3
+    const int output_labels[] = {15, 2, 7};  // background-0, person-15, bike-2, car-7
 
     // select cadidates with obj_score > conf_thresh
     for (int i = 0; i < NUM_STRIDES; i++) {

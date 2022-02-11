@@ -16,11 +16,12 @@ if __name__ == "__main__":
     # model setup ======================================================================================
     logger.debug("Loading pytorch neural network model")
     # make sure to configure the following variables
-    model_stamp = "GhostNano_3x4_m96_build_test"
+    model_stamp = "GhostNano_3x4_m96"
     output_names = ["output_0", "output_1", "output_2", "output_3"]
     class_names = drive3_names
     num_strides = len(output_names)
     model = GhostNano_3x4_m96(num_classes=len(class_names))
+    model.load_state_dict(torch.load("runs/train/exp17/best.pt", map_location="cpu")["state_dict"])
     # model.load_state_dict(torch.load("release/GhostNano_3x4_m96/GhostNano_3x4_m96.pt", map_location="cpu"))
     input_size = (1, 3, 224, 416)
     forced_export = True
@@ -111,6 +112,7 @@ if __name__ == "__main__":
     logger.debug("Updating XNNC source ..")
     xnnc_root = "/Users/sh/Projects/tensilica/xtensa/XNNC"
     xnnc_project = "yolox-series"
+    xnnc_valset = 'calib_dataset_416x'
     for cmd in [
         f"sudo rm -r {xnnc_root}/Example/{xnnc_project}",
         f"mkdir {xnnc_root}/Example/{xnnc_project}",
@@ -118,7 +120,7 @@ if __name__ == "__main__":
         f"mkdir {xnnc_root}/Example/{xnnc_project}/layers",
         f"cp {root}/*-custom.prototxt {xnnc_root}/Example/{xnnc_project}/model/yolox.prototxt",
         f"cp {root}/*.caffemodel {xnnc_root}/Example/{xnnc_project}/model/yolox.caffemodel",
-        f"cp -r ../datasets/dataset {xnnc_root}/Example/{xnnc_project}/dataset",
+        f"cp -r ../datasets/{xnnc_valset} {xnnc_root}/Example/{xnnc_project}/{xnnc_valset}",
         f"cp -r xnnc/cpp_layers/* {xnnc_root}/Example/{xnnc_project}/layers/",
         f"cp xnnc/yolox.cfg {xnnc_root}/Example/{xnnc_project}/",
     ]:
@@ -134,7 +136,7 @@ if __name__ == "__main__":
         f.write("0.0    # channel 3\n")
     logger.debug("Generating output_ctrl.txt")
     with open(f"{xnnc_root}/Example/{xnnc_project}/model/output_ctrl.txt", "w") as f:
-        f.write("[detection_out:detection_out] save det dataset/voc2012_labels.txt dataset/")
+        f.write(f"[detection_out:detection_out] save det {xnnc_valset}/voc2012_labels.txt {xnnc_valset}/")
     logger.success(f"Update finished in {xnnc_root}")
 
     # Build DSP project =======================================================================================

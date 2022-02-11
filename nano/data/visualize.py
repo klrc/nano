@@ -37,6 +37,7 @@ class Canvas:
         return self.color
 
     def merge_transparent_layer(self, layer, alpha):
+        alpha = float(alpha)
         if alpha < 1:
             self.image = cv2.addWeighted(self.image, 1 - alpha, layer, alpha, 0)
         return layer
@@ -44,6 +45,7 @@ class Canvas:
     def draw_point(self, center, thickness=3, alpha=1):
         # draw square pixel-style points on image
         layer = self.image.copy()
+        center = [int(x) for x in center]
         layer = cv2.circle(layer, center, 1, self.color, thickness)
         self.image = self.merge_transparent_layer(layer, alpha)
 
@@ -58,7 +60,7 @@ class Canvas:
         text_size, _ = cv2.getTextSize(text, self.font, self.font_scale, self.font_thickness)
         text_w, text_h = text_size
         layer = self.image.copy()
-        x1, y1 = top_left_point
+        x1, y1 = [int(x) for x in top_left_point]
         layer = cv2.rectangle(layer, (x1, y1), (x1 + text_w + 2, y1 + text_h + 2), self.color, -1)
         layer = cv2.putText(layer, text, (x1, y1 + text_h), self.font, self.font_scale, self.font_color, self.font_thickness)
         self.image = self.merge_transparent_layer(layer, alpha)
