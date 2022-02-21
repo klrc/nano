@@ -2,7 +2,7 @@ from nano.data.dataset import detection_data_layer, Assembly
 from nano.data.dataset_info import coco_to_drive3, voc_to_drive3, drive3_names
 from nano.models.assigners.simota import SimOTA
 from nano.models.model_zoo.nano_ghost import GhostNano_3x3_l128, GhostNano_3x3_m96, GhostNano_3x4_m96, GhostNano_3x4_s64, GhostNano_4x3_m96
-from nano.training_core import Trainer, Validator, Controller
+from nano.trainer.core import Trainer, Validator, Controller
 from nano.models.model_zoo import GhostNano_3x3_s64
 import nano.data.transforms as T
 
@@ -28,11 +28,12 @@ if __name__ == "__main__":
             T.IndexMapping(coco_to_drive3, pattern="/coco"),
             T.IndexMapping(voc_to_drive3, pattern="/VOC"),
             T.HorizontalFlip(p=0.5),
-            T.Resize(max_size=max(target_resolution) + 64),
-            T.RandomScale(min_scale=0.75, max_scale=1.25),
+            T.Resize(max_size=int(max(target_resolution)/2)),
+            T.RandomScale(min_scale=0.5, max_scale=1),
             T.RandomAffine(min_scale=0.875, max_scale=1.125, p=0.5),
             T.HSVTransform(),
-            T.Mosaic4(mosaic_size=max(target_resolution) + 32, p=1),
+            T.AlbumentationsPreset(),
+            T.Mosaic4(mosaic_size=int(max(target_resolution)), p=1),
             T.ToTensor(),
         )
         trainloader = factory.as_dataloader(batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=T.letterbox_collate_fn)

@@ -107,20 +107,21 @@ voc_names = (
 
 
 drive3_names = (
-    'person',
-    'bike',
-    'car',
+    "person",
+    "bike",
+    "car",
 )
 
 any_to_drive3 = {
-    'person': 'person',
-    'bicycle': 'bike',
-    'motorcycle': 'bike',
-    'motorbike': 'bike',
-    'car': 'car',
-    'bus': 'car',
-    'truck': 'car',
+    "person": "person",
+    "bicycle": "bike",
+    "motorcycle": "bike",
+    "motorbike": "bike",
+    "car": "car",
+    "bus": "car",
+    "truck": "car",
 }
+
 
 def __index_mapping(src_names, target_names, src_to_target_names):
     index_map = {}
@@ -130,6 +131,7 @@ def __index_mapping(src_names, target_names, src_to_target_names):
             target_cid = target_names.index(v)
             index_map[src_cid] = target_cid
     return index_map
+
 
 voc_to_drive3 = __index_mapping(voc_names, drive3_names, any_to_drive3)
 coco_to_drive3 = __index_mapping(coco_names, drive3_names, any_to_drive3)

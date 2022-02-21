@@ -59,48 +59,13 @@ class Tensor2Image(TransformFunction):
         return np_img
 
 
-class ToNumpy(TransformFunction):
-    def __init__(self, mark_source=False) -> None:
-        super().__init__(p=1)
-        self.mark_source = mark_source
-
-    def __call__(self, data):
-        # load unsorted data (image+label) into numpy
-        image, label = sorted(data, key=lambda x: x.split(".")[-1])
-        image = cv2.imread(image)  # BGR
-        image_size_factor = image.shape[:2][::-1]  # orig hw
-        # process label
-        # relative cxywh -> absolute cxyxy
-        with open(label, "r") as f:
-            label = []
-            for line in f.readlines():
-                line = np.array([float(x) for x in line.split(" ")])
-                line[1:3] *= image_size_factor
-                line[3:] *= image_size_factor
-                line[1:3] -= line[3:] / 2
-                line[3:] += line[1:3]
-                label.append(line)
-        label = np.array(label)
-        if self.mark_source:
-            return image, label, data[1]
-        return image, label
-
-
 class IndexMapping(TransformFunction):
-    def __init__(self, index_map, pattern=None, p=1) -> None:
-        super().__init__(p)
+    def __init__(self, index_map) -> None:
+        super().__init__(p=1)
         self.index_map = index_map
-        self.pattern = pattern
 
     def __call__(self, data):
-        if self.pattern is not None:  # pattern match mode
-            if len(data) <= 2:  # already processed
-                return data
-            image, label, source = data
-            if self.pattern not in source:  # pass
-                return data
-        else:
-            image, label = data  # non-match mode
+        image, label = data  # non-match mode
         # ready to process
         new_label = []
         for lb in label:
@@ -416,8 +381,8 @@ class AlbumentationsPreset(TransformFunction):
         if preset == "random_blind":
             self.transforms = A.Compose(
                 [
-                    A.Blur(p=0.05),
-                    A.MedianBlur(p=0.05),
+                    A.Blur(p=0.01),
+                    A.MedianBlur(p=0.01),
                     A.ToGray(p=0.1),
                 ]
             )

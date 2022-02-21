@@ -1,5 +1,6 @@
 import torch
 
+
 def check_size(model):
     params = 0
     for module in model.modules():
@@ -7,5 +8,5 @@ def check_size(model):
             params += torch.prod(torch.LongTensor(list(module.weight.size())))
         if hasattr(module, "bias") and hasattr(module.bias, "size"):
             params += torch.prod(torch.LongTensor(list(module.bias.size())))
-    total_params_size = abs(params.numpy() * 4. / (1024 ** 2.))
+    total_params_size = abs(params.numpy() * 4.0 / (1024 ** 2.0))
     print("Params size (MB): %0.2f" % total_params_size)

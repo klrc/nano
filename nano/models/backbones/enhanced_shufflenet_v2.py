@@ -69,55 +69,15 @@ class ESBlockS1(nn.Module):
         self.channel_shuffle = ChannelShuffle(2)
 
     def forward(self, x):
-        x1, x2 = x[:, : self.split_point, :, :], x[:, self.split_point :, :, :]
+        x1, x2 = x[:, : self.split_point, :, :], x[:, self.split_point:, :, :]
         x1 = self.main_branch(x1)
         x = torch.cat([x1, x2], dim=1)
         x = self.channel_shuffle(x)
         return x
 
 
-class EnhancedShuffleNetv2_4x(nn.Module):
-    def __init__(self, channels=(24, 48, 96, 192, 288), s2_depth=7):
-        super().__init__()
-        channels = [x if i == 0 else make_divisible(x) for i, x in enumerate(channels)]
-
-        __inc, __mid = channels[0], channels[1]
-        self.feature_s0 = nn.Sequential(
-            nn.Conv2d(3, __inc, 3, 2, 1),
-            nn.BatchNorm2d(__inc),
-            nn.ReLU6(),
-            ESBlockS2(__inc, __mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-        )
-        __inc, __mid = channels[1], channels[2]
-        self.feature_s1 = nn.Sequential(
-            ESBlockS2(__inc, __mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-        )
-        __inc, __mid = channels[2], channels[3]
-        self.feature_s2 = nn.Sequential(
-            ESBlockS2(__inc, __mid, __mid),
-            *[ESBlockS1(__mid, __mid) for _ in range(s2_depth - 1)],
-        )
-        __inc, __mid = channels[3], channels[4]
-        self.feature_s3 = nn.Sequential(
-            ESBlockS2(__inc, __mid, __mid),
-            ESBlockS1(__mid, __mid),
-            ESBlockS1(__mid, __mid),
-        )
-
-    def forward(self, x):
-        fs0 = self.feature_s0(x)
-        fs1 = self.feature_s1(fs0)
-        fs2 = self.feature_s2(fs1)
-        fs3 = self.feature_s3(fs2)
-        return [fs0, fs1, fs2, fs3]
-
-
-class EnhancedShuffleNetv2_3x(nn.Module):
-    def __init__(self, channels=(24, 96, 192, 384), s2_depth=7):
+class EnhancedShuffleNetv2(nn.Module):
+    def __init__(self, channels=(24, 96, 192, 384)):
         super().__init__()
         channels = [x if i == 0 else make_divisible(x) for i, x in enumerate(channels)]
 
@@ -137,7 +97,7 @@ class EnhancedShuffleNetv2_3x(nn.Module):
         __inc, __mid = channels[1], channels[2]
         self.feature_s2 = nn.Sequential(
             ESBlockS2(__inc, __mid, __mid),
-            *[ESBlockS1(__mid, __mid) for _ in range(s2_depth - 1)],
+            *[ESBlockS1(__mid, __mid) for _ in range(6)],
         )
         __inc, __mid = channels[2], channels[3]
         self.feature_s3 = nn.Sequential(

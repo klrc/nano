@@ -32,6 +32,9 @@ class Canvas:
         self.font_thickness = 1
         self.font_color = (0, 0, 0)
 
+    def set_color(self, color):
+        self.color = color
+
     def next_color(self):
         self.color = list(np.random.random(size=3) * 128 + 128)  # light color
         return self.color
@@ -39,7 +42,7 @@ class Canvas:
     def merge_transparent_layer(self, layer, alpha):
         alpha = float(alpha)
         if alpha < 1:
-            self.image = cv2.addWeighted(self.image, 1 - alpha, layer, alpha, 0)
+            return cv2.addWeighted(self.image, 1 - alpha, layer, alpha, 0)
         return layer
 
     def draw_point(self, center, thickness=3, alpha=1):
@@ -49,10 +52,10 @@ class Canvas:
         layer = cv2.circle(layer, center, 1, self.color, thickness)
         self.image = self.merge_transparent_layer(layer, alpha)
 
-    def draw_box(self, box, alpha=1):
+    def draw_box(self, box, alpha=1, thickness=1):
         layer = self.image.copy()
         x1, y1, x2, y2 = [int(x) for x in box]
-        layer = cv2.rectangle(layer, (x1, y1), (x2, y2), self.color, 1, 4, 0)
+        layer = cv2.rectangle(layer, (x1, y1), (x2, y2), self.color, thickness, 4, 0)
         self.image = self.merge_transparent_layer(layer, alpha)
 
     def draw_text_with_background(self, text, top_left_point, alpha=1):
