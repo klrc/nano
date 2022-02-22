@@ -4,13 +4,13 @@ from loguru import logger
 
 sys.path.append(".")
 
-from nano.data.dataset import DatasetModule, CAVIARSeed, MSCOCOSeed  # noqa: E402
+from nano.data.dataset import DatasetModule, CAVIARSeed, MSCOCOSeed, PETS09Seed, VIRATSeed  # noqa: E402
 from nano.data.dataset_info import drive3_names, voc_to_drive3, coco_to_drive3  # noqa: E402
 import nano.data.transforms as T  # noqa: E402
 import nano.data.visualize as V  # noqa: E402
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         logger.debug("Dataloader Test ------------------")
 
@@ -55,8 +55,19 @@ if __name__ == '__main__':
         #     T.Resize(max_size=int(max(target_resolution))),  # 1x
         #     T.ToTensor(),
         # )
+        # factory.add_seed(
+        #     CAVIARSeed("/Volumes/ASM236X/CAVIAR", pick_rate=0.1),
+        #     T.HorizontalFlip(p=0.5),
+        #     T.ToTensor(),
+        # )
+        # factory.add_seed(
+        #     PETS09Seed("/Volumes/ASM236X/Crowd_PETS09", pick_rate=1),
+        #     T.HorizontalFlip(p=0.5),
+        #     T.ToTensor(),
+        # )
         factory.add_seed(
-            CAVIARSeed("/Volumes/ASM236X/CAVIAR", pick_rate=0.1),
+            VIRATSeed("/Volumes/ASM236X/VIRAT", pick_rate=1),
+            T.IndexMapping({1: 0, 2: 2, 3: 2, 5: 1}),
             T.HorizontalFlip(p=0.5),
             T.ToTensor(),
         )
@@ -74,3 +85,4 @@ if __name__ == '__main__':
 
     except Exception as e:
         logger.error(e)
+        raise e

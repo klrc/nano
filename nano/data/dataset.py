@@ -20,10 +20,10 @@ class Seed:
         pass
 
     def __len__(self):
-        raise NotImplementedError
+        raise NotImplementedError("Seed function __len__() not implemented")
 
     def __getitem__(self, index):
-        raise NotImplementedError
+        raise NotImplementedError("Seed function __getitem__() not implemented")
 
 
 class DatasetModule(Dataset):
@@ -182,10 +182,10 @@ class CAVIARSeed(Seed):
                 for object in frame.find("objectlist").findall("object"):
                     # obj_id = object.attrib["id"]
                     box = object.find("box")
-                    h, w, xc, yc = [int(box.attrib[x]) for x in ('h', 'w', 'xc', 'yc')]
+                    h, w, xc, yc = [int(box.attrib[x]) for x in ("h", "w", "xc", "yc")]
                     labels = (0, xc - w * 0.5, yc - h * 0.5, xc + w * 0.5, yc + h * 0.5)
                     object_list.append(labels)
-                self._data.append((f'{root}/{video_set}/{frames[n]}', object_list))
+                self._data.append((f"{root}/{video_set}/{frames[n]}", object_list))
 
     def __len__(self):
         return len(self._data)
@@ -197,7 +197,6 @@ class CAVIARSeed(Seed):
         # process label
         label = np.array(label)
         return image, label
-
 
 
 class PETS09Seed(Seed):
@@ -236,6 +235,45 @@ class PETS09Seed(Seed):
     </frame>
 
     """
+
+    def __init__(self, root, pick_rate=1) -> None:
+        super().__init__()
+        self._data = []
+        for level in ("L1", "L2", "L3"):
+            frames = []
+            level_root = f"{root}/S2/{level}"
+            for clip in os.listdir(level_root):
+                clip_root = f"{root}/S2/{level}/{clip}/View_001"
+                if not os.path.isdir(clip_root):
+                    continue
+                for image in os.listdir(clip_root):
+                    if image.endswith("jpg"):
+                        frames.append(f"{clip_root}/{image}")
+            frames = sorted(frames)
+            tree = ET.parse(f"{root}/S2/PETS2009-S2{level}.xml")
+            for frame in tree.getroot().findall("frame"):
+                if random.random() > pick_rate:
+                    continue
+                n = int(frame.attrib["number"])
+                object_list = []
+                for object in frame.find("objectlist").findall("object"):
+                    # obj_id = object.attrib["id"]
+                    box = object.find("box")
+                    h, w, xc, yc = [int(float(box.attrib[x])) for x in ("h", "w", "xc", "yc")]
+                    labels = (0, xc - w * 0.5, yc - h * 0.5, xc + w * 0.5, yc + h * 0.5)
+                    object_list.append(labels)
+                self._data.append((frames[n], object_list))
+
+    def __len__(self):
+        return len(self._data)
+
+    def __getitem__(self, index):
+        # load unsorted data (image+label) into numpy
+        image, label = self._data[index]
+        image = cv2.imread(image)  # BGR
+        # process label
+        label = np.array(label)
+        return image, label
 
 
 class VIRATSeed(Seed):
@@ -281,6 +319,50 @@ class VIRATSeed(Seed):
         5: bike, bicylces   (may include engine-powered auto-bikes)
 
     """
+
+    def __init__(self, root, pick_rate=1) -> None:
+        super().__init__()
+        self._data = []
+        video_root = f"{root}/ground/videos_original"
+        xml_root = f"{root}/ground/annotations"
+        os.system(f"rm {video_root}/._*.mp4")
+        for clip in os.listdir(video_root):
+            # ----------------------------------------- to generate jpgs from video
+            # if clip.endswith('.mp4'):
+            #     print(f'processing {clip}')
+            #     os.system(f"mkdir {video_root}/{clip.split('.')[0]}")
+            #     vidcap = cv2.VideoCapture(f"{video_root}/{clip}")
+            #     success, image = vidcap.read()
+            #     count = 0
+            #     while success:
+            #         if count % 10 == 0:
+            #             cv2.imwrite(f"{video_root}/{clip.split('.')[0]}/{count}.jpg", image)  # save frame as JPEG file
+            #         success, image = vidcap.read()
+            #         count += 1
+            # -------------------------------------------------------------------
+            if os.path.isdir(f"{video_root}/{clip}"):
+                tree = ET.parse(f"{xml_root}/{clip}.viratdata.objects.xml")
+                for frame in tree.getroot().findall("frame"):
+                    if random.random() > pick_rate:
+                        continue
+                    n = int(frame.attrib["number"])
+                    object_list = []
+                    for object in frame.find("objectlist").findall("object"):
+                        box = object.find("box")
+                        c, x1, y1, x2, y2 = [int(float(box.attrib[x])) for x in ("c", "x1", "y1", "x2", "y2")]
+                        object_list.append((c, x1, y1, x2, y2))
+                    self._data.append((f"{video_root}/{clip}/{n}.jpg", object_list))
+
+    def __len__(self):
+        return len(self._data)
+
+    def __getitem__(self, index):
+        # load unsorted data (image+label) into numpy
+        image, label = self._data[index]
+        image = cv2.imread(image)  # BGR
+        # process label
+        label = np.array(label)
+        return image, label
 
 
 class EmptyRandChoice(Seed):
