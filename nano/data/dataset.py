@@ -132,7 +132,7 @@ class MSCOCOSeed(Seed):
 
 class CAVIARSeed(Seed):
     """
-    Seed for CAVIAR dataset (https://homepages.inf.ed.ac.uk/rbf/CAVIARDATA1/)
+    Seed for CAVIAR dataset (https://homepages.inf.ed.ac.uk/rbf/CAVIARDATA1/) (98782)
     Containing CCTV fisheye perspective video and annotations.
     Dataset directory structure:
         - video_1
@@ -201,7 +201,7 @@ class CAVIARSeed(Seed):
 
 class PETS09Seed(Seed):
     """
-    Seed for PETS09-S2 dataset(http://www.milanton.de/data/)
+    Seed for PETS09-S2 dataset(http://www.milanton.de/data/) (1471)
     Containing CCTV frames and annotations for person tracking.
     Dataset directory structure:
     - S2
@@ -278,7 +278,7 @@ class PETS09Seed(Seed):
 
 class VIRATSeed(Seed):
     """
-    Seed for VIRAT dataset(https://gitlab.kitware.com/viratdata/viratannotations)
+    Seed for VIRAT dataset(https://gitlab.kitware.com/viratdata/viratannotations) (4793)
     Containing high-resolution suvilliance mp4 video
 
     Dataset structure:
@@ -325,7 +325,7 @@ class VIRATSeed(Seed):
         self._data = []
         video_root = f"{root}/ground/videos_original"
         xml_root = f"{root}/ground/annotations"
-        os.system(f"rm {video_root}/._*.mp4")
+        # os.system(f"rm {video_root}/._*.mp4")
         for clip in os.listdir(video_root):
             # ----------------------------------------- to generate jpgs from video
             # if clip.endswith('.mp4'):
@@ -349,7 +349,7 @@ class VIRATSeed(Seed):
                     object_list = []
                     for object in frame.find("objectlist").findall("object"):
                         box = object.find("box")
-                        c, x1, y1, x2, y2 = [int(float(box.attrib[x])) for x in ("c", "x1", "y1", "x2", "y2")]
+                        c, x1, y1, x2, y2 = [float(box.attrib[x]) for x in ("c", "x1", "y1", "x2", "y2")]
                         object_list.append((c, x1, y1, x2, y2))
                     self._data.append((f"{video_root}/{clip}/{n}.jpg", object_list))
 
@@ -375,15 +375,18 @@ class EmptyRandChoice(Seed):
     def __init__(self, *roots, pick_rate=1) -> None:
         super().__init__()
         self._data = []
+        frames = []
         for root in roots:
             # extract files from specified root
             if os.path.exists(root):
-                # TODO: turn into random choice
+                os.system(f'rm {root}/._*.jpg')
                 for fname in os.listdir(root):
-                    if pick_rate < 1 and random.random() < pick_rate and fname.endswith(".jpg"):
+                    if fname.endswith(".jpg"):
                         path = f"{root}/{fname}"
-                        self._data.append(path)
-
+                        frames.append(path)
+        if pick_rate < 1:
+            frames = random.choices(frames, k=int(len(frames) * pick_rate))
+        self._data = frames
         assert len(self._data) > 0, f"No samples found in {roots}"
 
     def __len__(self):
@@ -399,13 +402,18 @@ class EmptyRandChoice(Seed):
 
 class IndoorSeed(EmptyRandChoice):
     """
-    Seed for Indoor Object Detection dataset(https://zenodo.org/record/2654485#.YgzWw9--tpR)
+    Seed for Indoor Object Detection dataset(https://zenodo.org/record/2654485#.YgzWw9--tpR) (2213)
     Containing frames for indoor facilities with ACTUALLY NO person in it.
     """
+
+    def __init__(self, root, pick_rate=1) -> None:
+        super().__init__(*[f"{root}/sequence_{i}" for i in range(1, 7)], pick_rate=pick_rate)
 
 
 class SKU110KSeed(EmptyRandChoice):
     """
-    Seed for SKU110K dataset(https://github.com/eg4000/SKU110K_CVPR19)
+    Seed for SKU110K dataset(https://github.com/eg4000/SKU110K_CVPR19) (11743)
     Containing supermarket detection data with NEARLY no person in it.
     """
+    def __init__(self, root, pick_rate=1) -> None:
+        super().__init__(f'{root}/images', pick_rate=pick_rate)

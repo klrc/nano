@@ -383,7 +383,7 @@ class AlbumentationsPreset(TransformFunction):
                 [
                     A.Blur(p=0.01),
                     A.MedianBlur(p=0.01),
-                    A.ToGray(p=0.1),
+                    A.ToGray(p=0.01),
                 ]
             )
         else:

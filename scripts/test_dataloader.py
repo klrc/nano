@@ -4,7 +4,7 @@ from loguru import logger
 
 sys.path.append(".")
 
-from nano.data.dataset import DatasetModule, CAVIARSeed, MSCOCOSeed, PETS09Seed, VIRATSeed  # noqa: E402
+from nano.data.dataset import DatasetModule, CAVIARSeed, IndoorSeed, MSCOCOSeed, PETS09Seed, SKU110KSeed, VIRATSeed  # noqa: E402
 from nano.data.dataset_info import drive3_names, voc_to_drive3, coco_to_drive3  # noqa: E402
 import nano.data.transforms as T  # noqa: E402
 import nano.data.visualize as V  # noqa: E402
@@ -18,8 +18,8 @@ if __name__ == "__main__":
         factory = DatasetModule()
         # factory.add_seed(
         #     MSCOCOSeed(
-        #         "../datasets/VOC/images/train2012",
-        #         "../datasets/VOC/labels/train2012",
+        #         "/Volumes/ASM236X/VOC/images/train2012",
+        #         "/Volumes/ASM236X/VOC/labels/train2012",
         #     ),
         #     T.IndexMapping(voc_to_drive3),
         #     T.HorizontalFlip(p=0.5),
@@ -46,29 +46,42 @@ if __name__ == "__main__":
         #     T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.25, p=1),
         #     T.ToTensor(),
         # )
-        # factory.add_seed(
-        #     EmptySeed(
-        #         "/Volumes/ASM236X/SKU110K_fixed/images",
-        #         pick_rate=0.5,
-        #     ),
-        #     T.HorizontalFlip(p=0.5),
-        #     T.Resize(max_size=int(max(target_resolution))),  # 1x
-        #     T.ToTensor(),
-        # )
-        # factory.add_seed(
-        #     CAVIARSeed("/Volumes/ASM236X/CAVIAR", pick_rate=0.1),
-        #     T.HorizontalFlip(p=0.5),
-        #     T.ToTensor(),
-        # )
-        # factory.add_seed(
-        #     PETS09Seed("/Volumes/ASM236X/Crowd_PETS09", pick_rate=1),
-        #     T.HorizontalFlip(p=0.5),
-        #     T.ToTensor(),
-        # )
+        factory.add_seed(
+            SKU110KSeed("/Volumes/ASM236X/SKU110K_fixed", pick_rate=0.1),
+            T.HorizontalFlip(p=0.5),
+            T.Resize(max_size=int(max(target_resolution))),  # 1x
+            T.ToTensor(),
+        )
+        factory.add_seed(
+            IndoorSeed("/Volumes/ASM236X/IndoorOD", pick_rate=0.2),
+            T.HorizontalFlip(p=0.5),
+            T.Resize(max_size=int(max(target_resolution))),  # 1x
+            T.ToTensor(),
+        )
+        factory.add_seed(
+            CAVIARSeed("/Volumes/ASM236X/CAVIAR", pick_rate=0.1),
+            T.HorizontalFlip(p=0.5),
+            T.Resize(max_size=int(max(target_resolution))),  # 1x
+            T.HSVTransform(p=0.5),
+            T.AlbumentationsPreset(),
+            T.ToTensor(),
+        )
+        factory.add_seed(
+            PETS09Seed("/Volumes/ASM236X/Crowd_PETS09", pick_rate=1),
+            T.HorizontalFlip(p=0.5),
+            T.Resize(max_size=int(max(target_resolution))),  # 1x
+            T.HSVTransform(p=0.5),
+            T.AlbumentationsPreset(),
+            T.ToTensor(),
+        )
         factory.add_seed(
             VIRATSeed("/Volumes/ASM236X/VIRAT", pick_rate=1),
             T.IndexMapping({1: 0, 2: 2, 3: 2, 5: 1}),
             T.HorizontalFlip(p=0.5),
+            T.Resize(max_size=int(max(target_resolution))),
+            T.RandomScale(min_scale=1, max_scale=1.5),
+            T.HSVTransform(p=0.5),
+            T.AlbumentationsPreset(),
             T.ToTensor(),
         )
         factory = factory.as_dataloader(batch_size=16, num_workers=4, shuffle=True, collate_fn=T.letterbox_collate_fn)
