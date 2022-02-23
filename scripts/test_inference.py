@@ -1,60 +1,19 @@
+import sys
 import cv2
 import torch
 import torchvision.transforms as T
 from multiprocessing import Queue, Process
 import numpy as np
-from nano.data.visualize import Canvas
-from nano.models.box2d import non_max_suppression
 from loguru import logger
+import time
 
-
-# # person: 2.1882 | bike: 1.2726 | car: 0.8559
-# std_ratio = (0.4570, 0.7857, 1.1684)
-# std_ratio_bias = (1, 0, 0)
-# std_size = (12600, 14300, 9500)
-# std_size_bias = (0.8, 1, 1)
-
-
-# def apply_p(p, c):
-#     if p > 0:
-#         return c + (1 - c) * p
-#     return c + c * p
-
-
-# def ratio_penalty(x, cid, conf, loss_only):
-#     ratio = (x[2] - x[0]) / (x[3] - x[1])
-#     p = np.arctan(ratio) - np.arctan(std_ratio[cid])
-#     p = 1 - 2 * 4 / np.pi * np.abs(p)
-#     if p > 0:
-#         if loss_only:
-#             p = 0
-#         else:
-#             p *= 0.6
-#     p *= std_ratio_bias[cid]
-#     return apply_p(p, conf)
-
-
-# def size_penalty(x, cid, conf):
-#     max_sz = (x[2] - x[0]) * (x[3] - x[1])
-#     std_sz = std_size[cid]
-#     if max_sz > std_sz:
-#         p = std_size_bias[cid] * (std_sz - max_sz) / max_sz
-#     else:
-#         p = std_size_bias[cid] * 0.6 * (max_sz - std_sz) / std_sz
-#     return apply_p(p, conf)
-
-
-# def penalty(x, conf_thres):
-#     cid = torch.argmax(x[4:])
-#     conf = x[4 + cid]
-#     conf = size_penalty(x, cid, conf)
-#     conf = ratio_penalty(x, cid, conf, conf < conf_thres)
-#     x[4 + cid] = conf
-#     return x
+sys.path.append(".")
+from nano.data.visualize import Canvas  # noqa: E402
+from nano.models.box2d import non_max_suppression  # noqa: E402
 
 
 def detection(model, conf_thres, iou_thres, inf_size, device, capture_queue, result_queue):
-    model.eval().to(device)
+    model = model.eval().to(device)
     model.head.debug = True
     logger.info("Model Online")
     transforms = T.Compose([T.ToPILImage(), T.Resize(inf_size), T.ToTensor()])
@@ -76,7 +35,7 @@ def detection(model, conf_thres, iou_thres, inf_size, device, capture_queue, res
 
 def test_video(model, capture_generator, capture_size, conf_thres, iou_thres, class_names, device="cpu", always_on_top=False):
     cap_h, cap_w = capture_size
-    ratio = 480 / max(capture_size)  # h, w <= 416
+    ratio = 512 / max(capture_size)  # h, w <= 416
     inf_h = int(np.ceil(cap_h * ratio / 64) * 64)  # (padding for Thinkpad-P51 front camera)
     inf_w = int(np.ceil(cap_w * ratio / 64) * 64)  # (padding for Thinkpad-P51 front camera)
     border_h = int((inf_h / ratio - cap_h) // 2)
@@ -85,6 +44,12 @@ def test_video(model, capture_generator, capture_size, conf_thres, iou_thres, cl
     capture_queue = Queue(maxsize=1)
     result_queue = Queue(maxsize=64)
     bbox_set = []
+
+    record_mode = True
+
+    if record_mode:
+        fourcc = cv2.VideoWriter_fourcc(*"MP4V")
+        video_out = cv2.VideoWriter(f"test_video_act_buf_{int(time.time())}.mp4", fourcc, 24.0, (cap_w + 2 * border_w, cap_h + 2 * border_h))
 
     # inference process --------------
     proc_1 = Process(target=detection, args=[model, conf_thres, iou_thres, inference_size, device, capture_queue, result_queue])
@@ -114,11 +79,18 @@ def test_video(model, capture_generator, capture_size, conf_thres, iou_thres, cl
             for center, alpha in zip(centers, alphas):
                 canvas.draw_point(center, alpha=alpha)
             frame = canvas.image
-        cv2.imshow("frame", frame)
-        if always_on_top:
-            cv2.setWindowProperty("frame", cv2.WND_PROP_TOPMOST, 1)
-        if cv2.waitKey(10) == 27:
-            return
+
+        if record_mode:
+            video_out.write(frame)
+        else:
+            cv2.imshow("frame", frame)
+            if always_on_top:
+                cv2.setWindowProperty("frame", cv2.WND_PROP_TOPMOST, 1)
+            if cv2.waitKey(10) == 27:
+                return
+
+    if record_mode:
+        video_out.release()
 
 
 def test_front_camera(model, conf_thres, iou_thres, class_names, device="cpu"):
@@ -197,3 +169,12 @@ def test_yuv(model, conf_thres, iou_thres, class_names, yuv_file, yuv_size=(720,
     except Exception as e:
         cv2.destroyAllWindows()
         raise e
+
+
+if __name__ == "__main__":
+    from nano.data.dataset_info import drive3_names
+    from nano.models.model_zoo import GhostNano_3x3_m96, GhostNano_3x3_l128
+
+    model = GhostNano_3x3_m96(len(drive3_names))
+    # model.load_state_dict(torch.load("runs/train/exp20/best.pt", map_location="cpu"))
+    test_yuv(model, 0.9, 0.45, drive3_names, yuv_file="../datasets/1280x720_3.yuv", device="cpu")

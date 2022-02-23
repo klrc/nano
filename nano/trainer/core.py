@@ -512,7 +512,7 @@ class Validator:
 
 
 class Controller:
-    def __init__(self, trainer: Trainer, validator: Validator, patience=8):
+    def __init__(self, trainer: Trainer, validator: Validator, patience=16):
         self.trainer = trainer
         self.validator = validator
         self.patience = patience

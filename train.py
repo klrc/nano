@@ -9,13 +9,12 @@ import nano.data.transforms as T
 if __name__ == "__main__":
 
     for model_template, target_resolution, batch_size in (
-        (GhostNano_3x3_m96, (224, 416), 64),
-        (GhostNano_3x3_l128, (224, 416), 32),
+        (GhostNano_3x3_m96, (224, 416), 128),
+        (GhostNano_3x3_l128, (224, 416), 64),
     ):
         device = "cuda:0"
-        dataset_root = "/Volumes/ASM236X"
+        dataset_root = "../datasets"
 
-        target_resolution = (288, 512)
         factory = DatasetModule()
         factory.add_seed(
             MSCOCOSeed(
@@ -47,40 +46,44 @@ if __name__ == "__main__":
             T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.25, p=1),
             T.ToTensor(),
         )
-        factory.add_seed(
-            SKU110KSeed(f"{dataset_root}/SKU110K_fixed", pick_rate=0.1),
-            T.HorizontalFlip(p=0.5),
-            T.Resize(max_size=int(max(target_resolution))),  # 1x
-            T.ToTensor(),
-        )
+#        factory.add_seed(
+#            SKU110KSeed(f"{dataset_root}/SKU110K_fixed", pick_rate=0.1),
+#            T.HorizontalFlip(p=0.5),
+#            T.Resize(max_size=int(max(target_resolution))),  # 1x
+#            T.ToTensor(),
+#        )
         factory.add_seed(
             IndoorSeed(f"{dataset_root}/IndoorOD", pick_rate=0.2),
             T.HorizontalFlip(p=0.5),
             T.Resize(max_size=int(max(target_resolution))),  # 1x
+            T.RandomAffine(min_scale=0.875, max_scale=1.125, p=0.5),  # 1x
             T.ToTensor(),
         )
         factory.add_seed(
             CAVIARSeed(f"{dataset_root}/CAVIAR", pick_rate=0.1),
             T.HorizontalFlip(p=0.5),
             T.Resize(max_size=int(max(target_resolution))),  # 1x
+            T.RandomAffine(min_scale=0.875, max_scale=1.125, p=0.1),  # 1x
             T.HSVTransform(p=0.5),
             T.AlbumentationsPreset(),
             T.ToTensor(),
         )
         factory.add_seed(
-            PETS09Seed(f"{dataset_root}/Crowd_PETS09", pick_rate=1),
+            PETS09Seed(f"{dataset_root}/Crowd_PETS09", pick_rate=0.5),
             T.HorizontalFlip(p=0.5),
             T.Resize(max_size=int(max(target_resolution))),  # 1x
+            T.RandomAffine(min_scale=0.875, max_scale=1.125, p=0.5),  # 1x
             T.HSVTransform(p=0.5),
             T.AlbumentationsPreset(),
             T.ToTensor(),
         )
         factory.add_seed(
-            VIRATSeed(f"{dataset_root}/VIRAT", pick_rate=1),
+            VIRATSeed(f"{dataset_root}/VIRAT", pick_rate=0.5),
             T.IndexMapping({1: 0, 2: 2, 3: 2, 5: 1}),
             T.HorizontalFlip(p=0.5),
             T.Resize(max_size=int(max(target_resolution))),
             T.RandomScale(min_scale=1, max_scale=1.5),
+            T.RandomAffine(min_scale=0.875, max_scale=1.125, p=0.5),  # 1x
             T.HSVTransform(p=0.5),
             T.AlbumentationsPreset(),
             T.ToTensor(),
