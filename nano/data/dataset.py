@@ -174,18 +174,17 @@ class CAVIARSeed(Seed):
             xml_file = [x for x in files if x.endswith(".xml")][0]
             # parse xml
             tree = ET.parse(f"{root}/{video_set}/{xml_file}")
-            for frame in tree.getroot():
-                if random.random() > pick_rate:
-                    continue
-                n = int(frame.attrib["number"])
-                object_list = []
-                for object in frame.find("objectlist").findall("object"):
-                    # obj_id = object.attrib["id"]
-                    box = object.find("box")
-                    h, w, xc, yc = [int(box.attrib[x]) for x in ("h", "w", "xc", "yc")]
-                    labels = (0, xc - w * 0.5, yc - h * 0.5, xc + w * 0.5, yc + h * 0.5)
-                    object_list.append(labels)
-                self._data.append((f"{root}/{video_set}/{frames[n]}", object_list))
+            for i, frame in enumerate(tree.getroot().findall("frame")):
+                if i % int(1/pick_rate) == 0:
+                    n = int(frame.attrib["number"])
+                    object_list = []
+                    for object in frame.find("objectlist").findall("object"):
+                        # obj_id = object.attrib["id"]
+                        box = object.find("box")
+                        h, w, xc, yc = [int(box.attrib[x]) for x in ("h", "w", "xc", "yc")]
+                        labels = (0, xc - w * 0.5, yc - h * 0.5, xc + w * 0.5, yc + h * 0.5)
+                        object_list.append(labels)
+                    self._data.append((f"{root}/{video_set}/{frames[n]}", object_list))
 
     def __len__(self):
         return len(self._data)
@@ -251,18 +250,17 @@ class PETS09Seed(Seed):
                         frames.append(f"{clip_root}/{image}")
             frames = sorted(frames)
             tree = ET.parse(f"{root}/S2/PETS2009-S2{level}.xml")
-            for frame in tree.getroot().findall("frame"):
-                if random.random() > pick_rate:
-                    continue
-                n = int(frame.attrib["number"])
-                object_list = []
-                for object in frame.find("objectlist").findall("object"):
-                    # obj_id = object.attrib["id"]
-                    box = object.find("box")
-                    h, w, xc, yc = [int(float(box.attrib[x])) for x in ("h", "w", "xc", "yc")]
-                    labels = (0, xc - w * 0.5, yc - h * 0.5, xc + w * 0.5, yc + h * 0.5)
-                    object_list.append(labels)
-                self._data.append((frames[n], object_list))
+            for i, frame in enumerate(tree.getroot().findall("frame")):
+                if i % int(1/pick_rate) == 0:
+                    n = int(frame.attrib["number"])
+                    object_list = []
+                    for object in frame.find("objectlist").findall("object"):
+                        # obj_id = object.attrib["id"]
+                        box = object.find("box")
+                        h, w, xc, yc = [int(float(box.attrib[x])) for x in ("h", "w", "xc", "yc")]
+                        labels = (0, xc - w * 0.5, yc - h * 0.5, xc + w * 0.5, yc + h * 0.5)
+                        object_list.append(labels)
+                    self._data.append((frames[n], object_list))
 
     def __len__(self):
         return len(self._data)
@@ -342,16 +340,15 @@ class VIRATSeed(Seed):
             # -------------------------------------------------------------------
             if os.path.isdir(f"{video_root}/{clip}"):
                 tree = ET.parse(f"{xml_root}/{clip}.viratdata.objects.xml")
-                for frame in tree.getroot().findall("frame"):
-                    if random.random() > pick_rate:
-                        continue
-                    n = int(frame.attrib["number"])
-                    object_list = []
-                    for object in frame.find("objectlist").findall("object"):
-                        box = object.find("box")
-                        c, x1, y1, x2, y2 = [float(box.attrib[x]) for x in ("c", "x1", "y1", "x2", "y2")]
-                        object_list.append((c, x1, y1, x2, y2))
-                    self._data.append((f"{video_root}/{clip}/{n}.jpg", object_list))
+                for i, frame in enumerate(tree.getroot().findall("frame")):
+                    if i % int(1/pick_rate) == 0:
+                        n = int(frame.attrib["number"])
+                        object_list = []
+                        for object in frame.find("objectlist").findall("object"):
+                            box = object.find("box")
+                            c, x1, y1, x2, y2 = [float(box.attrib[x]) for x in ("c", "x1", "y1", "x2", "y2")]
+                            object_list.append((c, x1, y1, x2, y2))
+                        self._data.append((f"{video_root}/{clip}/{n}.jpg", object_list))
 
     def __len__(self):
         return len(self._data)

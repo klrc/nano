@@ -1,7 +1,6 @@
 import time
 import torch
 import torchvision
-from torchvision.ops import box_iou
 import numpy as np
 import math
 
@@ -40,40 +39,24 @@ def non_max_suppression(
     """
 
     # Candidates
-    p1 = prediction[..., :4]
-    p2 = prediction[..., 4:]
-    conf = p2.max(dim=-1, keepdim=True).values
-    prediction = torch.cat([p1, conf, p2], dim=-1)
-    xc = prediction[..., 4] > conf_thres
+    box = prediction[..., :4]
+    quality = prediction[..., 4:]
+    conf, cls = quality.max(dim=-1, keepdim=True)
+    prediction = torch.cat((box, conf, cls.float()), -1)
+    xc = (conf > conf_thres).squeeze(-1)
 
     # Checks
     assert 0 <= conf_thres <= 1, f"Invalid Confidence threshold {conf_thres}, valid values are between 0.0 and 1.0"
     assert 0 <= iou_thres <= 1, f"Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0"
 
     # Settings
-    min_wh, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
+    max_wh = 4096  # (pixels) maximum box width and height
     time_limit = 10.0  # seconds to quit after
-    redundant = True  # require redundant detections
-    merge = False  # use merge-NMS
 
     t = time.time()
     output = [torch.zeros((0, 6), device=prediction.device)] * prediction.shape[0]
     for xi, x in enumerate(prediction):  # image index, image inference
         x = x[xc[xi]]  # confidence
-        # If none remain process next image
-        if not x.shape[0]:
-            continue
-
-        # Box (center x, center y, width, height) to (x1, y1, x2, y2)
-        # box = xywh2xyxy(x[:, :4])
-        box = x[:, :4]
-
-        # Confidence
-        # x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf
-
-        # Detections matrix nx6 (xyxy, conf, cls)
-        i, j = (x[:, 5:] > conf_thres).nonzero(as_tuple=False).T
-        x = torch.cat((box[i], x[i, j + 5, None], j[:, None].float()), 1)
 
         # Check shape
         n = x.shape[0]  # number of boxes
@@ -85,19 +68,9 @@ def non_max_suppression(
         # Batched NMS
         c = x[:, 5:6] * max_wh  # classes
         boxes, scores = x[:, :4] + c, x[:, 4]  # boxes (offset by class), scores
-
-        # this is not good enough:
         i = torchvision.ops.nms(boxes, scores, iou_thres)  # NMS
-
         if i.shape[0] > max_det:  # limit detections
             i = i[:max_det]
-        if merge and (1 < n < 3e3):  # Merge NMS (boxes merged using weighted mean)
-            # update boxes as boxes(i,4) = weights(i,n) * boxes(n,4)
-            iou = box_iou(boxes[i], boxes) > iou_thres  # iou matrix
-            weights = iou * scores[None]  # box weights
-            x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)  # merged boxes
-            if redundant:
-                i = i[iou.sum(1) > 1]  # require redundancy
 
         output[xi] = x[i]
         if (time.time() - t) > time_limit:

@@ -45,7 +45,7 @@ def test_video(model, capture_generator, capture_size, conf_thres, iou_thres, cl
     result_queue = Queue(maxsize=64)
     bbox_set = []
 
-    record_mode = True
+    record_mode = False
 
     if record_mode:
         fourcc = cv2.VideoWriter_fourcc(*"MP4V")
@@ -176,5 +176,5 @@ if __name__ == "__main__":
     from nano.models.model_zoo import GhostNano_3x3_m96, GhostNano_3x3_l128
 
     model = GhostNano_3x3_m96(len(drive3_names))
-    # model.load_state_dict(torch.load("runs/train/exp20/best.pt", map_location="cpu"))
-    test_yuv(model, 0.9, 0.45, drive3_names, yuv_file="../datasets/1280x720_3.yuv", device="cpu")
+    model.load_state_dict(torch.load("runs/train/exp29/best.pt", map_location="cpu")['state_dict'])
+    test_yuv(model, 0.25, 0.45, drive3_names, yuv_file="../datasets/1280x720_4.yuv", device="cpu")
