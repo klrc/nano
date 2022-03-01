@@ -16,7 +16,7 @@ import glob
 import re
 
 from torchvision.ops import box_iou
-from nano.models.box2d import non_max_suppression
+from nano.models.multiplex.box2d import non_max_suppression
 
 
 def load_device(device="cuda"):

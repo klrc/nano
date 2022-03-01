@@ -3,7 +3,7 @@ from torch import nn
 from torch.nn.functional import one_hot, binary_cross_entropy
 from torchvision.ops.boxes import box_iou
 from nano.models.assigners.gfocal_loss import quality_focal_loss
-from nano.models.box2d import completely_box_iou
+from nano.models.multiplex.box2d import completely_box_iou
 
 
 def iou_loss(input, target, reduction="mean"):

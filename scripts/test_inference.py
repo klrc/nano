@@ -9,12 +9,11 @@ import time
 
 sys.path.append(".")
 from nano.data.visualize import Canvas  # noqa: E402
-from nano.models.box2d import non_max_suppression  # noqa: E402
+from nano.models.multiplex.box2d import non_max_suppression  # noqa: E402
 
 
 def detection(model, conf_thres, iou_thres, inf_size, device, capture_queue, result_queue):
     model = model.eval().to(device)
-    model.head.debug = True
     logger.info("Model Online")
     transforms = T.Compose([T.ToPILImage(), T.Resize(inf_size), T.ToTensor()])
     with torch.no_grad():
@@ -176,5 +175,5 @@ if __name__ == "__main__":
     from nano.models.model_zoo import GhostNano_3x3_m96, GhostNano_3x3_l128
 
     model = GhostNano_3x3_m96(len(drive3_names))
-    model.load_state_dict(torch.load("runs/train/exp29/best.pt", map_location="cpu")['state_dict'])
-    test_yuv(model, 0.25, 0.45, drive3_names, yuv_file="../datasets/1280x720_4.yuv", device="cpu")
+    # model.load_state_dict(torch.load("runs/train/exp29/best.pt", map_location="cpu")['state_dict'])
+    test_yuv(model, 0.5, 0.45, drive3_names, yuv_file="../datasets/1280x720_4.yuv", device="cpu")
