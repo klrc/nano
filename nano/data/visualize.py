@@ -26,18 +26,19 @@ def random_color(default=None):
 class Canvas:
     def __init__(self, any_image) -> None:
         self.image = any_image_format(any_image)
-        self.color = self.next_color()
+        self._color = self.next_color()
         self.font = cv2.FONT_HERSHEY_SIMPLEX
         self.font_scale = 0.3
         self.font_thickness = 1
         self.font_color = (0, 0, 0)
 
-    def set_color(self, color):
-        self.color = color
+    def set_color(self, rgb):
+        R, G, B = rgb  # RGB -> cv2 BGR
+        self._color = (B, G, R)
 
     def next_color(self):
-        self.color = list(np.random.random(size=3) * 128 + 128)  # light color
-        return self.color
+        self._color = list(np.random.random(size=3) * 128 + 128)  # light color
+        return self._color
 
     def merge_transparent_layer(self, layer, alpha):
         alpha = float(alpha)
@@ -49,13 +50,19 @@ class Canvas:
         # draw square pixel-style points on image
         layer = self.image.copy()
         center = [int(x) for x in center]
-        layer = cv2.circle(layer, center, 1, self.color, thickness)
+        layer = cv2.circle(layer, center, 1, self._color, thickness)
         self.image = self.merge_transparent_layer(layer, alpha)
+
+    def draw_boxes(self, boxes, alpha=1, thickness=1, color=None):
+        if color is not None:
+            self.set_color(color)
+        for box in boxes:
+            self.draw_box(box, alpha, thickness)
 
     def draw_box(self, box, alpha=1, thickness=1):
         layer = self.image.copy()
         x1, y1, x2, y2 = [int(x) for x in box]
-        layer = cv2.rectangle(layer, (x1, y1), (x2, y2), self.color, thickness, 4, 0)
+        layer = cv2.rectangle(layer, (x1, y1), (x2, y2), self._color, thickness, 4, 0)
         self.image = self.merge_transparent_layer(layer, alpha)
 
     def draw_text_with_background(self, text, top_left_point, alpha=1):
@@ -64,11 +71,12 @@ class Canvas:
         text_w, text_h = text_size
         layer = self.image.copy()
         x1, y1 = [int(x) for x in top_left_point]
-        layer = cv2.rectangle(layer, (x1, y1), (x1 + text_w + 2, y1 + text_h + 2), self.color, -1)
+        layer = cv2.rectangle(layer, (x1, y1), (x1 + text_w + 2, y1 + text_h + 2), self._color, -1)
         layer = cv2.putText(layer, text, (x1, y1 + text_h), self.font, self.font_scale, self.font_color, self.font_thickness)
         self.image = self.merge_transparent_layer(layer, alpha)
 
 
+# modulized as <TransformFunction> for quick testing implementation
 class RenderLabels(TransformFunction):
     def __init__(self, class_names) -> None:
         super().__init__(p=1)

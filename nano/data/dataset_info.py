@@ -1,137 +1,71 @@
-coco_names = (
-    "person",
-    "bicycle",
-    "car",
-    "motorcycle",
-    "airplane",
-    "bus",
-    "train",
-    "truck",
-    "boat",
-    "traffic light",
-    "fire hydrant",
-    "stop sign",
-    "parking meter",
-    "bench",
-    "bird",
-    "cat",
-    "dog",
-    "horse",
-    "sheep",
-    "cow",
-    "elephant",
-    "bear",
-    "zebra",
-    "giraffe",
-    "backpack",
-    "umbrella",
-    "handbag",
-    "tie",
-    "suitcase",
-    "frisbee",
-    "skis",
-    "snowboard",
-    "sports ball",
-    "kite",
-    "baseball bat",
-    "baseball glove",
-    "skateboard",
-    "surfboard",
-    "tennis racket",
-    "bottle",
-    "wine glass",
-    "cup",
-    "fork",
-    "knife",
-    "spoon",
-    "bowl",
-    "banana",
-    "apple",
-    "sandwich",
-    "orange",
-    "broccoli",
-    "carrot",
-    "hot dog",
-    "pizza",
-    "donut",
-    "cake",
-    "chair",
-    "couch",
-    "potted plant",
-    "bed",
-    "dining table",
-    "toilet",
-    "tv",
-    "laptop",
-    "mouse",
-    "remote",
-    "keyboard",
-    "cell phone",
-    "microwave",
-    "oven",
-    "toaster",
-    "sink",
-    "refrigerator",
-    "book",
-    "clock",
-    "vase",
-    "scissors",
-    "teddy bear",
-    "hair drier",
-    "toothbrush",
-)  # class names
+from unicodedata import name
 
 
-voc_names = (
-    "aeroplane",
-    "bicycle",
-    "bird",
-    "boat",
-    "bottle",
-    "bus",
-    "car",
-    "cat",
-    "chair",
-    "cow",
-    "diningtable",
-    "dog",
-    "horse",
-    "motorbike",
-    "person",
-    "pottedplant",
-    "sheep",
-    "sofa",
-    "train",
-    "tvmonitor",
-)  # class names
-
-
-drive3_names = (
-    "person",
-    "bike",
-    "car",
-)
-
-any_to_drive3 = {
+_coco_names = "person|bicycle|car|motorcycle|airplane|bus|train|truck|boat|traffic light|fire hydrant|stop sign|\
+parking meter|bench|bird|cat|dog|horse|sheep|cow|elephant|bear|zebra|giraffe|backpack|umbrella|handbag|tie|\
+suitcase|frisbee|skis|snowboard|sports ball|kite|baseball bat|baseball glove|skateboard|surfboard|\
+tennis racket|bottle|wine glass|cup|fork|knife|spoon|bowl|banana|apple|sandwich|orange|broccoli|\
+carrot|hot dog|pizza|donut|cake|chair|couch|potted plant|bed|dining table|toilet|tv|laptop|mouse|\
+remote|keyboard|cell phone|microwave|oven|toaster|sink|refrigerator|book|clock|vase|scissors|teddy bear|\
+hair drier|toothbrush"
+_voc_names = "aeroplane|bicycle|bird|boat|bottle|bus|car|cat|chair|cow|diningtable|dog|horse|motorbike|person|\
+pottedplant|sheep|sofa|train|tvmonitor"
+_virat_names = "--|person|car|construction vehicle|carried object|bike"
+_default_mapper = {
     "person": "person",
+    "bike": "bike",
     "bicycle": "bike",
     "motorcycle": "bike",
     "motorbike": "bike",
     "car": "car",
     "bus": "car",
     "truck": "car",
+    "construction vehicle": "car",
+    "else": "OOD",
 }
 
 
-def __index_mapping(src_names, target_names, src_to_target_names):
-    index_map = {}
-    for k, v in src_to_target_names.items():
-        if k in src_names:
-            src_cid = src_names.index(k)
-            target_cid = target_names.index(v)
-            index_map[src_cid] = target_cid
-    return index_map
+class ClassHub:
+    """
+    Hub module for quick dataset class mapping
+    """
+
+    def __init__(self, names: str, mapper=None):
+        super().__init__()
+        supported_datasets = {
+            "coco": _coco_names,
+            "voc": _voc_names,
+            "virat": _virat_names,
+        }
+        if names in supported_datasets:
+            names = supported_datasets[names]
+
+        self.names = names.split("|")
+        if mapper is None:
+            mapper = _default_mapper
+        self.mapper = mapper
+
+    def to(self, target_names="person|bike|car|OOD") -> None:
+        if isinstance(target_names, str):
+            assert "|" in target_names, 'please seperate with "|" or pass a list to the hub'
+            target_names = target_names.split("|")
+
+        index_map = {}
+        for src_cid, k in enumerate(self.names):
+            # disambiguation
+            if k in self.mapper:
+                k = self.mapper[k]
+            elif "else" in self.mapper:  # out of distribution
+                k = self.mapper["else"]
+            # match
+            if k in target_names:
+                index_map[src_cid] = target_names.index(k)
+        return index_map
 
 
-voc_to_drive3 = __index_mapping(voc_names, drive3_names, any_to_drive3)
-coco_to_drive3 = __index_mapping(coco_names, drive3_names, any_to_drive3)
+if __name__ == "__main__":
+    # use like this
+    print(ClassHub("voc").to("person|bike|car|OOD"))
+
+    for k, v in ClassHub("coco").to("person|bike|car|OOD").items():
+        print(_coco_names.split("|")[k], "person|bike|car|OOD".split("|")[v])

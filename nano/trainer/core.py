@@ -577,6 +577,7 @@ class Controller:
             return best
         except Exception as e:
             logger.error(e)
+            raise e
         finally:
             self.wandb_logger.finish()
             torch.cuda.empty_cache()

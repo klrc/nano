@@ -175,7 +175,7 @@ class CAVIARSeed(Seed):
             # parse xml
             tree = ET.parse(f"{root}/{video_set}/{xml_file}")
             for i, frame in enumerate(tree.getroot().findall("frame")):
-                if i % int(1/pick_rate) == 0:
+                if i % int(1 / pick_rate) == 0:
                     n = int(frame.attrib["number"])
                     object_list = []
                     for object in frame.find("objectlist").findall("object"):
@@ -251,7 +251,7 @@ class PETS09Seed(Seed):
             frames = sorted(frames)
             tree = ET.parse(f"{root}/S2/PETS2009-S2{level}.xml")
             for i, frame in enumerate(tree.getroot().findall("frame")):
-                if i % int(1/pick_rate) == 0:
+                if i % int(1 / pick_rate) == 0:
                     n = int(frame.attrib["number"])
                     object_list = []
                     for object in frame.find("objectlist").findall("object"):
@@ -341,7 +341,7 @@ class VIRATSeed(Seed):
             if os.path.isdir(f"{video_root}/{clip}"):
                 tree = ET.parse(f"{xml_root}/{clip}.viratdata.objects.xml")
                 for i, frame in enumerate(tree.getroot().findall("frame")):
-                    if i % int(1/pick_rate) == 0:
+                    if i % int(1 / pick_rate) == 0:
                         n = int(frame.attrib["number"])
                         object_list = []
                         for object in frame.find("objectlist").findall("object"):
@@ -376,7 +376,7 @@ class EmptyRandChoice(Seed):
         for root in roots:
             # extract files from specified root
             if os.path.exists(root):
-                os.system(f'rm {root}/._*.jpg')
+                os.system(f"rm {root}/._*.jpg")
                 for fname in os.listdir(root):
                     if fname.endswith(".jpg"):
                         path = f"{root}/{fname}"
@@ -412,5 +412,139 @@ class SKU110KSeed(EmptyRandChoice):
     Seed for SKU110K dataset(https://github.com/eg4000/SKU110K_CVPR19) (11743)
     Containing supermarket detection data with NEARLY no person in it.
     """
+
     def __init__(self, root, pick_rate=1) -> None:
-        super().__init__(f'{root}/images', pick_rate=pick_rate)
+        super().__init__(f"{root}/images", pick_rate=pick_rate)
+
+
+def voc_quick_test_preset(
+    target_resolution=(224, 416),
+    target_classes="person|bike|car|OOD",
+    dataset_root="/your/dataset/root",
+):
+    from .dataset_info import ClassHub
+
+    factory = DatasetModule()
+    factory.add_seed(
+        MSCOCOSeed(
+            f"{dataset_root}/VOC/images/train2012",
+            f"{dataset_root}/VOC/labels/train2012",
+        ),
+        T.IndexMapping(ClassHub("voc").to(target_classes)),
+        T.HorizontalFlip(p=0.5),
+        T.Resize(max_size=int(max(target_resolution) * 0.75)),  # 0.75x
+        T.RandomScale(min_scale=0.6, max_scale=1),  # 0.8x
+        T.RandomAffine(min_scale=0.875, max_scale=1.125, p=0.5),  # 1x
+        T.HSVTransform(),
+        T.AlbumentationsPreset(),
+        T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.45, p=1),
+        T.ToTensor(),
+    )
+    return factory
+
+
+def preson_vehicle_detection_preset_mscoco_test(
+    target_resolution=(224, 416),
+    target_classes="person|bike|car|OOD",
+    dataset_root="/your/dataset/root",
+):
+    from .dataset_info import ClassHub
+    factory = DatasetModule()
+    factory.add_seed(
+        MSCOCOSeed(
+            f"{dataset_root}/MSCOCO/val2017",
+            f"{dataset_root}/MSCOCO/labels/val2017",
+        ),
+        T.IndexMapping(ClassHub("coco").to(target_classes)),
+        T.Resize(max_size=int(max(target_resolution))),
+        T.ToTensor(),
+    )
+    return factory
+    
+def person_vehicle_detection_preset(
+    target_resolution=(224, 416),
+    target_classes="person|bike|car|OOD",
+    dataset_root="/your/dataset/root",
+):
+    from .dataset_info import ClassHub
+
+    factory = DatasetModule()
+    factory.add_seed(
+        MSCOCOSeed(
+            f"{dataset_root}/VOC/images/train2012",
+            f"{dataset_root}/VOC/labels/train2012",
+        ),
+        T.IndexMapping(ClassHub("voc").to(target_classes)),
+        T.HorizontalFlip(p=0.5),
+        T.Resize(max_size=int(max(target_resolution) * 0.75)),  # 0.75x
+        T.RandomScale(min_scale=0.6, max_scale=1),  # 0.8x
+        T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.1),  # 1x
+        T.HSVTransform(p=0.1),
+        T.AlbumentationsPreset(),
+        T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.45, p=1),
+        T.ToTensor(),
+    )
+    factory.add_seed(
+        MSCOCOSeed(
+            f"{dataset_root}/MSCOCO/train2017",
+            f"{dataset_root}/MSCOCO/labels/train2017",
+        ),
+        T.IndexMapping(ClassHub("coco").to(target_classes)),
+        T.HorizontalFlip(p=0.5),
+        T.Resize(max_size=int(max(target_resolution))),  # 1x
+        T.RandomScale(min_scale=0.875, max_scale=1.125),  # 1x
+        T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.1),  # 1x
+        T.HSVTransform(p=0.1),
+        T.AlbumentationsPreset(),
+        T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.45, p=1),
+        T.ToTensor(),
+    )
+    factory.add_seed(
+        SKU110KSeed(f"{dataset_root}/SKU110K_fixed", pick_rate=0.05),
+        T.HorizontalFlip(p=0.5),
+        T.Resize(max_size=int(max(target_resolution))),  # 1x
+        T.HSVTransform(p=0.1),
+        T.AlbumentationsPreset(),
+        T.ToTensor(),
+    )
+    factory.add_seed(
+        IndoorSeed(f"{dataset_root}/IndoorOD", pick_rate=0.05),
+        T.HorizontalFlip(p=0.5),
+        T.Resize(max_size=int(max(target_resolution))),  # 1x
+        T.HSVTransform(p=0.1),
+        T.AlbumentationsPreset(),
+        T.ToTensor(),
+    )
+    factory.add_seed(
+        CAVIARSeed(f"{dataset_root}/CAVIAR", pick_rate=0.05),
+        T.HorizontalFlip(p=0.5),
+        T.Resize(max_size=int(max(target_resolution))),  # 1x
+        T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.1),  # 1x
+        T.HSVTransform(p=0.1),
+        T.AlbumentationsPreset(),
+        T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.45, p=1),
+        T.ToTensor(),
+    )
+    factory.add_seed(
+        PETS09Seed(f"{dataset_root}/Crowd_PETS09", pick_rate=0.05),
+        T.HorizontalFlip(p=0.5),
+        T.Resize(max_size=int(max(target_resolution))),  # 1x
+        T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.5),  # 1x
+        T.HSVTransform(p=0.1),
+        T.AlbumentationsPreset(),
+        T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.45, p=1),
+        T.ToTensor(),
+    )
+    factory.add_seed(
+        VIRATSeed(f"{dataset_root}/VIRAT", pick_rate=0.05),
+        T.IndexMapping(ClassHub("virat").to(target_classes)),
+        T.HorizontalFlip(p=0.5),
+        T.Resize(max_size=int(max(target_resolution))),
+        T.RandomScale(min_scale=1, max_scale=1.5),
+        T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.5),  # 1x
+        T.HSVTransform(p=0.1),
+        T.AlbumentationsPreset(),
+        T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.45, p=1),
+        T.ToTensor(),
+    )
+    return factory

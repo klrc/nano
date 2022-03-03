@@ -3,7 +3,7 @@
     "python.linting.enabled": true,
     "python.linting.flake8Args": [
         "--max-line-length",
-        "120",
+        "160",
         "--ignore",
         "E203",
     ],
