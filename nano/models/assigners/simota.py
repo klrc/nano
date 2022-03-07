@@ -1,5 +1,5 @@
 import torch
-from torch import device, nn
+from torch import nn
 from torch.nn.functional import one_hot, binary_cross_entropy, binary_cross_entropy_with_logits
 from torchvision.ops.boxes import box_iou
 from nano.models.multiplex.box2d import completely_box_iou
@@ -187,7 +187,7 @@ class SimOTA(nn.Module):
         # ------------------------------------------------------------
 
         device = matched.device
-        pos_mask = matched[..., 0] > 0
+        pos_mask = matched[..., 0] == 1
         box_pred, box_target = input[pos_mask][..., 3:7], matched[pos_mask][..., 1:5]
         cls_pred, cls_target = input[..., 7:].flatten(0, 1), matched[..., 5:].flatten(0, 1)
         loss = torch.zeros(2, device=device)
@@ -195,9 +195,11 @@ class SimOTA(nn.Module):
 
         # reference: https://arxiv.org/pdf/2111.00902.pdf
         # loss = loss_vfl + 2 * loss_giou + 0.25 * loss_dfl
-        lbox = 0 if nt == 0 else 2 * (1 - completely_box_iou(box_pred, box_target).mean())
+        lbox = 0 if nt == 0 else 1 - completely_box_iou(box_pred, box_target).mean()
         lqfl = quality_focal_loss_with_ood(cls_pred, cls_target, beta=2)
         lqfl = lqfl.sum() / max(nt, 1)
+        lbox = 0.04 * lbox
+        lqfl = 0.02 * lqfl
         loss += torch.stack((lbox, lqfl))
         # loss, loss items (for printing)
         return lbox + lqfl, loss.detach()

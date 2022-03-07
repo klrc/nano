@@ -460,7 +460,8 @@ def preson_vehicle_detection_preset_mscoco_test(
         T.ToTensor(),
     )
     return factory
-    
+
+
 def person_vehicle_detection_preset(
     target_resolution=(224, 416),
     target_classes="person|bike|car|OOD",
@@ -500,23 +501,7 @@ def person_vehicle_detection_preset(
         T.ToTensor(),
     )
     factory.add_seed(
-        SKU110KSeed(f"{dataset_root}/SKU110K_fixed", pick_rate=0.05),
-        T.HorizontalFlip(p=0.5),
-        T.Resize(max_size=int(max(target_resolution))),  # 1x
-        T.HSVTransform(p=0.1),
-        T.AlbumentationsPreset(),
-        T.ToTensor(),
-    )
-    factory.add_seed(
-        IndoorSeed(f"{dataset_root}/IndoorOD", pick_rate=0.05),
-        T.HorizontalFlip(p=0.5),
-        T.Resize(max_size=int(max(target_resolution))),  # 1x
-        T.HSVTransform(p=0.1),
-        T.AlbumentationsPreset(),
-        T.ToTensor(),
-    )
-    factory.add_seed(
-        CAVIARSeed(f"{dataset_root}/CAVIAR", pick_rate=0.05),
+        CAVIARSeed(f"{dataset_root}/CAVIAR", pick_rate=0.002),
         T.HorizontalFlip(p=0.5),
         T.Resize(max_size=int(max(target_resolution))),  # 1x
         T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.1),  # 1x
@@ -526,7 +511,19 @@ def person_vehicle_detection_preset(
         T.ToTensor(),
     )
     factory.add_seed(
-        PETS09Seed(f"{dataset_root}/Crowd_PETS09", pick_rate=0.05),
+        VIRATSeed(f"{dataset_root}/VIRAT", pick_rate=0.002),
+        T.IndexMapping(ClassHub("virat").to(target_classes)),
+        T.HorizontalFlip(p=0.5),
+        T.Resize(max_size=int(max(target_resolution))),
+        T.RandomScale(min_scale=1, max_scale=1.5),
+        T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.5),  # 1x
+        T.HSVTransform(p=0.1),
+        T.AlbumentationsPreset(),
+        T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.45, p=1),
+        T.ToTensor(),
+    )
+    factory.add_seed(
+        PETS09Seed(f"{dataset_root}/Crowd_PETS09", pick_rate=0.005),
         T.HorizontalFlip(p=0.5),
         T.Resize(max_size=int(max(target_resolution))),  # 1x
         T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.5),  # 1x
@@ -536,11 +533,9 @@ def person_vehicle_detection_preset(
         T.ToTensor(),
     )
     factory.add_seed(
-        VIRATSeed(f"{dataset_root}/VIRAT", pick_rate=0.05),
-        T.IndexMapping(ClassHub("virat").to(target_classes)),
+        IndoorSeed(f"{dataset_root}/IndoorOD", pick_rate=0.01),
         T.HorizontalFlip(p=0.5),
-        T.Resize(max_size=int(max(target_resolution))),
-        T.RandomScale(min_scale=1, max_scale=1.5),
+        T.Resize(max_size=int(max(target_resolution))),  # 1x
         T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.5),  # 1x
         T.HSVTransform(p=0.1),
         T.AlbumentationsPreset(),

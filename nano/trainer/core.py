@@ -266,7 +266,7 @@ class Trainer:
         device,
         batch_size=64,
         lr0=0.01,
-        momentum=0.9,
+        momentum=0.937,
         weight_decay=0.0005,
         lrf=0.1,
         optimizer="AdamW",
@@ -459,7 +459,7 @@ class Validator:
             targets = targets.to(self.device)
 
             # Run model
-            out = model(img)  # inference and training outputs
+            out = model(img)  # inference outputs
 
             # Run NMS
             out = non_max_suppression(out, self.conf_thres, self.iou_thres)

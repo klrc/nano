@@ -76,9 +76,9 @@ class AnchorfreeHead(nn.Module):
                 # flatten anchors
                 y = x.flatten(2).permute(0, 2, 1).sigmoid()
                 # post process
-                y[..., 3 : 3 + 4] *= 5 * stride  # sigmoid box only, max = 5 * 2 * stride
-                y[..., 3 : 3 + 2] *= -1
-                y[..., 3 : 3 + 4] += (G.repeat(1, 1, 2) + 0.5) * stride
+                y[..., : 4] *= 5 * stride  # sigmoid box only, max = 5 * 2 * stride
+                y[..., : 2] *= -1
+                y[..., : 4] += (G.repeat(1, 1, 2) + 0.5) * stride
                 ys.append(y)
 
         return torch.cat(ys, dim=1)
