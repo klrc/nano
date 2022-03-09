@@ -1,4 +1,3 @@
-from unicodedata import name
 
 
 _coco_names = "person|bicycle|car|motorcycle|airplane|bus|train|truck|boat|traffic light|fire hydrant|stop sign|\
