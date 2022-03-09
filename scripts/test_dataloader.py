@@ -12,8 +12,8 @@ if __name__ == "__main__":
         import nano.data.transforms as T
         import nano.data.visualize as V
 
-        dataset = preson_vehicle_detection_preset_mscoco_test((288, 512), "person|bike|car|OOD", "/Volumes/ASM236X")
-        # dataset = person_vehicle_detection_preset((288, 512), "person|bike|car|OOD", "/Volumes/ASM236X")
+        # dataset = preson_vehicle_detection_preset_mscoco_test((256, 448), "person|bike|car|OOD", "/Volumes/ASM236X")
+        dataset = person_vehicle_detection_preset((256, 448), "person|bike|car|OOD", "/Volumes/ASM236X")
         dataloader = dataset.as_dataloader(batch_size=16, num_workers=4, shuffle=True, collate_fn=T.letterbox_collate_fn)
 
         for images, target in dataloader:

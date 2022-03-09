@@ -198,8 +198,6 @@ class SimOTA(nn.Module):
         lbox = 0 if nt == 0 else 1 - completely_box_iou(box_pred, box_target).mean()
         lqfl = quality_focal_loss_with_ood(cls_pred, cls_target, beta=2)
         lqfl = lqfl.sum() / max(nt, 1)
-        lbox = 0.04 * lbox
-        lqfl = 0.02 * lqfl
         loss += torch.stack((lbox, lqfl))
         # loss, loss items (for printing)
         return lbox + lqfl, loss.detach()

@@ -418,7 +418,7 @@ class SKU110KSeed(EmptyRandChoice):
 
 
 def voc_quick_test_preset(
-    target_resolution=(224, 416),
+    target_resolution=(256, 448),
     target_classes="person|bike|car|OOD",
     dataset_root="/your/dataset/root",
 ):
@@ -432,10 +432,10 @@ def voc_quick_test_preset(
         ),
         T.IndexMapping(ClassHub("voc").to(target_classes)),
         T.HorizontalFlip(p=0.5),
-        T.Resize(max_size=int(max(target_resolution) * 0.75)),  # 0.75x
-        T.RandomScale(min_scale=0.6, max_scale=1),  # 0.8x
-        T.RandomAffine(min_scale=0.875, max_scale=1.125, p=0.5),  # 1x
-        T.HSVTransform(),
+        T.Resize(max_size=int(max(target_resolution))),  # 0.75x
+        T.RandomScale(min_scale=0.25, max_scale=1),  # 0.8x
+        T.RandomAffine(min_scale=0.875, max_scale=1.125, p=0.1),  # 1x
+        T.HSVTransform(0.01, 0.54, 0.27),
         T.AlbumentationsPreset(),
         T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.45, p=1),
         T.ToTensor(),
@@ -444,11 +444,12 @@ def voc_quick_test_preset(
 
 
 def preson_vehicle_detection_preset_mscoco_test(
-    target_resolution=(224, 416),
+    target_resolution=(256, 448),
     target_classes="person|bike|car|OOD",
     dataset_root="/your/dataset/root",
 ):
     from .dataset_info import ClassHub
+
     factory = DatasetModule()
     factory.add_seed(
         MSCOCOSeed(
@@ -463,7 +464,7 @@ def preson_vehicle_detection_preset_mscoco_test(
 
 
 def person_vehicle_detection_preset(
-    target_resolution=(224, 416),
+    target_resolution=(256, 448),
     target_classes="person|bike|car|OOD",
     dataset_root="/your/dataset/root",
 ):
@@ -477,10 +478,10 @@ def person_vehicle_detection_preset(
         ),
         T.IndexMapping(ClassHub("voc").to(target_classes)),
         T.HorizontalFlip(p=0.5),
-        T.Resize(max_size=int(max(target_resolution) * 0.75)),  # 0.75x
-        T.RandomScale(min_scale=0.6, max_scale=1),  # 0.8x
+        T.Resize(max_size=int(max(target_resolution))),  # 1x
+        T.RandomScale(min_scale=0.25, max_scale=1),  # 0.8x
         T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.1),  # 1x
-        T.HSVTransform(p=0.1),
+        T.HSVTransform(0.01, 0.54, 0.27),
         T.AlbumentationsPreset(),
         T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.45, p=1),
         T.ToTensor(),
@@ -493,9 +494,9 @@ def person_vehicle_detection_preset(
         T.IndexMapping(ClassHub("coco").to(target_classes)),
         T.HorizontalFlip(p=0.5),
         T.Resize(max_size=int(max(target_resolution))),  # 1x
-        T.RandomScale(min_scale=0.875, max_scale=1.125),  # 1x
+        T.RandomScale(min_scale=0.5, max_scale=1.5),  # 1x
         T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.1),  # 1x
-        T.HSVTransform(p=0.1),
+        T.HSVTransform(),
         T.AlbumentationsPreset(),
         T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.45, p=1),
         T.ToTensor(),
@@ -504,8 +505,9 @@ def person_vehicle_detection_preset(
         CAVIARSeed(f"{dataset_root}/CAVIAR", pick_rate=0.002),
         T.HorizontalFlip(p=0.5),
         T.Resize(max_size=int(max(target_resolution))),  # 1x
+        T.RandomScale(min_scale=0.5, max_scale=1.5),
         T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.1),  # 1x
-        T.HSVTransform(p=0.1),
+        T.HSVTransform(),
         T.AlbumentationsPreset(),
         T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.45, p=1),
         T.ToTensor(),
@@ -515,9 +517,9 @@ def person_vehicle_detection_preset(
         T.IndexMapping(ClassHub("virat").to(target_classes)),
         T.HorizontalFlip(p=0.5),
         T.Resize(max_size=int(max(target_resolution))),
-        T.RandomScale(min_scale=1, max_scale=1.5),
-        T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.5),  # 1x
-        T.HSVTransform(p=0.1),
+        T.RandomScale(min_scale=0.5, max_scale=1.5),
+        T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.1),  # 1x
+        T.HSVTransform(),
         T.AlbumentationsPreset(),
         T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.45, p=1),
         T.ToTensor(),
@@ -526,8 +528,9 @@ def person_vehicle_detection_preset(
         PETS09Seed(f"{dataset_root}/Crowd_PETS09", pick_rate=0.005),
         T.HorizontalFlip(p=0.5),
         T.Resize(max_size=int(max(target_resolution))),  # 1x
-        T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.5),  # 1x
-        T.HSVTransform(p=0.1),
+        T.RandomScale(min_scale=0.5, max_scale=1.5),
+        T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.1),  # 1x
+        T.HSVTransform(),
         T.AlbumentationsPreset(),
         T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.45, p=1),
         T.ToTensor(),
@@ -536,8 +539,9 @@ def person_vehicle_detection_preset(
         IndoorSeed(f"{dataset_root}/IndoorOD", pick_rate=0.01),
         T.HorizontalFlip(p=0.5),
         T.Resize(max_size=int(max(target_resolution))),  # 1x
-        T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.5),  # 1x
-        T.HSVTransform(p=0.1),
+        T.RandomScale(min_scale=0.5, max_scale=1.5),
+        T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.1),  # 1x
+        T.HSVTransform(),
         T.AlbumentationsPreset(),
         T.Mosaic4(mosaic_size=int(max(target_resolution)), min_iou=0.45, p=1),
         T.ToTensor(),

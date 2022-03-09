@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+
+from nano.models.multiplex.dct import DCTModule
 from ..multiplex.conv import pointwise_conv, depthwise_conv
 from ..multiplex.ghostnet import GhostBlock
 
@@ -69,7 +71,7 @@ class ESBlockS1(nn.Module):
         self.channel_shuffle = ChannelShuffle(2)
 
     def forward(self, x):
-        x1, x2 = x[:, : self.split_point, :, :], x[:, self.split_point:, :, :]
+        x1, x2 = x[:, : self.split_point, :, :], x[:, self.split_point :, :, :]
         x1 = self.main_branch(x1)
         x = torch.cat([x1, x2], dim=1)
         x = self.channel_shuffle(x)
@@ -112,3 +114,11 @@ class EnhancedShuffleNetv2(nn.Module):
         fs2 = self.feature_s2(fs1)
         fs3 = self.feature_s3(fs2)
         return [fs1, fs2, fs3]
+
+
+class DCTEnhancedShuffleNetv2(EnhancedShuffleNetv2):
+    # An frequency domain backbone with DCT input
+    # idea from: https://arxiv.org/pdf/2002.12416.pdf
+    def __init__(self, channels=(64, 96, 192, 384)):
+        super().__init__(channels)
+        self.feature_s0 = DCTModule(8)

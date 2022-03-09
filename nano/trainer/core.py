@@ -272,7 +272,7 @@ class Trainer:
         optimizer="AdamW",
         warmup_epochs=3,
         warmup_bias_lr=0.1,
-        warmup_momentum=0.5,
+        warmup_momentum=0.8,
         start_epoch=0,
         end_epoch=300,
     ):

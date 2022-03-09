@@ -25,11 +25,14 @@ if __name__ == "__main__":
         GhostNano_3x4_m96,
         GhostNano_3x3_l128,
         GhostNano_3x4_l128,
+        NanoDCT_3x4_m96,
     )
 
-    get_model_info(GhostNano_3x3_s64(4).eval(), (1, 3, 416, 736))
-    get_model_info(GhostNano_3x4_s64(4).eval(), (1, 3, 416, 736))
-    get_model_info(GhostNano_3x3_m96(4).eval(), (1, 3, 288, 512))
-    get_model_info(GhostNano_3x4_m96(4).eval(), (1, 3, 288, 512))
-    get_model_info(GhostNano_3x3_l128(4).eval(), (1, 3, 224, 416))
-    get_model_info(GhostNano_3x4_l128(4).eval(), (1, 3, 224, 416))
+    get_model_info(GhostNano_3x3_s64(4).eval(), (1, 3, 256, 448))
+    get_model_info(GhostNano_3x4_s64(4).eval(), (1, 3, 256, 448))
+    get_model_info(GhostNano_3x3_m96(4).eval(), (1, 3, 256, 448))
+    get_model_info(GhostNano_3x4_m96(4).eval(), (1, 3, 256, 448))
+    get_model_info(GhostNano_3x3_l128(4).eval(), (1, 3, 256, 448))
+    get_model_info(GhostNano_3x4_l128(4).eval(), (1, 3, 256, 448))
+
+    get_model_info(NanoDCT_3x4_m96(4).eval(), (1, 3, 256, 448))
