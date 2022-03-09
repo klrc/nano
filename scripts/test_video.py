@@ -15,6 +15,9 @@ from nano.data.visualize import Canvas  # noqa: E402
 from nano.models.multiplex.box2d import non_max_suppression  # noqa: E402
 
 
+default_classes = "person|bike|motorcycle|car|bus|truck|OOD".split("|")
+
+
 def single_frame_inference(frame_queue, transforms, model, output_queue, device, conf_threshold, iou_threshold):
     # setup model
     model = model.eval().to(device)
@@ -114,7 +117,7 @@ class VideoRenderPipe:
 
 
 class FrontCameraDetection:
-    def __init__(self, model, inference_size=416, max_stride=64, class_names="person|bike|car|OOD".split("|"), always_on_top=True, device="cpu") -> None:
+    def __init__(self, model, inference_size=416, max_stride=64, class_names=default_classes, always_on_top=True, device="cpu") -> None:
         detector = VideoDetector(model, inference_size, max_stride, device)
         self.pipe = VideoRenderPipe(detector, class_names, always_on_top)
 
@@ -138,7 +141,7 @@ class FrontCameraDetection:
 
 
 class ScreenshotDetection:
-    def __init__(self, model, inference_size=416, max_stride=64, class_names="person|bike|car|OOD".split("|"), always_on_top=True, device="cpu") -> None:
+    def __init__(self, model, inference_size=416, max_stride=64, class_names=default_classes, always_on_top=True, device="cpu") -> None:
         detector = VideoDetector(model, inference_size, max_stride, device)
         self.pipe = VideoRenderPipe(detector, class_names, always_on_top)
 
@@ -166,7 +169,7 @@ class ScreenshotDetection:
 
 
 class YUVDetection:
-    def __init__(self, model, inference_size=416, max_stride=64, class_names="person|bike|car|OOD".split("|"), always_on_top=True, device="cpu") -> None:
+    def __init__(self, model, inference_size=416, max_stride=64, class_names=default_classes, always_on_top=True, device="cpu") -> None:
         detector = VideoDetector(model, inference_size, max_stride, device)
         self.pipe = VideoRenderPipe(detector, class_names, always_on_top)
 
@@ -205,6 +208,3 @@ if __name__ == "__main__":
     # detector.start(flip=False)
     detector = YUVDetection(model, device="cpu")
     detector.start(yuv_file="../datasets/1280x720_3.yuv")
-
-
-

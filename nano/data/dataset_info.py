@@ -15,12 +15,12 @@ _default_mapper = {
     "person": "person",
     "bike": "bike",
     "bicycle": "bike",
-    "motorcycle": "bike",
-    "motorbike": "bike",
+    "motorcycle": "motorcycle",
+    "motorbike": "motorcycle",
     "car": "car",
-    "bus": "car",
-    "truck": "car",
-    "construction vehicle": "car",
+    "bus": "bus",
+    "truck": "truck",
+    "construction vehicle": "truck",
     "else": "OOD",
 }
 

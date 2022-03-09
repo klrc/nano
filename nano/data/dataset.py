@@ -419,7 +419,7 @@ class SKU110KSeed(EmptyRandChoice):
 
 def voc_quick_test_preset(
     target_resolution=(256, 448),
-    target_classes="person|bike|car|OOD",
+    target_classes="person|bike|motorcycle|car|bus|truck|OOD",
     dataset_root="/your/dataset/root",
 ):
     from .dataset_info import ClassHub
@@ -445,7 +445,7 @@ def voc_quick_test_preset(
 
 def preson_vehicle_detection_preset_mscoco_test(
     target_resolution=(256, 448),
-    target_classes="person|bike|car|OOD",
+    target_classes="person|bike|motorcycle|car|bus|truck|OOD",
     dataset_root="/your/dataset/root",
 ):
     from .dataset_info import ClassHub
@@ -465,7 +465,7 @@ def preson_vehicle_detection_preset_mscoco_test(
 
 def person_vehicle_detection_preset(
     target_resolution=(256, 448),
-    target_classes="person|bike|car|OOD",
+    target_classes="person|bike|motorcycle|car|bus|truck|OOD",
     dataset_root="/your/dataset/root",
 ):
     from .dataset_info import ClassHub
