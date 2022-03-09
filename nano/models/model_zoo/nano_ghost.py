@@ -41,7 +41,7 @@ class GhostNano_3x3_l128(nn.Module):
 class NanoDCT_3x3_m96(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
-        backbone_width, neck_width, strides = ((64 * 3, 96, 192, 384), 96, (16, 32, 64))
+        backbone_width, neck_width, strides = ((48, 96, 192, 384), 96, (16, 32, 64))
         self.backbone = DCTEnhancedShuffleNetv2(backbone_width)
         self.neck = GhostPAN(backbone_width[1:], neck_width, len(strides))
         self.head = AnchorfreeHead(neck_width, neck_width, strides, num_classes)

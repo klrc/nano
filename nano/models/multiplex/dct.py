@@ -24,34 +24,39 @@ class RGB2YCbCrConv2d(nn.Conv2d):
         return weight, bias
 
 
-class DCTConv2d(nn.Conv2d):
-    def __init__(self, kernel_size: int):
-        super().__init__(in_channels=3, out_channels=kernel_size ** 2 * 3, kernel_size=kernel_size, stride=kernel_size, bias=False, groups=3)
-        self.weight.data = self.dct_weight(kernel_size)
+class DCTConv2d(nn.Module):
+    def __init__(self, kernel_size: int, ratio_y=0.9, ratio_cb=0.5, ratio_cr=0.5) -> None:
+        super().__init__()
+        self.convs = nn.ModuleList()
+        for ratio in (ratio_y, ratio_cb, ratio_cr):
+            tri_len = int(kernel_size * ratio)
+            out_channels = int((tri_len + 1) * tri_len / 2)
+            conv = nn.Conv2d(1, out_channels, kernel_size, kernel_size, bias=False)
+            conv.weight.data = self.dct_weight(kernel_size, ratio)
+            self.convs.append(conv)
+        self.out_channels = sum([x.weight.data.size(0) for x in self.convs])
 
-    def dct_weight(self, kernel_size, input_channels=3):
-        dct_size = kernel_size  # full-channel DCT
-        weight = torch.zeros(dct_size ** 2 * input_channels, 1, kernel_size, kernel_size)
+    def dct_weight(self, kernel_size, ratio=1):
+        # get sampled dct pairs
+        dct_index = []
+        dct_size = int(kernel_size * ratio)  # ratio = 1 for full-channel DCT
+        for i in range(dct_size):
+            for j in range(dct_size - i):  # top-left triangular matrix (sort by frequency)
+                dct_index.append((i, j))
+        # create preset DCT weights
+        weight = torch.zeros(len(dct_index), 1, kernel_size, kernel_size)
         for i in range(kernel_size):
             for j in range(kernel_size):
-                for d_i in range(dct_size):
-                    for d_j in range(dct_size):
-                        for input_channel in range(input_channels):
-                            x_a = np.cos(d_i * np.pi / dct_size * (i + 0.5))
-                            x_b = np.cos(d_j * np.pi / dct_size * (j + 0.5))
-                            weight[input_channel * dct_size * dct_size + d_i * dct_size + d_j, 0, i, j] = x_a * x_b
+                for ii, (d_i, d_j) in enumerate(dct_index):
+                    x_a = np.cos(d_i * np.pi / kernel_size * (i + 0.5))
+                    x_b = np.cos(d_j * np.pi / kernel_size * (j + 0.5))
+                    weight[ii, 0, i, j] = x_a * x_b
         return weight
 
-
-class ChannelGate(nn.Module):
-    def __init__(self, channels) -> None:
-        super().__init__()
-        self.gate = nn.Parameter(data=torch.zeros(channels).view(1, -1, 1, 1), requires_grad=True)
-        self.softmax = nn.Softmax(dim=1)
-
-    def forward(self, x):
-        g = self.softmax(self.gate)
-        return x * g
+    def forward(self, x: torch.Tensor):
+        xs = x.chunk(3, dim=1)
+        xs = [conv(x) for conv, x in zip(self.convs, xs)]
+        return torch.cat(xs, dim=1)
 
 
 class DCTModule(nn.Module):
@@ -59,8 +64,7 @@ class DCTModule(nn.Module):
         super().__init__()
         self.rgb2ycbcr = RGB2YCbCrConv2d()
         self.conv = DCTConv2d(kernel_size)
-        self.norm = nn.GroupNorm(num_groups=kernel_size ** 2 * 3, num_channels=kernel_size ** 2 * 3)
-        self.gate = ChannelGate(kernel_size ** 2 * 3)
+        self.norm = nn.GroupNorm(num_groups=self.conv.out_channels, num_channels=self.conv.out_channels)
         for p in self.rgb2ycbcr.parameters():
             p.requires_grad = False
         for p in self.conv.parameters():
@@ -70,5 +74,4 @@ class DCTModule(nn.Module):
         x = self.rgb2ycbcr(x)
         x = self.conv(x)
         x = self.norm(x)
-        x = self.gate(x)
         return x
