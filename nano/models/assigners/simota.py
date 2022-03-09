@@ -214,7 +214,7 @@ def quality_focal_loss_with_ood(pred, target, beta=2.0):
     sigmoid_pred = pred.sigmoid()
     scale_factor = (target - sigmoid_pred).abs().pow(beta)
     out_of_distribution = target[..., -1] > 0
-    scale_factor[out_of_distribution, -1] *= min(1, 2 * sigmoid_pred[out_of_distribution, :-1].max(dim=-1)[0])
+    scale_factor[out_of_distribution, -1] *= 2 * sigmoid_pred[out_of_distribution, :-1].max(dim=-1)[0].clamp(0, 1)
     # negatives are supervised by 0 quality score
     # positives are supervised by bbox quality (IoU) score
     loss = binary_cross_entropy_with_logits(pred, target, reduction="none") * scale_factor
