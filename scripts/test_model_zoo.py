@@ -4,6 +4,7 @@ import sys
 from thop import profile
 from copy import deepcopy
 
+
 sys.path.append(".")
 
 
@@ -25,7 +26,7 @@ if __name__ == "__main__":
         GhostNano_3x4_m96,
         GhostNano_3x3_l128,
         GhostNano_3x4_l128,
-        NanoDCT_3x4_m96,
+        NanoDCT_3x3_m96,
     )
 
     get_model_info(GhostNano_3x3_s64(4).eval(), (1, 3, 256, 448))
@@ -35,4 +36,8 @@ if __name__ == "__main__":
     get_model_info(GhostNano_3x3_l128(4).eval(), (1, 3, 256, 448))
     get_model_info(GhostNano_3x4_l128(4).eval(), (1, 3, 256, 448))
 
-    get_model_info(NanoDCT_3x4_m96(4).eval(), (1, 3, 256, 448))
+    get_model_info(NanoDCT_3x3_m96(4).eval(), (1, 3, 256, 448))
+
+    
+    from nano.models.multiplex.dct import DCTModule
+    get_model_info(DCTModule(4).eval(), (1, 3, 256, 448))

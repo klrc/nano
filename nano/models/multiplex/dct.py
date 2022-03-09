@@ -26,12 +26,12 @@ class RGB2YCbCrConv2d(nn.Conv2d):
 
 class DCTConv2d(nn.Conv2d):
     def __init__(self, kernel_size: int):
-        super().__init__(in_channels=3, out_channels=kernel_size ** 2, kernel_size=kernel_size, stride=kernel_size, bias=False)
+        super().__init__(in_channels=3, out_channels=kernel_size ** 2 * 3, kernel_size=kernel_size, stride=kernel_size, bias=False, groups=3)
         self.weight.data = self.dct_weight(kernel_size)
 
     def dct_weight(self, kernel_size, input_channels=3):
         dct_size = kernel_size  # full-channel DCT
-        weight = torch.zeros(dct_size ** 2, input_channels, kernel_size, kernel_size)
+        weight = torch.zeros(dct_size ** 2 * input_channels, 1, kernel_size, kernel_size)
         for i in range(kernel_size):
             for j in range(kernel_size):
                 for d_i in range(dct_size):
@@ -39,11 +39,11 @@ class DCTConv2d(nn.Conv2d):
                         for input_channel in range(input_channels):
                             x_a = np.cos(d_i * np.pi / dct_size * (i + 0.5))
                             x_b = np.cos(d_j * np.pi / dct_size * (j + 0.5))
-                            weight[d_i * dct_size + d_j, input_channel, i, j] = x_a * x_b
+                            weight[input_channel * dct_size * dct_size + d_i * dct_size + d_j, 0, i, j] = x_a * x_b
         return weight
 
 
-class StaticDCTGate(nn.Module):
+class ChannelGate(nn.Module):
     def __init__(self, channels) -> None:
         super().__init__()
         self.gate = nn.Parameter(data=torch.zeros(channels).view(1, -1, 1, 1), requires_grad=True)
@@ -59,8 +59,8 @@ class DCTModule(nn.Module):
         super().__init__()
         self.rgb2ycbcr = RGB2YCbCrConv2d()
         self.conv = DCTConv2d(kernel_size)
-        self.norm = nn.GroupNorm(num_groups=kernel_size ** 2, num_channels=kernel_size ** 2)
-        self.gate = StaticDCTGate(kernel_size ** 2)
+        self.norm = nn.GroupNorm(num_groups=kernel_size ** 2 * 3, num_channels=kernel_size ** 2 * 3)
+        self.gate = ChannelGate(kernel_size ** 2 * 3)
         for p in self.rgb2ycbcr.parameters():
             p.requires_grad = False
         for p in self.conv.parameters():
