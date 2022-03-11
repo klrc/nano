@@ -15,8 +15,9 @@ class SimOTA(nn.Module):
 
     """
 
-    def __init__(self):
+    def __init__(self, class_balance=None):
         super().__init__()
+        self.class_balance = class_balance
 
     @torch.no_grad()
     def center_sampling(self, pred_per_image, target_per_image):
@@ -187,17 +188,30 @@ class SimOTA(nn.Module):
         # ------------------------------------------------------------
 
         device = matched.device
+        input = input.flatten(0, 1)  # (N*A,  2+1+4+C)
+        matched = matched.flatten(0, 1)  # (N*A,  1+4+C)
         pos_mask = matched[..., 0] == 1
-        box_pred, box_target = input[pos_mask][..., 3:7], matched[pos_mask][..., 1:5]
-        cls_pred, cls_target = input[..., 7:].flatten(0, 1), matched[..., 5:].flatten(0, 1)
+        box_pred, box_target = input[pos_mask, 3:7], matched[pos_mask, 1:5]
+        cls_pred, cls_target = input[:, 7:], matched[:, 5:]
         loss = torch.zeros(2, device=device)
-        nt = box_target.size(0)
 
-        # reference: https://arxiv.org/pdf/2111.00902.pdf
-        # loss = loss_vfl + 2 * loss_giou + 0.25 * loss_dfl
-        lbox = 0 if nt == 0 else 1 - completely_box_iou(box_pred, box_target).mean()
-        lqfl = quality_focal_loss_with_ood(cls_pred, cls_target, beta=2)
-        lqfl = lqfl.sum() / max(nt, 1) * (5 / cls_target.size(-1))
+        nt = box_target.size(0)
+        if nt == 0:
+            lbox = 0
+            lqfl = quality_focal_loss_with_ood(cls_pred, cls_target, beta=2)
+        else:
+            # reference: https://arxiv.org/pdf/2111.00902.pdf
+            # loss = loss_vfl + 2 * loss_giou + 0.25 * loss_dfl
+            lbox = 1 - completely_box_iou(box_pred, box_target)
+            lqfl = quality_focal_loss_with_ood(cls_pred, cls_target, beta=2)
+            # class balance using manual weights
+            if self.class_balance is not None:
+                class_balance = torch.tensor(self.class_balance, device=device)
+                balance_mask = torch.matmul((matched[pos_mask, 5:] > 0).float(), class_balance).detach()
+                lbox *= balance_mask
+                lqfl[pos_mask] *= balance_mask.unsqueeze(-1)
+        lbox = 0.2 * lbox.mean()
+        lqfl = 0.2 * lqfl.sum() / max(nt, 1)
         loss += torch.stack((lbox, lqfl))
         # loss, loss items (for printing)
         return lbox + lqfl, loss.detach()
@@ -215,6 +229,7 @@ def quality_focal_loss_with_ood(pred, target, beta=2.0):
     scale_factor = (target - sigmoid_pred).abs().pow(beta)
     out_of_distribution = target[..., -1] > 0
     scale_factor[out_of_distribution, -1] *= 2 * sigmoid_pred[out_of_distribution, :-1].max(dim=-1)[0].clamp(0, 1)
+    scale_factor = scale_factor.detach()
     # negatives are supervised by 0 quality score
     # positives are supervised by bbox quality (IoU) score
     loss = binary_cross_entropy_with_logits(pred, target, reduction="none") * scale_factor

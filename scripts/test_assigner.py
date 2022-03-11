@@ -15,10 +15,11 @@ if __name__ == "__main__":
         from nano.models.assigners.simota import SimOTA
         from nano.models.model_zoo.nano_ghost import GhostNano_3x3_m96
 
-        dataset = voc_quick_test_preset((224, 416), "person|bike|car|OOD", "/Volumes/ASM236X")
+        class_names = "person|bike|motorcycle|car|bus|truck|OOD".split("|")
+        dataset = voc_quick_test_preset((224, 416), class_names, "/Volumes/ASM236X")
         dataloader = dataset.as_dataloader(batch_size=16, num_workers=4, shuffle=True, collate_fn=T.letterbox_collate_fn)
-        assigner = SimOTA()
-        model = GhostNano_3x3_m96(4).train()
+        assigner = SimOTA(class_balance=[0.3, 1, 1, 1, 1, 1, 1])
+        model = GhostNano_3x3_m96(len(class_names)).train()
 
         # test for one batch
         for images, target in dataloader:

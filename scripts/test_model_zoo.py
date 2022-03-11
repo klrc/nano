@@ -41,4 +41,3 @@ if __name__ == "__main__":
     
     from nano.models.multiplex.dct import DCTModule
     get_model_info(DCTModule(4).eval(), (1, 3, 256, 448))
-l

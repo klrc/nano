@@ -64,14 +64,13 @@ class DCTModule(nn.Module):
         super().__init__()
         self.rgb2ycbcr = RGB2YCbCrConv2d()
         self.conv = DCTConv2d(kernel_size)
-        self.norm = nn.GroupNorm(num_groups=self.conv.out_channels, num_channels=self.conv.out_channels)
-        for p in self.rgb2ycbcr.parameters():
-            p.requires_grad = False
-        for p in self.conv.parameters():
-            p.requires_grad = False
+        # self.norm = nn.GroupNorm(num_groups=self.conv.out_channels, num_channels=self.conv.out_channels)
+        # for p in self.rgb2ycbcr.parameters():
+        #     p.requires_grad = False
+        # for p in self.conv.parameters():
+        #     p.requires_grad = False
 
     def forward(self, x):
         x = self.rgb2ycbcr(x)
         x = self.conv(x)
-        x = self.norm(x)
         return x

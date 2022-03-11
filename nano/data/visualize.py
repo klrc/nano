@@ -53,6 +53,13 @@ class Canvas:
         layer = cv2.circle(layer, center, 1, self._color, thickness)
         self.image = self.merge_transparent_layer(layer, alpha)
 
+    def draw_boxes_with_label(self, boxes, labels, alpha=1, thickness=1, color=None):
+        if color is not None:
+            self.set_color(color)
+        for box, label in zip(boxes, labels):
+            self.draw_box(box, alpha, thickness)
+            self.draw_text_with_background(label, box[:2], alpha)
+
     def draw_boxes(self, boxes, alpha=1, thickness=1, color=None):
         if color is not None:
             self.set_color(color)

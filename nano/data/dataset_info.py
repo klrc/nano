@@ -1,5 +1,3 @@
-
-
 _coco_names = "person|bicycle|car|motorcycle|airplane|bus|train|truck|boat|traffic light|fire hydrant|stop sign|\
 parking meter|bench|bird|cat|dog|horse|sheep|cow|elephant|bear|zebra|giraffe|backpack|umbrella|handbag|tie|\
 suitcase|frisbee|skis|snowboard|sports ball|kite|baseball bat|baseball glove|skateboard|surfboard|\
@@ -64,7 +62,12 @@ class ClassHub:
 
 if __name__ == "__main__":
     # use like this
-    print(ClassHub("voc").to("person|bike|car|OOD"))
+    print(ClassHub("voc").to("person|bike|motorcycle|car|bus|truck|OOD"))
 
-    for k, v in ClassHub("coco").to("person|bike|car|OOD").items():
-        print(_coco_names.split("|")[k], "person|bike|car|OOD".split("|")[v])
+    for k, v in ClassHub("coco").to("person|bike|motorcycle|car|bus|truck|OOD").items():
+        print('{:15s}'.format(_coco_names.split("|")[k]), "person|bike|motorcycle|car|bus|truck|OOD".split("|")[v])
+    
+    print()
+    for k, v in ClassHub("voc").to("person|bike|motorcycle|car|bus|truck|OOD").items():
+        print('{:15s}'.format(_voc_names.split("|")[k]), "person|bike|motorcycle|car|bus|truck|OOD".split("|")[v])
+

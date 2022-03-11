@@ -433,7 +433,7 @@ def voc_quick_test_preset(
         T.IndexMapping(ClassHub("voc").to(target_classes)),
         T.HorizontalFlip(p=0.5),
         T.Resize(max_size=int(max(target_resolution))),  # 0.75x
-        T.RandomScale(min_scale=0.25, max_scale=1),  # 0.8x
+        T.RandomScale(min_scale=0.25, max_scale=1.5),  # 0.8x
         T.RandomAffine(min_scale=0.875, max_scale=1.125, p=0.1),  # 1x
         T.HSVTransform(0.01, 0.54, 0.27),
         T.AlbumentationsPreset(),
@@ -479,7 +479,7 @@ def person_vehicle_detection_preset(
         T.IndexMapping(ClassHub("voc").to(target_classes)),
         T.HorizontalFlip(p=0.5),
         T.Resize(max_size=int(max(target_resolution))),  # 1x
-        T.RandomScale(min_scale=0.25, max_scale=1),  # 0.8x
+        T.RandomScale(min_scale=0.25, max_scale=1.5),  # 0.8x
         T.RandomAffine(min_scale=0.9, max_scale=1.1, p=0.1),  # 1x
         T.HSVTransform(0.01, 0.54, 0.27),
         T.AlbumentationsPreset(),
