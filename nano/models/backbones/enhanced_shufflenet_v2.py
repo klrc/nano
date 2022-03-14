@@ -121,7 +121,8 @@ class DCTEnhancedShuffleNetv2(EnhancedShuffleNetv2):
     # idea from: https://arxiv.org/pdf/2002.12416.pdf
     def __init__(self, channels=(48, 96, 192, 384)):
         super().__init__(channels)
+        assert channels[0] == 48
         self.feature_s0 = nn.Sequential(
-            DCTModule(8, 4),    # 4x downsample
-            nn.MaxPool2d(3, 2, 1),
+            DCTModule(8, 4),  # 4x downsample
+            nn.MaxPool2d(3, 2, 1),  # 2x downsample
         )

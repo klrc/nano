@@ -129,8 +129,7 @@ void check_dense_anchors(Tensor<float>* input, const int stride, vector<Bounding
 void post_process(const std::vector<Tensor<float>*>& inputs, const std::vector<Tensor<float>*>& outputs) {
     float* output_memory = outputs[0]->getMutableData();
     vector<BoundingBox> results;
-    const int strides[] = {8, 16, 32, 64};
-    const int output_labels[] = {15, 2, 7};  // background-0, person-15, bike-2, car-7
+    const int strides[] = {16, 32, 64};
 
     // select cadidates with obj_score > conf_thresh
     for (int i = 0; i < NUM_STRIDES; i++) {
@@ -146,9 +145,9 @@ void post_process(const std::vector<Tensor<float>*>& inputs, const std::vector<T
     }
 
     for (int i = 0; i < results.size(); i++) {
-        printf("[%d], %d, %f, %f, %f, %f, %f \n", i, output_labels[results[i].label], results[i].score, results[i].x1,
+        printf("[%d], %d, %f, %f, %f, %f, %f \n", i, results[i].label, results[i].score, results[i].x1,
                results[i].y1, results[i].x2, results[i].y2);
-        output_memory[i * 6 + 0] = output_labels[results[i].label];
+        output_memory[i * 6 + 0] = results[i].label;
         output_memory[i * 6 + 1] = results[i].score;
         output_memory[i * 6 + 2] = results[i].x1;
         output_memory[i * 6 + 3] = results[i].y1;
