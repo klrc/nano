@@ -1,0 +1,126 @@
+layer {
+  name: "input"
+  type: "Input"
+  top: "input"
+  input_param {
+    shape {
+      dim: 1
+      dim: 3
+      dim: 256
+      dim: 512
+    }
+  }
+}
+layer {
+  name: "Conv_0"
+  type: "Convolution"
+  bottom: "input"
+  top: "6"
+  convolution_param {
+    num_output: 3
+    bias_term: true
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    dilation: 1
+  }
+}
+layer {
+  name: "UnifiedSlice_1_0"
+  type: "CppCustom"
+  bottom: "6"
+  top: "11"
+  cpp_custom_param {
+    module: "slice"
+    param_map_str: "axis:1 start:0 end:1"
+  }
+}
+layer {
+  name: "UnifiedSlice_1_1"
+  type: "CppCustom"
+  bottom: "6"
+  top: "17"
+  cpp_custom_param {
+    module: "slice"
+    param_map_str: "axis:1 start:1 end:2"
+  }
+}
+layer {
+  name: "UnifiedSlice_1_2"
+  type: "CppCustom"
+  bottom: "6"
+  top: "23"
+  cpp_custom_param {
+    module: "slice"
+    param_map_str: "axis:1 start:2 end:3"
+  }
+}
+layer {
+  name: "Conv_2"
+  type: "Convolution"
+  bottom: "11"
+  top: "12"
+  convolution_param {
+    num_output: 28
+    bias_term: false
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 8
+    kernel_w: 8
+    stride_h: 8
+    stride_w: 8
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_3"
+  type: "Convolution"
+  bottom: "17"
+  top: "18"
+  convolution_param {
+    num_output: 10
+    bias_term: false
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 8
+    kernel_w: 8
+    stride_h: 8
+    stride_w: 8
+    dilation: 1
+  }
+}
+layer {
+  name: "Conv_4"
+  type: "Convolution"
+  bottom: "23"
+  top: "24"
+  convolution_param {
+    num_output: 10
+    bias_term: false
+    group: 1
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 8
+    kernel_w: 8
+    stride_h: 8
+    stride_w: 8
+    dilation: 1
+  }
+}
+layer {
+  name: "Concat_5"
+  type: "Concat"
+  bottom: "12"
+  bottom: "18"
+  bottom: "24"
+  top: "25"
+  concat_param {
+    axis: 1
+  }
+}

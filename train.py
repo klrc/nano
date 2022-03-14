@@ -8,8 +8,8 @@ import nano.data.transforms as T
 if __name__ == "__main__":
 
     for model_template, target_resolution, batch_size in (
-        # (NanoDCT_3x3_m96, (256, 448), 128),
-        (GhostNano_3x4_m96, (256, 448), 128),
+        (NanoDCT_3x3_m96, (256, 448), 256),
+        # (GhostNano_3x4_m96, (256, 448), 128),
         # (GhostNano_3x4_l128, (256, 448), 128),
     ):
         device = "cuda:0"
@@ -23,7 +23,7 @@ if __name__ == "__main__":
         model = model_template(7)
         criteria = SimOTA(class_balance=(0.31, 1, 1, 1, 1, 1, 1))
 
-        trainer = Trainer(trainloader, model, criteria, device, lr0=0.001, optimizer="AdamW", batch_size=batch_size)
+        trainer = Trainer(trainloader, model, criteria, device, lr0=0.003, optimizer="AdamW", batch_size=batch_size)
         validator = Validator(valloader, class_names, device)
         controller = Controller(trainer, validator, patience=100)
 

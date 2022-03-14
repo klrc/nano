@@ -20,8 +20,6 @@ def slice_killer(graph):
         inputs = [data]  # input blobs
         outputs = [str(layer.output[0]) for layer in layers]  # output blobs
         slice_points = [layer.input[2] for layer in layers]  # ends
-        slice_points = sorted(slice_points)
-        slice_points = slice_points[:-1]  # remove last end
         slice_layer = helper.make_node(
             "UnifiedSlice",
             inputs=inputs,
@@ -51,7 +49,10 @@ class Slice:
         # slice attributes
         attrs = parse_attribute(node)
         self.axis = constant_dict[str(int(attrs["axes"]))][0]
-        self.slice_points = [constant_dict[str(int(x))][0] for x in attrs["slice_points"]]
+        slice_points = [constant_dict[str(int(x))][0] for x in attrs["slice_points"]]
+        slice_points = sorted(slice_points)
+        slice_points = slice_points[:-1]  # remove last end
+        self.slice_points = slice_points
         self.max_axis = None
 
     def reshape(self, bottom_shapes):  # -> top_shapes

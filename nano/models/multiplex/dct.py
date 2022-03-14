@@ -54,8 +54,9 @@ class DCTConv2d(nn.Module):
         return weight
 
     def forward(self, x: torch.Tensor):
-        xs = x.chunk(3, dim=1)
-        xs = [conv(x) for conv, x in zip(self.convs, xs)]
+        xs = []
+        for i in range(3):
+            xs.append(self.convs[i](x[:, i : i + 1]))
         return torch.cat(xs, dim=1)
 
 
