@@ -15,10 +15,10 @@ using namespace std;
 #define MAX_NMS 30000  // maximum number of boxes into torchvision.ops.nms()
 
 #define NUM_CLASSES 3
-#define NUM_STRIDES 4
+#define NUM_STRIDES 3
 
-#define INPUT_HEIGHT 224
-#define INPUT_WIDTH 416
+#define INPUT_HEIGHT 256
+#define INPUT_WIDTH 512
 
 typedef struct BoundingBox {
     int label;
@@ -107,21 +107,17 @@ void check_dense_anchors(Tensor<float>* input, const int stride, vector<Bounding
             // collect data
             if (confidence > CONFIDENCE_THRESH) {
                 // get real-size x, y, w, h, class label, class score
-                float _cx = sigmoid(tensor_by_index(tensor, 0, 0, h, w, 1, IN_D, IN_H));
-                float _cy = sigmoid(tensor_by_index(tensor, 0, 1, h, w, 1, IN_D, IN_H));
-                float _cw = sigmoid(tensor_by_index(tensor, 0, 2, h, w, 1, IN_D, IN_H));
-                float _ch = sigmoid(tensor_by_index(tensor, 0, 3, h, w, 1, IN_D, IN_H));
-                // scale to real size
-                _cx = (_cx * 7 - 3 + w) * stride;
-                _cy = (_cy * 7 - 3 + h) * stride;
-                _cw = fast_exp(_cw * 3) * stride;
-                _ch = fast_exp(_ch * 3) * stride;
+                float x1 = sigmoid(tensor_by_index(tensor, 0, 0, h, w, 1, IN_D, IN_H)) * 4 * stride;
+                float y1 = sigmoid(tensor_by_index(tensor, 0, 1, h, w, 1, IN_D, IN_H)) * 4 * stride;
+                float x2 = sigmoid(tensor_by_index(tensor, 0, 2, h, w, 1, IN_D, IN_H)) * 4 * stride;
+                float y2 = sigmoid(tensor_by_index(tensor, 0, 3, h, w, 1, IN_D, IN_H)) * 4 * stride;
                 // Box (center x, center y, width, height) to (x1, y1, x2, y2)
                 BoundingBox obj;
-                obj.x1 = clip((_cx - _cw / 2.0) / INPUT_WIDTH, 0, 1);
-                obj.y1 = clip((_cy - _ch / 2.0) / INPUT_HEIGHT, 0, 1);
-                obj.x2 = clip((_cx + _cw / 2.0) / INPUT_WIDTH, 0, 1);
-                obj.y2 = clip((_cy + _ch / 2.0) / INPUT_HEIGHT, 0, 1);
+                // scale to real size
+                obj.x1 = clip(((w + 0.5) * stride - x1) / INPUT_WIDTH, 0, 1);
+                obj.y1 = clip(((h + 0.5) * stride - y1) / INPUT_HEIGHT, 0, 1);
+                obj.x2 = clip(((w + 0.5) * stride + x2) / INPUT_WIDTH, 0, 1);
+                obj.y2 = clip(((h + 0.5) * stride + y2) / INPUT_HEIGHT, 0, 1);
                 obj.score = confidence;
                 obj.label = label;
                 results.push_back(obj);

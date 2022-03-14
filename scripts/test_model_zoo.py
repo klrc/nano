@@ -37,7 +37,3 @@ if __name__ == "__main__":
     get_model_info(GhostNano_3x4_l128(4).eval(), (1, 3, 256, 448))
 
     get_model_info(NanoDCT_3x3_m96(4).eval(), (1, 3, 256, 448))
-
-    
-    from nano.models.multiplex.dct import DCTModule
-    get_model_info(DCTModule(4).eval(), (1, 3, 256, 448))

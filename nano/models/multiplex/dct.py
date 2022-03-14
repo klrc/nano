@@ -25,13 +25,13 @@ class RGB2YCbCrConv2d(nn.Conv2d):
 
 
 class DCTConv2d(nn.Module):
-    def __init__(self, kernel_size: int, ratio_y=0.9, ratio_cb=0.5, ratio_cr=0.5) -> None:
+    def __init__(self, kernel_size: int, stride: int, ratio_y=0.9, ratio_cb=0.5, ratio_cr=0.5) -> None:
         super().__init__()
         self.convs = nn.ModuleList()
         for ratio in (ratio_y, ratio_cb, ratio_cr):
             tri_len = int(kernel_size * ratio)
             out_channels = int((tri_len + 1) * tri_len / 2)
-            conv = nn.Conv2d(1, out_channels, kernel_size, kernel_size, bias=False)
+            conv = nn.Conv2d(1, out_channels, kernel_size, stride, bias=False)
             conv.weight.data = self.dct_weight(kernel_size, ratio)
             self.convs.append(conv)
         self.out_channels = sum([x.weight.data.size(0) for x in self.convs])
@@ -61,10 +61,10 @@ class DCTConv2d(nn.Module):
 
 
 class DCTModule(nn.Module):
-    def __init__(self, kernel_size) -> None:
+    def __init__(self, kernel_size, stride) -> None:
         super().__init__()
         self.rgb2ycbcr = RGB2YCbCrConv2d()
-        self.conv = DCTConv2d(kernel_size)
+        self.conv = DCTConv2d(kernel_size, stride)
         # self.norm = nn.GroupNorm(num_groups=self.conv.out_channels, num_channels=self.conv.out_channels)
         # for p in self.rgb2ycbcr.parameters():
         #     p.requires_grad = False

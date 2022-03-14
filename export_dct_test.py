@@ -27,7 +27,6 @@ if __name__ == "__main__":
             raise FileExistsError("please check your release model stamp.")
     os.makedirs(root)
 
-
     # Generate ONNX models =============================================================================
     logger.debug("Build ONNX model")
     onnx_path = f"{root}/{model_stamp}.onnx"

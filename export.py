@@ -6,28 +6,25 @@ import torch
 from loguru import logger
 from torch.onnx import OperatorExportTypes
 from nano.models.backbones.enhanced_shufflenet_v2 import ESBlockS1
-from nano.models.heads.nanodet_head import NanoHeadless
-from nano.models.model_zoo.nano_ghost import GhostNano_3x4_m96
+from nano.models.model_zoo.nano_ghost import NanoDCT_3x3_m96
 from xnnc.docker import caffe_builder, xnnc_builder
-from nano.data.dataset_info import drive3_names
 
 
 if __name__ == "__main__":
     # model setup ======================================================================================
     logger.debug("Loading pytorch neural network model")
     # make sure to configure the following variables
-    model_stamp = "GhostNano_3x4_m96"
-    output_names = ["output_0", "output_1", "output_2", "output_3"]
-    class_names = drive3_names
+    model_stamp = "NanoDCT_3x3_m96"
+    output_names = ["output_0", "output_1", "output_2"]
+    class_names = "person|bike|motorcycle|car|bus|truck|OOD".split("|")
     num_strides = len(output_names)
-    model = GhostNano_3x4_m96(num_classes=len(class_names))
-    model.load_state_dict(torch.load("runs/train/exp17/best.pt", map_location="cpu")["state_dict"])
-    # model.load_state_dict(torch.load("release/GhostNano_3x4_m96/GhostNano_3x4_m96.pt", map_location="cpu"))
-    input_size = (1, 3, 224, 416)
+    model = NanoDCT_3x3_m96(num_classes=len(class_names))
+    # model.load_state_dict(torch.load("runs/train/exp17/best.pt", map_location="cpu")["state_dict"])
+    input_size = (1, 3, 256, 512)
     forced_export = True
     # -------------------------------------------
     logger.debug("Replacing layer for support: ChannelShuffle")
-    model.head = NanoHeadless(model.head)
+    model.head = model.head.headless
     for m in model.modules():
         for cname, c in m.named_children():
             if isinstance(c, ESBlockS1):
