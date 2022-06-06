@@ -15,7 +15,7 @@ class VideoLoader:
         raise NotImplementedError
 
     def play(self, pipe: Queue, fps=24, color_format=cv2.COLOR_YUV2BGR_I420, non_block=True):
-        # create a virtual video stream
+        # Create a virtual video stream
         proc = Process(target=self.collect, args=(pipe, self.size, self.file_path, fps, color_format, non_block))
         proc.daemon = True
         proc.start()
@@ -39,13 +39,14 @@ class YUV420_VID_LOADER(VideoLoader):
                 yuv = np.frombuffer(f.read(yuv_w * yuv_h * 3 // 2), dtype=np.uint8).reshape((yuv_h * 3 // 2, yuv_w))
                 # Convert YUV420 to BGR (for testing), applies BT.601 "Limited Range" conversion.
                 if not (non_block and pipe.full()):
-                    pipe.put(cv2.cvtColor(yuv, color_format))
+                    pipe.put(yuv if color_format is None else cv2.cvtColor(yuv, color_format))
                 time.sleep(1 / fps)
-        # ending flag as None
+        # Ending flag as None
         pipe.put(None)
 
 
 if __name__ == "__main__":
+    # Test scripts
     loader = YUV420_VID_LOADER("/Users/sh/Downloads/1280x720_2.yuv", (720, 1280))
     pipe = Queue(maxsize=2)
     loader.play(pipe, fps=48)
@@ -55,6 +56,6 @@ if __name__ == "__main__":
         cv2.imshow("frame", frame)
         cv2.setWindowProperty("frame", cv2.WND_PROP_TOPMOST, 1)
         frame = pipe.get()
-        # press ESC to break
+        # Press ESC to break
         if cv2.waitKey(10) == 27:
             break
