@@ -371,7 +371,15 @@ class DetectHead(nn.Module):
 
 
 class VoVYOLO(nn.Module):
-    def __init__(self, num_classes, anchors):
+    def __init__(
+        self,
+        num_classes,
+        anchors=[
+            [10, 13, 16, 30, 33, 23],
+            [10, 13, 16, 30, 33, 23],
+            [10, 13, 16, 30, 33, 23],
+        ],
+    ):
         super().__init__()
         outchannel = 48  # 96
         self.backbone = vovnet27_extra_slim()
@@ -419,12 +427,12 @@ if __name__ == "__main__":
     )
 
     # forward test
-    for y in model.forward(torch.rand(4, 3, 416, 416)):
+    for y in model.forward(torch.rand(4, 3, 384, 640)):
         print(y.shape)
 
     # size & bandwidth test
-    get_model_info(model, (1, 3, 640, 384))
+    get_model_info(model, (1, 3, 384, 640))
 
     # onnx test
     model.eval().dsp()
-    torch.onnx.export(model, torch.rand(1, 3, 640, 384), 'vovnet_yolov5.onnx', opset_version=12)
+    torch.onnx.export(model, torch.rand(1, 3, 384, 640), "vovnet_yolov5.onnx", opset_version=12)

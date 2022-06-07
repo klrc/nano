@@ -36,11 +36,11 @@ class Albumentations:
             ]  # transforms
             self.transform = A.Compose(T, bbox_params=A.BboxParams(format="yolo", label_fields=["class_labels"]))
 
-            logger.info(colorstr("albumentations: ") + ", ".join(f"{x}" for x in self.transform.transforms if x.p))
+            print(colorstr("albumentations: ") + ", ".join(f"{x}" for x in self.transform.transforms if x.p))
         except ImportError:  # package not installed, skip
             pass
         except Exception as e:
-            logger.info(colorstr("albumentations: ") + f"{e}")
+            logger.error(colorstr("albumentations: ") + f"{e}")
 
     def __call__(self, im, labels, p=1.0):
         if self.transform and random.random() < p:

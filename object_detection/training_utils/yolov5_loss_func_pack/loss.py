@@ -140,9 +140,10 @@ class ComputeLoss:
     sort_obj_iou = False
 
     # Compute losses
-    def __init__(self, model, autobalance=False):
+    def __init__(self, model, hyp, autobalance=False):
         device = next(model.parameters()).device  # get model device
-        h = model.hyp  # hyperparameters
+        # h = model.hyp  # hyperparameters
+        h = hyp
 
         # Define criteria
         BCEcls = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([h["cls_pw"]], device=device))
@@ -156,7 +157,7 @@ class ComputeLoss:
         if g > 0:
             BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g)
 
-        m = de_parallel(model).model[-1]  # Detect() module
+        m = de_parallel(model).detect  # Detect() module
         self.balance = {3: [4.0, 1.0, 0.4]}.get(m.nl, [4.0, 1.0, 0.25, 0.06, 0.02])  # P3-P7
         self.ssi = list(m.stride).index(16) if autobalance else 0  # stride 16 index
         self.BCEcls, self.BCEobj, self.gr, self.hyp, self.autobalance = BCEcls, BCEobj, 1.0, h, autobalance
@@ -284,3 +285,17 @@ class ComputeLoss:
             tcls.append(c)  # class
 
         return tcls, tbox, indices, anch
+
+
+def yolov5_fake_hyp(cls_pw, obj_pw, label_smoothing, fl_gamma, box, obj, cls, anchor_t):
+    hyp = {
+        "cls_pw": cls_pw,
+        "obj_pw": obj_pw,
+        "label_smoothing": label_smoothing,
+        "fl_gamma": fl_gamma,
+        "box": box,
+        "obj": obj,
+        "cls": cls,
+        "anchor_t": anchor_t,
+    }
+    return hyp

@@ -1,1 +1,1 @@
-from .loss import ComputeLoss
+from .loss import ComputeLoss, yolov5_fake_hyp
