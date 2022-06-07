@@ -23,8 +23,8 @@ def conv3x3(in_channels, out_channels, module_name, postfix, stride=1, groups=1,
             "{}_{}/conv".format(module_name, postfix),
             nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, groups=groups, bias=False),
         ),
-        ("{}_{}/norm".format(module_name, postfix), nn.BatchNorm2d(out_channels)),
-        ("{}_{}/relu".format(module_name, postfix), nn.ReLU(inplace=True)),
+        ("{}_{}/norm".format(module_name, postfix), __default_norm(out_channels)),
+        ("{}_{}/relu".format(module_name, postfix), __default_activation(inplace=True)),
     ]
 
 
@@ -35,8 +35,8 @@ def conv1x1(in_channels, out_channels, module_name, postfix, stride=1, groups=1,
             "{}_{}/conv".format(module_name, postfix),
             nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, groups=groups, bias=False),
         ),
-        ("{}_{}/norm".format(module_name, postfix), nn.BatchNorm2d(out_channels)),
-        ("{}_{}/relu".format(module_name, postfix), nn.ReLU(inplace=True)),
+        ("{}_{}/norm".format(module_name, postfix), __default_norm(out_channels)),
+        ("{}_{}/relu".format(module_name, postfix), __default_activation(inplace=True)),
     ]
 
 

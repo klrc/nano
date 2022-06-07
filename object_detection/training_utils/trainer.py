@@ -44,7 +44,7 @@ def train(model: nn.Module, config=None, device="cpu"):
         val_for_one_epoch(model, device, val_loader, criteria, s, u)
 
         # save model
-        save_data(u, w / "status.txt")
+        save_data(u, w / "status.txt", 'a')
         state_dict = deepcopy(de_parallel(model)).half().state_dict()
         save_data(state_dict, last)
         if u.best_fitness == u.current_fitness:

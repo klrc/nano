@@ -622,12 +622,14 @@ def val_for_one_epoch(model, device, val_loader, criteria, settings: DefaultSett
     u.f1 = float(mf1)
 
 
-def save_data(data, path):
+def save_data(data, path, mode="w"):
     if isinstance(data, DefaultSettings) or isinstance(data, Status):
-        with open(path, "w") as f:
+        assert mode in ("w", "a")
+        with open(path, mode) as f:
             for k, v in inspect.getmembers(data):
                 if not k.startswith("__"):
                     line = f"{k}: {v}\n"
                     f.write(line)
+                f.write('\n')
     else:
         torch.save(data, path)
