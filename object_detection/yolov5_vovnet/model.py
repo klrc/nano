@@ -1,3 +1,4 @@
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,6 +15,18 @@ model_urls = {
     "vovnet39": "https://dl.dropbox.com/s/1lnzsgnixd8gjra/vovnet39_torchvision.pth?dl=1",
     "vovnet57": "https://dl.dropbox.com/s/6bfu9gstbwfw31m/vovnet57_torchvision.pth?dl=1",
 }
+
+
+def initialize_weights(model):
+    for m in model.modules():
+        t = type(m)
+        if t is nn.Conv2d:
+            pass  # nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+        elif t is nn.BatchNorm2d:
+            m.eps = 1e-3
+            m.momentum = 0.03
+        elif t in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU]:
+            m.inplace = True
 
 
 def conv3x3(in_channels, out_channels, module_name, postfix, stride=1, groups=1, kernel_size=3, padding=1):
@@ -38,21 +51,6 @@ def conv1x1(in_channels, out_channels, module_name, postfix, stride=1, groups=1,
         ("{}_{}/norm".format(module_name, postfix), __default_norm(out_channels)),
         ("{}_{}/relu".format(module_name, postfix), __default_activation(inplace=True)),
     ]
-
-
-# initialize parameters
-def init_parameters(model):
-    for m in model.modules():
-        if isinstance(m, nn.Conv2d):
-            nn.init.kaiming_normal_(m.weight, mode="fan_out")
-            if m.bias is not None:
-                nn.init.zeros_(m.bias)
-        elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
-            nn.init.ones_(m.weight)
-            nn.init.zeros_(m.bias)
-        elif isinstance(m, nn.Linear):
-            nn.init.normal_(m.weight, 0, 0.01)
-            nn.init.zeros_(m.bias)
 
 
 # basic conv+norm+relu combination
@@ -332,7 +330,7 @@ class CSPPANS3(nn.Module):
 # Detection Head modified from yolov5 series
 # Ultralytics version
 class DetectHead(nn.Module):
-    def __init__(self, in_channels, num_classes, anchors, strides):  # detection layer=(8, 16, 32)
+    def __init__(self, in_channels, num_classes, anchors, strides, cf=None):  # detection layer=(8, 16, 32)
         super().__init__()
         self.nc = num_classes  # number of classes
         self.no = num_classes + 5  # number of outputs per anchor
@@ -345,6 +343,17 @@ class DetectHead(nn.Module):
         self.register_buffer("anchor_grid", a.clone().view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
         self.mode_dsp_off = True
         self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in in_channels)  # output conv
+        self._initialize_biases(cf)
+
+    def _initialize_biases(self, cf):  # initialize biases into Detect(), cf is class frequency
+        # https://arxiv.org/abs/1708.02002 section 3.3
+        # cf = torch.bincount(torch.tensor(np.concatenate(dataset.labels, 0)[:, 0]).long(), minlength=nc) + 1.
+        m = self  # Detect() module
+        for mi, s in zip(m.m, m.stride):  # from
+            b = mi.bias.view(m.na, -1)  # conv.bias(255) to (3,85)
+            b.data[:, 4] += math.log(8 / (640 / s) ** 2)  # obj (8 objects per 640 image)
+            b.data[:, 5:] += math.log(0.6 / (m.nc - 0.999999)) if cf is None else torch.log(cf / cf.sum())  # cls
+            mi.bias = torch.nn.Parameter(b.view(-1), requires_grad=True)
 
     def forward(self, x):
         z = []
@@ -379,14 +388,15 @@ class VoVYOLO(nn.Module):
             [10, 13, 16, 30, 33, 23],
             [10, 13, 16, 30, 33, 23],
         ],
+        cf=None,
     ):
         super().__init__()
         outchannel = 48  # 96
         self.backbone = vovnet27_extra_slim()
         channels = (128, 256, 384)
         self.neck = CSPPANS3(channels, outchannel)  # [96, 192, 384]
-        self.detect = DetectHead([outchannel, outchannel, outchannel], num_classes, anchors, strides=(8, 16, 32))  # head
-        init_parameters(self)  # tzg
+        self.detect = DetectHead([outchannel, outchannel, outchannel], num_classes, anchors, strides=(8, 16, 32), cf=cf)  # head
+        initialize_weights(self)
 
     def forward(self, x):
         x = self.backbone(x)
@@ -411,13 +421,15 @@ if __name__ == "__main__":
         flops /= 1e9
         logger.success(f"Estimated Size:{params:.2f}M, Estimated Bandwidth: {flops * 2:.2f}G, Resolution: {tsize[2:]}")
 
+    cf = torch.Tensor((0.5, 0.1, 0.1, 0.2, 0.05, 0.05))
     model = VoVYOLO(
-        80,
+        6,
         anchors=[
             [10, 13, 16, 30, 33, 23],
             [10, 13, 16, 30, 33, 23],
             [10, 13, 16, 30, 33, 23],
         ],
+        cf=cf,
     )
 
     # forward test

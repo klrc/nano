@@ -1,4 +1,3 @@
-import torch
 from object_detection.training_utils import train, DefaultSettings
 from object_detection.yolov5n import YoloV5N
 
