@@ -50,6 +50,7 @@ class DefaultSettings:
     flipud = 0.0
     fliplr = 0.5
     copy_paste = 0.0
+    fake_osd = False
 
     # training settings
     label_smoothing = 0.0  # label smoothing epsilon

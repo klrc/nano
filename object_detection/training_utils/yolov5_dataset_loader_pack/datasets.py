@@ -434,6 +434,7 @@ class LoadImagesAndLabels(Dataset):
         stride=32,
         pad=0.0,
         prefix="",
+        fake_osd=False,
     ):
         self.img_size = img_size
         self.augment = augment
@@ -445,7 +446,7 @@ class LoadImagesAndLabels(Dataset):
         self.stride = stride
         self.path = path
         self.albumentations = Albumentations() if augment else None
-
+        self.fake_osd = fake_osd
         try:
             f = []  # image files
             for p in path if isinstance(path, list) else [path]:
@@ -659,7 +660,7 @@ class LoadImagesAndLabels(Dataset):
                     labels[:, 1] = 1 - labels[:, 1]
 
             # fake OSD
-            if random.random() < 0.5:
+            if self.fake_osd and random.random() < 0.5:
                 img = image_osd(img.astype(np.uint8))
 
             # Cutouts

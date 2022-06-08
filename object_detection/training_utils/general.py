@@ -198,13 +198,13 @@ def create_dataloader(dataset_path, training, settings: DefaultSettings):
         "copy_paste": s.copy_paste,
     }
     if training:
-        augment, shuffle, rect, pad = True, True, False, 0.0  # rect is incompatible with DataLoader shuffle
+        augment, shuffle, rect, pad, fake_osd = True, True, False, 0.0, s.fake_osd  # rect is incompatible with DataLoader shuffle
     else:
-        augment, shuffle, rect, pad = False, False, True, 0.5
+        augment, shuffle, rect, pad, fake_osd = False, False, True, 0.5, False
         batch_size *= 2
         workers *= 2
     dataset = LoadImagesAndLabels(
-        dataset_path, s.imgsz, batch_size, augment=augment, hyp=hyp, rect=rect, cache_images=s.cache, stride=int(s.grid_stride), pad=pad
+        dataset_path, s.imgsz, batch_size, augment=augment, hyp=hyp, rect=rect, cache_images=s.cache, stride=int(s.grid_stride), pad=pad, fake_osd=fake_osd
     )
     batch_size = min(batch_size, len(dataset))
     nd = torch.cuda.device_count()  # number of CUDA devices
@@ -630,6 +630,6 @@ def save_data(data, path, mode="w"):
                 if not k.startswith("__"):
                     line = f"{k}: {v}\n"
                     f.write(line)
-                f.write('\n')
+                f.write("\n")
     else:
         torch.save(data, path)
