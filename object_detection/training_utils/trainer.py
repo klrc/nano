@@ -41,11 +41,11 @@ def train(model: nn.Module, config=None, device="cpu"):
     for epoch in range(s.start_epoch, s.max_epoch):
         u.current_epoch = epoch
         train_for_one_epoch(model, device, train_loader, optimizer, criteria, scaler, ema, scheduler, lf, s, u)
-        val_for_one_epoch(model, device, val_loader, criteria, s, u)
+        val_for_one_epoch(ema.ema, device, val_loader, criteria, s, u)
 
         # save model
         save_data(u, w / "status.txt", 'a')
-        state_dict = deepcopy(de_parallel(model)).half().state_dict()
+        state_dict = deepcopy(ema.ema).half().state_dict()
         save_data(state_dict, last)
         if u.best_fitness == u.current_fitness:
             save_data(state_dict, best)
