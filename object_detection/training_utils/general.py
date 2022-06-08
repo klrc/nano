@@ -439,7 +439,7 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
 def fitness(x):
     # Model fitness as a weighted combination of metrics
     w = [0.0, 0.0, 0.1, 0.9]  # weights for [P, R, mAP@0.5, mAP@0.5:0.95]
-    return (x[:, :4] * w).sum(1)
+    return float((x[:, :4] * w).sum(1))
 
 
 def train_for_one_epoch(model, device, train_loader, optimizer, criteria, scaler, ema, scheduler, lf, settings: DefaultSettings, status: Status):
