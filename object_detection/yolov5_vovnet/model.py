@@ -394,13 +394,7 @@ class VoVYOLO(nn.Module):
         x = self.detect(x)  # head
         return x
 
-    def as_relu(self):
-        return self
-
     def fuse(self):
-        return self
-
-    def dsp(self):
         self.detect.mode_dsp_off = False
         return self
 
@@ -434,5 +428,5 @@ if __name__ == "__main__":
     get_model_info(model, (1, 3, 384, 640))
 
     # onnx test
-    model.eval().dsp()
+    model.eval().fuse()
     torch.onnx.export(model, torch.rand(1, 3, 384, 640), "vovnet_yolov5.onnx", opset_version=12)
