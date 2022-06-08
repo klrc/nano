@@ -173,7 +173,16 @@ class DetectHead(nn.Module):
 
 
 class YoloV5N(nn.Module):
-    def __init__(self, num_classes, anchors, cf=None) -> None:
+    def __init__(
+        self,
+        num_classes,
+        anchors=[
+            [10, 13, 16, 30, 33, 23],
+            [10, 13, 16, 30, 33, 23],
+            [10, 13, 16, 30, 33, 23],
+        ],
+        cf=None,
+    ) -> None:
         super().__init__()
         self.p1 = Conv(3, x64, 6, 2, 2)  # 0-P1/2
         self.p2 = Conv(x64, x128, 3, 2)  # 1-P2/4
