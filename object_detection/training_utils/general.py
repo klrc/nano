@@ -35,6 +35,9 @@ class Status:
     tr_accumulate = -1
     tr_nb = -1
     tr_nw = -1
+    tr_loss_box = 0
+    tr_loss_obj = 0
+    tr_loss_cls = 0
 
     # validation status
     best_fitness = 0.0
@@ -44,6 +47,9 @@ class Status:
     mAP_50 = 0
     mAP_95 = 0
     f1 = 0
+    val_loss_box = 0
+    val_loss_obj = 0
+    val_loss_cls = 0
 
 
 def sync_settings(config: DefaultSettings):
@@ -485,6 +491,9 @@ def train_for_one_epoch(model, device, train_loader, optimizer, criteria, scaler
         mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
         mem = f"{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G"  # (GB)
         pbar.set_description(("%10s" * 2 + "%10.4g" * 3) % (f"{u.current_epoch}/{s.max_epoch - 1}", mem, *mloss))
+        u.tr_loss_box = float(mloss[0])
+        u.tr_loss_obj = float(mloss[1])
+        u.tr_loss_cls = float(mloss[2])
 
         if FAST_DEBUG_MODE:
             break
@@ -620,6 +629,10 @@ def val_for_one_epoch(model, device, val_loader, criteria, settings: DefaultSett
     u.mAP_50 = float(map50)
     u.mAP_95 = float(map)
     u.f1 = float(mf1)
+    if s.compute_loss:
+        u.val_loss_box = float(results[4])
+        u.val_loss_obj = float(results[5])
+        u.val_loss_cls = float(results[6])
 
 
 def save_data(data, path, mode="w"):
@@ -630,6 +643,6 @@ def save_data(data, path, mode="w"):
                 if not k.startswith("__"):
                     line = f"{k}: {v}\n"
                     f.write(line)
-                f.write("\n")
+            f.write("\n")
     else:
         torch.save(data, path)
