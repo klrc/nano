@@ -168,14 +168,14 @@ class VoVNet(nn.Module):
 
         # self.classifier = nn.Linear(config_concat_ch[-1], num_classes)
 
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight)
-            elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
-                nn.init.constant_(m.weight, 1)
-                nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.Linear):
-                nn.init.constant_(m.bias, 0)
+        # for m in self.modules():
+        #     if isinstance(m, nn.Conv2d):
+        #         nn.init.kaiming_normal_(m.weight)
+        #     elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
+        #         nn.init.constant_(m.weight, 1)
+        #         nn.init.constant_(m.bias, 0)
+        #     elif isinstance(m, nn.Linear):
+        #         nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
         x = self.stem(x)
@@ -385,8 +385,8 @@ class VoVYOLO(nn.Module):
         num_classes,
         anchors=[
             [10, 13, 16, 30, 33, 23],
-            [10, 13, 16, 30, 33, 23],
-            [10, 13, 16, 30, 33, 23],
+            [30, 61, 62, 45, 59, 119],
+            [116, 90, 156, 198, 373, 326],
         ],
         cf=None,
     ):
@@ -426,8 +426,8 @@ if __name__ == "__main__":
         6,
         anchors=[
             [10, 13, 16, 30, 33, 23],
-            [10, 13, 16, 30, 33, 23],
-            [10, 13, 16, 30, 33, 23],
+            [30, 61, 62, 45, 59, 119],
+            [116, 90, 156, 198, 373, 326],
         ],
         cf=cf,
     )
