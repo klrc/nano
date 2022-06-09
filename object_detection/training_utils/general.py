@@ -125,7 +125,6 @@ def check_before_training(model: nn.Module, device, input_shape, expected_output
             assert len(eos) == len(output), f"eos length does not match with output.({len(eos)} vs. {len(output)})"
             for t1, t2 in zip(output, eos):
                 assert t1.shape == t2.shape
-        model.half().float()  # pre-reduce anchor precision
         logger.success("model check passed")
         return model
     except Exception as e:
@@ -175,12 +174,13 @@ def linear_lambda(lrf, epochs):
     return lambda x: (1 - x / epochs) * (1.0 - lrf) + lrf  # linear
 
 
-def create_scheduler(optimizer, lrf, epochs, cos_lr=False):
+def create_scheduler(optimizer, lrf, start_epoch, epochs, cos_lr=False):
     if cos_lr:
         lf = one_cycle_lambda(1, lrf, epochs)  # cosine 1->hyp['lrf']
     else:
         lf = linear_lambda(lrf, epochs)
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)  # plot_lr_scheduler(optimizer, scheduler, epochs)
+    scheduler.last_epoch = start_epoch - 1
     return scheduler, lf
 
 
@@ -442,7 +442,7 @@ def fitness(x):
     return float((x[:, :4] * w).sum(1))
 
 
-def train_for_one_epoch(model, device, train_loader, optimizer, criteria, scaler, ema, scheduler, lf, settings: DefaultSettings, status: Status):
+def train_for_one_epoch(model: nn.Module, device, train_loader, optimizer, criteria, scaler, ema, scheduler, lf, settings: DefaultSettings, status: Status):
     s = settings
     u = status
     # training pipeline
@@ -454,9 +454,8 @@ def train_for_one_epoch(model, device, train_loader, optimizer, criteria, scaler
     optimizer.zero_grad()
     cuda = device.type != "cpu"
 
-    for i, (imgs, targets, paths, _) in pbar:  # batch -------------------------------------------------------------
+    for i, (imgs, targets, _, _) in pbar:  # batch -------------------------------------------------------------
         ni = i + u.tr_nb * u.current_epoch  # number integrated batches (since train start)
-        model.train()
         imgs = imgs.to(device, non_blocking=True).float() / 255  # uint8 to float32, 0-255 to 0.0-1.0
 
         # Warmup

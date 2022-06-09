@@ -60,6 +60,7 @@ def check_anchors(dataset, model, thr=4.0, imgsz=640):
         else:
             s = "Done (original anchors better than new anchors, proceeding with original anchors)"
         logger.success(s)
+    model.half().float()  # pre-reduce anchor precision
 
 
 def kmean_anchors(dataset, n=9, img_size=640, thr=4.0, gen=1000, verbose=True):

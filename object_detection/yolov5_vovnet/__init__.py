@@ -1,1 +1,1 @@
-from .model import VoVYOLO
+from .model import Yolov5UV, yolov5_vovnet

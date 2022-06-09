@@ -3,14 +3,13 @@ import torch
 import torch.nn as nn
 import math
 
-WIDTH_MULTIPLE = 0.25
-x64 = int(64 * WIDTH_MULTIPLE)
-x128 = int(128 * WIDTH_MULTIPLE)
-x256 = int(256 * WIDTH_MULTIPLE)
-x512 = int(512 * WIDTH_MULTIPLE)
-x1024 = int(1024 * WIDTH_MULTIPLE)
 
 ACTIVATION = nn.ReLU6
+DEFAULT_ANCHORS = (
+    (10, 13, 16, 30, 33, 23),
+    (30, 61, 62, 45, 59, 119),
+    (116, 90, 156, 198, 373, 326),
+)
 
 
 def autopad(k, p=None):  # kernel, padding
@@ -18,6 +17,11 @@ def autopad(k, p=None):  # kernel, padding
     if p is None:
         p = k // 2 if isinstance(k, int) else (x // 2 for x in k)  # auto-pad
     return p
+
+
+def intersect_dicts(da, db, exclude=()):
+    # Dictionary intersection of matching keys and shapes, omitting 'exclude' keys, using da values
+    return {k: v for k, v in da.items() if k in db and not any(x in k for x in exclude) and v.shape == db[k].shape}
 
 
 def initialize_weights(model):
@@ -102,41 +106,6 @@ class C3(nn.Module):
         return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), 1))
 
 
-class GhostConv(nn.Module):
-    # Ghost Convolution https://github.com/huawei-noah/ghostnet
-    def __init__(self, c1, c2, k=1, s=1, g=1, act=True):  # ch_in, ch_out, kernel, stride, groups
-        super().__init__()
-        c_ = c2 // 2  # hidden channels
-        self.cv1 = Conv(c1, c_, k, s, None, g, act)
-        self.cv2 = Conv(c_, c_, 5, 1, None, c_, act)
-
-    def forward(self, x):
-        y = self.cv1(x)
-        return torch.cat((y, self.cv2(y)), 1)
-
-
-class GhostBottleneck(nn.Module):
-    # Ghost Bottleneck https://github.com/huawei-noah/ghostnet
-    def __init__(self, c1, c2, k=3, s=1):  # ch_in, ch_out, kernel, stride
-        super().__init__()
-        c_ = c2 // 2
-        self.conv = nn.Sequential(
-            GhostConv(c1, c_, 1, 1), DWConv(c_, c_, k, s, act=False) if s == 2 else nn.Identity(), GhostConv(c_, c2, 1, 1, act=False)
-        )  # pw  # dw  # pw-linear
-        self.shortcut = nn.Sequential(DWConv(c1, c1, k, s, act=False), Conv(c1, c2, 1, 1, act=False)) if s == 2 else nn.Identity()
-
-    def forward(self, x):
-        return self.conv(x) + self.shortcut(x)
-
-
-class C3Ghost(C3):
-    # C3 module with GhostBottleneck()
-    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
-        super().__init__(c1, c2, n, shortcut, g, e)
-        c_ = int(c2 * e)  # hidden channels
-        self.m = nn.Sequential(*(GhostBottleneck(c_, c_) for _ in range(n)))
-
-
 class SPPF(nn.Module):
     # Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher
     def __init__(self, c1, c2, k=5):  # equivalent to SPP(k=(5, 9, 13))
@@ -160,15 +129,16 @@ class SPPF(nn.Module):
 class DetectHead(nn.Module):
     def __init__(self, in_channels, num_classes, anchors, strides, cf=None):  # detection layer=(8, 16, 32)
         super().__init__()
+        if anchors is None:
+            anchors = DEFAULT_ANCHORS
         self.nc = num_classes  # number of classes
         self.no = num_classes + 5  # number of outputs per anchor
         self.nl = len(anchors)  # number of detection layers
         self.na = len(anchors[0]) // 2  # number of anchors
         self.grid = [torch.zeros(1)] * self.nl  # init grid
+        self.anchor_grid = [torch.zeros(1)] * self.nl  # init anchor grid
         self.stride = torch.tensor(strides)  # strides computed during build
-        a = torch.tensor(anchors).float().view(self.nl, -1, 2)
-        self.register_buffer("anchors", a)  # shape(nl,na,2)
-        self.register_buffer("anchor_grid", a.clone().view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
+        self.register_buffer("anchors", torch.tensor(anchors).float().view(self.nl, -1, 2))  # shape(nl,na,2)
         self.mode_dsp_off = True
         self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in in_channels)  # output conv
         self._initialize_biases(cf)
@@ -183,6 +153,16 @@ class DetectHead(nn.Module):
             b.data[:, 5:] += math.log(0.6 / (m.nc - 0.999999)) if cf is None else torch.log(cf / cf.sum())  # cls
             mi.bias = torch.nn.Parameter(b.view(-1), requires_grad=True)
 
+    def _make_grid(self, nx=20, ny=20, i=0):
+        d = self.anchors[i].device
+        t = self.anchors[i].dtype
+        shape = 1, self.na, ny, nx, 2  # grid shape
+        y, x = torch.arange(ny, device=d, dtype=t), torch.arange(nx, device=d, dtype=t)
+        yv, xv = torch.meshgrid(y, x, indexing="ij")
+        grid = torch.stack((xv, yv), 2).expand(shape) - 0.5  # add grid offset, i.e. y = 2.0 * x - 0.5
+        anchor_grid = (self.anchors[i] * self.stride[i]).view((1, self.na, 1, 1, 2)).expand(shape)
+        return grid, anchor_grid
+
     def forward(self, x):
         z = []
         for i in range(self.nl):
@@ -195,6 +175,7 @@ class DetectHead(nn.Module):
                     # make grid
                     if self.grid[i].shape[2:4] != x[i].shape[2:4]:
                         yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
+                        self.grid[i], self.anchor_grid[i] = self._make_grid(nx, ny, i)
                         self.grid[i] = torch.stack((xv, yv), 2).view((1, 1, ny, nx, 2)).float().to(x[i].device)
                     # normalize and get xywh
                     y = x[i].sigmoid()
@@ -207,51 +188,54 @@ class DetectHead(nn.Module):
             return torch.cat(z, 1), x
 
 
-class YoloV5NGhost(nn.Module):
+class Yolov5U(nn.Module):
     def __init__(
         self,
         num_classes,
-        anchors=[
-            [10, 13, 16, 30, 33, 23],
-            [30, 61, 62, 45, 59, 119],
-            [116, 90, 156, 198, 373, 326],
-        ],
+        anchors=None,
+        width_multiple=0.25,
+        depth_multiple=0.33,
+        channels_per_chunk=16,
         cf=None,
     ) -> None:
         super().__init__()
+
+        # scaled channels
+        _cpc = channels_per_chunk
+        x64, x128, x256, x512, x1024 = [int((x * width_multiple) // _cpc) * _cpc for x in (64, 128, 256, 512, 1024)]
+        d3, d6, d9 = [int(x * depth_multiple) for x in (3, 6, 9)]
+
         self.p1 = Conv(3, x64, 6, 2, 2)  # 0-P1/2
         self.p2 = Conv(x64, x128, 3, 2)  # 1-P2/4
         self.p3 = nn.Sequential(
-            C3Ghost(x128, x128),
+            C3(x128, x128, d3),
             Conv(x128, x256, 3, 2),  # 3-P3/8
         )
         self.p4 = nn.Sequential(
-            C3Ghost(x256, x256),
-            C3Ghost(x256, x256),
+            C3(x256, x256, d6),
             Conv(x256, x512, 3, 2),  # 5-P4/16
         )
         self.p5 = nn.Sequential(
-            C3Ghost(x512, x512),
-            C3Ghost(x512, x512),
-            C3Ghost(x512, x512),
+            C3(x512, x512, d9),
             Conv(x512, x1024, 3, 2),  # 7-P5/32
         )
         self.sppf = nn.Sequential(
-            C3Ghost(x1024, x1024),
+            C3(x1024, x1024, d3),
             SPPF(x1024, x1024, 5),  # 9
             Conv(x1024, x512, 1, 1),
         )
         self.sppf_upsample = nn.Upsample(None, 2, "bilinear", align_corners=True)
         self.neck_pix = nn.Sequential(
-            C3Ghost(x1024, x512, False),
+            C3(x1024, x512, d3, shortcut=False),
             Conv(x512, x256, 1, 1),
         )
         self.neck_pix_upsample = nn.Upsample(None, 2, "bilinear", align_corners=True)
-        self.neck_small = C3Ghost(x512, x256, False)
+        self.neck_small = C3(x512, x256, d3, shortcut=False)
         self.neck_small_conv = Conv(x256, x256, 3, 2)
-        self.neck_medium = C3Ghost(x512, x512, False)
+        self.neck_medium = C3(x512, x512, d3, shortcut=False)
         self.neck_medium_conv = Conv(x512, x512, 3, 2)
-        self.neck_large = C3Ghost(x1024, x1024, False)
+        self.neck_large = C3(x1024, x1024, d3, shortcut=False)
+
         self.detect = DetectHead([x256, x512, x1024], num_classes, anchors, strides=(8, 16, 32), cf=cf)  # head
         initialize_weights(self)
 
@@ -286,6 +270,55 @@ class YoloV5NGhost(nn.Module):
         return self
 
 
+def forced_load(model, weights):
+    weight_mapper = {
+        "model.0.": "p1.",
+        "model.1.": "p2.",
+        "model.2.": "p3.0.",
+        "model.3.": "p3.1.",
+        "model.4.": "p4.0.",
+        "model.5.": "p4.1.",
+        "model.6.": "p5.0.",
+        "model.7.": "p5.1.",
+        "model.8.": "sppf.0.",
+        "model.9.": "sppf.1.",
+        "model.10.": "sppf.2.",
+        "model.13.": "neck_pix.0.",
+        "model.14.": "neck_pix.1.",
+        "model.17.": "neck_small.",
+        "model.18.": "neck_small_conv.",
+        "model.20.": "neck_medium.",
+        "model.21.": "neck_medium_conv.",
+        "model.23.": "neck_large.",
+        "model.24.": "detect.",
+    }
+    csd = {}
+    for k, v in torch.load(weights).items():
+        for pattern in weight_mapper:
+            if pattern in k:
+                k = k.replace(pattern, weight_mapper[pattern])
+                break
+        csd[k] = v
+    csd = intersect_dicts(csd, model.state_dict())  # intersect
+    model.load_state_dict(csd, strict=False)  # load
+    print(f"transferred {len(csd)}/{len(model.state_dict())} items from {weights}")  # report
+    return model
+
+
+def ultralytics_yolov5n(num_classes, anchors=None, cf=None, weights=None):
+    model = Yolov5U(num_classes, anchors, width_multiple=0.25, depth_multiple=0.33, cf=cf)
+    if weights is not None:
+        model = forced_load(model, weights)
+    return model
+
+
+def ultralytics_yolov5s(num_classes, anchors=None, cf=None, weights=None):
+    model = Yolov5U(num_classes, anchors, width_multiple=0.5, depth_multiple=0.33, cf=cf)
+    if weights is not None:
+        model = forced_load(model, weights)
+    return model
+
+
 if __name__ == "__main__":
     from loguru import logger
     from thop import profile
@@ -299,18 +332,15 @@ if __name__ == "__main__":
         logger.success(f"Estimated Size:{params:.2f}M, Estimated Bandwidth: {flops * 2:.2f}G, Resolution: {tsize[2:]}")
 
     cf = torch.Tensor((0.5, 0.1, 0.1, 0.2, 0.05, 0.05))
-    model = YoloV5NGhost(
-        6,
-        cf=cf,
-    )
+    model = ultralytics_yolov5s(6, cf=cf, weights="yolov5n.pt")
 
     # forward test
-    for y in model.forward(torch.rand(4, 3, 384, 640)):
+    for y in model.forward(torch.rand(4, 3, 640, 640)):
         print(y.shape)
 
     # size & bandwidth test
-    get_model_info(model, (1, 3, 384, 640))
+    get_model_info(model, (1, 3, 640, 640))
 
     # onnx test
-    model.eval().fuse()
-    torch.onnx.export(model, torch.rand(1, 3, 384, 640), "yolov5n.onnx", opset_version=12)
+    # model.eval().fuse()
+    # torch.onnx.export(model, torch.rand(1, 3, 640, 640), "ultralytics_yolov5n.onnx", opset_version=12)

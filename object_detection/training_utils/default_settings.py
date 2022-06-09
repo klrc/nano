@@ -5,6 +5,7 @@ class DefaultSettings:
     # model settings
     frozen_dict = None
     grid_stride = 32
+    auto_anchor = True
 
     # optimizer settings
     optimizer = torch.optim.SGD
@@ -72,5 +73,5 @@ class DefaultSettings:
     # other settings
     start_epoch = 0
     max_epoch = 300
-    patience = 100  # EarlyStopping patience (epochs without improvement)
-    save_dir = "runs/yolov5n"
+    patience = 50  # EarlyStopping patience (epochs without improvement)
+    save_dir = "runs/unknown_model"
