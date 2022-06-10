@@ -2,7 +2,17 @@ import numpy as np
 import torch
 import cv2
 
-from .transforms import Tensor2Image, TransformFunction
+from .transforms import Tensor2Image
+
+
+class AutoImage:
+    @staticmethod
+    def cv2_image(data):
+        pass
+
+    @staticmethod
+    def tensor(data):
+        pass
 
 
 def any_image_format(image):
