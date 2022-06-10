@@ -204,9 +204,9 @@ def create_dataloader(dataset_path, training, settings: DefaultSettings):
         "copy_paste": s.copy_paste,
     }
     if training:
-        augment, shuffle, rect, pad = True, s.shuffle, False, 0.0  # rect is incompatible with DataLoader shuffle
+        augment, shuffle, rect, pad = True, True, False, 0.0  # rect is incompatible with DataLoader shuffle
     else:
-        augment, shuffle, rect, pad = False, False, True, 0.5
+        augment, shuffle, rect, pad = False, False, True, 0.0
         batch_size *= 2
         workers *= 2
     dataset = LoadImagesAndLabels(

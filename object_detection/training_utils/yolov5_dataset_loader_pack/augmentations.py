@@ -35,7 +35,7 @@ class Albumentations:
                 T.extend(
                     [
                         A.RandomGamma(p=0.01),
-                        A.ColorJitter(brightness=(0.1, 0.5), p=0.5),
+                        A.ColorJitter(brightness=(0.15, 0.5), p=0.5),
                         A.ImageCompression(quality_lower=75, p=0.5),
                     ]
                 )

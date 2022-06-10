@@ -661,7 +661,7 @@ class LoadImagesAndLabels(Dataset):
                     labels[:, 1] = 1 - labels[:, 1]
 
             # fake OSD
-            if self.fake_osd and random.random() < 0.5:
+            if self.fake_osd:
                 img = image_osd(img.astype(np.uint8))
 
             # Cutouts

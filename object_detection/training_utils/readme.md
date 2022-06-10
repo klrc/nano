@@ -26,7 +26,7 @@ perspective: image perspective (+/- fraction), range 0-0.001
 
 ### fake_osd
 `training_utils.yolov5_dataset_loader_pack.augmentations.py:290`:
-| ![]() | ![]() |
+| ![](docs/fake_osd_off.png) | ![](docs/fake_osd_on.png) |
 | -- | -- |
 | fake_osd off | fake_osd on |
 
@@ -46,6 +46,6 @@ perspective: image perspective (+/- fraction), range 0-0.001
         )
 ```
 
-| ![]() | ![]() |
+| ![](docs/fake_darkness_off.png) | ![](docs/fake_darkness_on.png) |
 | -- | -- |
 | fake_darkness off | fake_darkness on |
