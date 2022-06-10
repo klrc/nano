@@ -36,10 +36,9 @@ if __name__ == "__main__":
     # visualize data
     from object_detection.training_utils.general import create_dataloader, xywhn2xyxy
     import test_utils.visualize as V
-    import cv2 
+    import cv2
 
     s = DefaultSettings()
-    s.valset_path = "../datasets/ExDark/images"
     train_loader, _ = create_dataloader(s.valset_path, training=True, settings=s)
     s.imgsz = 640
     for imgs, targets, _, _ in train_loader:
@@ -48,9 +47,10 @@ if __name__ == "__main__":
         for i, img in enumerate(imgs):
             img = img.unsqueeze(0)
             boxes = targets[targets[:, 0] == i, 1:]
+            labels = [s.names[int(x)] for x in boxes[:, 0]]
             canvas = V.Canvas(img[0])
-            canvas.draw_boxes(boxes[:, 1:])
-            cv2.imwrite('test.png', canvas.image)
+            canvas.draw_boxes_with_label(boxes[:, 1:], labels)
+            cv2.imwrite("test.png", canvas.image)
             break
         break
         # print(targets.shape)

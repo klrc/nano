@@ -81,36 +81,3 @@ class Canvas:
         layer = cv2.rectangle(layer, (x1, y1), (x1 + text_w + 2, y1 + text_h + 2), self._color, -1)
         layer = cv2.putText(layer, text, (x1, y1 + text_h), self.font, self.font_scale, self.font_color, self.font_thickness)
         self.image = self.merge_transparent_layer(layer, alpha)
-
-
-# modulized as <TransformFunction> for quick testing implementation
-class RenderLabels(TransformFunction):
-    def __init__(self, class_names) -> None:
-        super().__init__(p=1)
-        self.class_names = class_names
-
-    def __call__(self, data):
-        """
-        image: image with cv2(numpy) format or pytorch tensor format
-        label: labels nx5 (cid, xyxy)
-        """
-        image, label = data
-        return self.functional(image, label, self.class_names)
-
-    @staticmethod
-    def functional(image, label, class_names):
-        """
-        image: image with cv2(numpy) format or pytorch tensor format
-        label: labels nx5 (cid, xyxy)
-        """
-        canvas = Canvas(image)
-        if label.size(-1) == 5:  # nx5
-            for obj_arr in label:
-                c, x1, y1, x2, y2 = [int(x) for x in obj_arr]
-                text = class_names[c]
-                canvas.draw_box((x1, y1, x2, y2))
-                canvas.draw_text_with_background(text, (x1, y1))
-                canvas.next_color()
-        else:
-            raise NotImplementedError
-        return canvas.image

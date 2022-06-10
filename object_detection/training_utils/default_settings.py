@@ -36,6 +36,7 @@ class DefaultSettings:
     batch_size = 64
     cache = False  # cache images in "ram" (default) or "disk"
     workers = 8  # max dataloader workers
+    shuffle = True
 
     # augmentation settings
     mosaic = 1.0  # image mosaic (probability)
