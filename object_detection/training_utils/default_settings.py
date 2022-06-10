@@ -38,20 +38,21 @@ class DefaultSettings:
     workers = 8  # max dataloader workers
 
     # augmentation settings
-    mosaic = 1.0
-    mixup = 0.0
-    degrees = 0.0
-    translate = 0.1
-    scale = 0.5
-    shear = 0.0
-    perspective = 0.0
+    mosaic = 1.0  # image mosaic (probability)
+    mixup = 0.0  # image mixup (probability)
+    degrees = 0.0  # image rotation (+/- deg)
+    translate = 0.1  # image translation (+/- fraction)
+    scale = 0.5  # image scale (+/- gain)
+    shear = 0.0  # image shear (+/- deg)
+    perspective = 0.0  # image perspective (+/- fraction), range 0-0.001
     hsv_h = 0.015
     hsv_s = 0.7
     hsv_v = 0.4
-    flipud = 0.0
-    fliplr = 0.5
+    flipud = 0.0  # image flip up-down (probability)
+    fliplr = 0.5  # image flip left-right (probability)
     copy_paste = 0.0
     fake_osd = False
+    fake_darkness = False
 
     # training settings
     label_smoothing = 0.0  # label smoothing epsilon

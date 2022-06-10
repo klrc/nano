@@ -435,6 +435,7 @@ class LoadImagesAndLabels(Dataset):
         pad=0.0,
         prefix="",
         fake_osd=False,
+        fake_darkness=False,
     ):
         self.img_size = img_size
         self.augment = augment
@@ -445,7 +446,7 @@ class LoadImagesAndLabels(Dataset):
         self.mosaic_border = [-img_size // 2, -img_size // 2]
         self.stride = stride
         self.path = path
-        self.albumentations = Albumentations() if augment else None
+        self.albumentations = Albumentations(fake_darkness) if augment else None
         self.fake_osd = fake_osd
         try:
             f = []  # image files

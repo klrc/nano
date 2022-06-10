@@ -17,7 +17,7 @@ from .metrics import bbox_ioa
 
 class Albumentations:
     # YOLOv5 Albumentations class (optional, only used if package is installed)
-    def __init__(self):
+    def __init__(self, fake_darkness):
         self.transform = None
         try:
             import albumentations as A
@@ -30,10 +30,16 @@ class Albumentations:
                 A.ToGray(p=0.01),
                 A.CLAHE(p=0.01),
                 A.RandomBrightnessContrast(p=0.0),
-                # A.ColorJitter(brightness=(0.1, 0.5), p=0.5),
-                # A.RandomGamma(p=0.01),
-                # A.ImageCompression(quality_lower=75, p=0.01),
             ]  # transforms
+            if fake_darkness:
+                T.extend(
+                    [
+                        A.RandomGamma(p=0.01),
+                        A.ColorJitter(brightness=(0.1, 0.5), p=0.5),
+                        A.ImageCompression(quality_lower=75, p=0.5),
+                    ]
+                )
+
             self.transform = A.Compose(T, bbox_params=A.BboxParams(format="yolo", label_fields=["class_labels"]))
 
             print(colorstr("albumentations: ") + ", ".join(f"{x}" for x in self.transform.transforms if x.p))
