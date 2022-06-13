@@ -21,8 +21,8 @@ class DefaultSettings:
     warmup_epochs = 3
     warmup_momentum = 0.8
     warmup_bias_lr = 0.1
-    lrf = 0.01
-    cos_lr = False  # cosine LR scheduler
+    lrf = 0.2
+    cos_lr = True  # cosine LR scheduler
 
     # dataset settings
     nc = 80  # num of classes
@@ -59,8 +59,8 @@ class DefaultSettings:
     cls_pw = 1.0  # cls BCELoss positive_weight
     obj_pw = 1.0  # obj BCELoss positive_weight
     box = 0.05  # box loss gain
-    cls = 0.3  # cls loss gain
-    obj = 0.7  # obj loss gain (scale with pixels)
+    cls = 0.5  # cls loss gain
+    obj = 1  # obj loss gain (scale with pixels)
     anchor_t = 4.0  # anchor-multiple threshold
     fl_gamma = 0.0  # focal loss gamma (efficientDet default gamma=1.5)
 
