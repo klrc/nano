@@ -21,8 +21,8 @@ class DefaultSettings:
     warmup_epochs = 3
     warmup_momentum = 0.8
     warmup_bias_lr = 0.1
-    lrf = 0.2
-    cos_lr = True  # cosine LR scheduler
+    lrf = 0.01
+    cos_lr = False  # cosine LR scheduler
 
     # dataset settings
     nc = 80  # num of classes
