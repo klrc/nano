@@ -299,6 +299,7 @@ class Yolov5UG(nn.Module):
         self.detect.mode_dsp_off = False
         return self
 
+
 def yolov5s_ghost(num_classes, anchors=None, cf=None):
     return Yolov5UG(num_classes, anchors, width_multiple=0.5, depth_multiple=0.33, cf=cf)
 
