@@ -9,7 +9,7 @@ class DefaultSettings:
 
     # optimizer settings
     optimizer = torch.optim.SGD
-    input_shape = (4, 3, 360, 640)
+    input_shape = (4, 3, 384, 640)
     imgsz = 640
     expected_output_shapes = None
     lr0 = 0.01

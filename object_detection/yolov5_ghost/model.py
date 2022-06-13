@@ -299,8 +299,11 @@ class Yolov5UG(nn.Module):
         self.detect.mode_dsp_off = False
         return self
 
+def yolov5s_ghost(num_classes, anchors=None, cf=None):
+    return Yolov5UG(num_classes, anchors, width_multiple=0.5, depth_multiple=0.33, cf=cf)
 
-def yolov5_ghost(num_classes, anchors=None, cf=None):
+
+def yolov5n_ghost(num_classes, anchors=None, cf=None):
     return Yolov5UG(num_classes, anchors, width_multiple=0.25, depth_multiple=0.33, cf=cf)
 
 
@@ -317,7 +320,7 @@ if __name__ == "__main__":
         logger.success(f"Estimated Size:{params:.2f}M, Estimated Bandwidth: {flops * 2:.2f}G, Resolution: {tsize[2:]}")
 
     cf = torch.Tensor((0.5, 0.1, 0.1, 0.2, 0.05, 0.05))
-    model = yolov5_ghost(6, cf=cf)
+    model = yolov5n_ghost(6, cf=cf)
 
     # forward test
     for y in model.forward(torch.rand(4, 3, 384, 640)):

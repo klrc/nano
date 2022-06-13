@@ -305,15 +305,15 @@ def forced_load(model, weights):
     return model
 
 
-def ultralytics_yolov5n(num_classes, anchors=None, cf=None, weights=None):
-    model = Yolov5U(num_classes, anchors, width_multiple=0.25, depth_multiple=0.33, cf=cf)
+def yolov5s(num_classes, anchors=None, cf=None, weights=None):
+    model = Yolov5U(num_classes, anchors, width_multiple=0.5, depth_multiple=0.33, cf=cf)
     if weights is not None:
         model = forced_load(model, weights)
     return model
 
 
-def ultralytics_yolov5s(num_classes, anchors=None, cf=None, weights=None):
-    model = Yolov5U(num_classes, anchors, width_multiple=0.5, depth_multiple=0.33, cf=cf)
+def yolov5n(num_classes, anchors=None, cf=None, weights=None):
+    model = Yolov5U(num_classes, anchors, width_multiple=0.25, depth_multiple=0.33, cf=cf)
     if weights is not None:
         model = forced_load(model, weights)
     return model
@@ -332,7 +332,7 @@ if __name__ == "__main__":
         logger.success(f"Estimated Size:{params:.2f}M, Estimated Bandwidth: {flops * 2:.2f}G, Resolution: {tsize[2:]}")
 
     cf = torch.Tensor((0.5, 0.1, 0.1, 0.2, 0.05, 0.05))
-    model = ultralytics_yolov5s(6, cf=cf, weights="yolov5n.pt")
+    model = yolov5n(6, cf=cf, weights="yolov5n.pt")
 
     # forward test
     for y in model.forward(torch.rand(4, 3, 640, 640)):

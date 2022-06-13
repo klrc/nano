@@ -1,1 +1,1 @@
-from .model import Yolov5U, ultralytics_yolov5n, ultralytics_yolov5s
+from .model import Yolov5U, yolov5n, yolov5s

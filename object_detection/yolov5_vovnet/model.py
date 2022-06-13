@@ -428,7 +428,7 @@ class Yolov5UV(nn.Module):
         return self
 
 
-def yolov5_vovnet(num_classes, anchors=None, cf=None, weights=None):
+def yolov5n_vovnet(num_classes, anchors=None, cf=None, weights=None):
     model = Yolov5UV(num_classes, anchors, width_multiple=0.25, depth_multiple=0.33, cf=cf)
     return model
 
@@ -446,7 +446,7 @@ if __name__ == "__main__":
         logger.success(f"Estimated Size:{params:.2f}M, Estimated Bandwidth: {flops * 2:.2f}G, Resolution: {tsize[2:]}")
 
     cf = torch.Tensor((0.5, 0.1, 0.1, 0.2, 0.05, 0.05))
-    model = yolov5_vovnet(6, cf=cf)
+    model = yolov5n_vovnet(6, cf=cf)
 
     # forward test
     for y in model.forward(torch.rand(4, 3, 640, 640)):
