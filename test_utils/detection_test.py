@@ -1,6 +1,9 @@
+from matplotlib.pyplot import title
 import torch
 import torch.nn as nn
 import numpy as np
+
+from test_utils.detection_visualize import Canvas
 from .utils import non_max_suppression, im2tensor, tensor2im
 import math
 import cv2
@@ -23,15 +26,21 @@ def yolov5_inference(model, frame, conf_thres=0.01, iou_thres=0.45):
         out, _ = model(frame)  # inference, loss outputs
         # list of detections, on (n,6) tensor per image [xyxy, conf, cls]
         out = non_max_suppression(out, conf_thres, iou_thres, labels=[], multi_label=True, agnostic=False)
+    return out
 
 
-def detect(model: nn.Module, frame: np.ndarray, mode="yolov5"):
+def detect(model: nn.Module, frame: np.ndarray, mode="yolov5", class_names=None):
     assert not model.training  # detect in eval mode
     frame = im2tensor(frame).unsqueeze(0)
     frame = letterbox_padding(frame)
-    cv2.imshow("test", tensor2im(frame[0]))
-    cv2.waitKey(0)
+    canvas = Canvas(frame[0])
+    canvas.show()
     if mode == "yolov5":
-        nx6 = yolov5_inference(model, frame)
+        for det in yolov5_inference(model, frame)[0]:
+            pt1, pt2, conf, cls = det[:2], det[2:4], det[4], int(det[5])
+            color = canvas.color(cls)
+            print(cls, conf)
+            canvas.draw_box(pt1, pt2, color=color, title=f"{class_names[cls]}:{conf:.2f}")
+        canvas.show()
     else:
         raise NotImplementedError

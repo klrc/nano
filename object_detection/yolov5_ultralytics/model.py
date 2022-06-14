@@ -4,7 +4,8 @@ import torch.nn as nn
 import math
 
 
-ACTIVATION = nn.ReLU6
+# ACTIVATION = nn.ReLU6
+ACTIVATION = nn.SiLU
 DEFAULT_ANCHORS = (
     (10, 13, 16, 30, 33, 23),
     (30, 61, 62, 45, 59, 119),
@@ -205,60 +206,54 @@ class Yolov5U(nn.Module):
         x64, x128, x256, x512, x1024 = [int((x * width_multiple) // _cpc) * _cpc for x in (64, 128, 256, 512, 1024)]
         d3, d6, d9 = [int(math.ceil(x * depth_multiple)) for x in (3, 6, 9)]
 
-        self.p1 = Conv(3, x64, 6, 2, 2)  # 0-P1/2
-        self.p2 = Conv(x64, x128, 3, 2)  # 1-P2/4
-        self.p3 = nn.Sequential(
+        self.p0 = nn.Sequential(
+            Conv(3, x64, 6, 2, 2),  # 0-P1/2
+            Conv(x64, x128, 3, 2),  # 1-P2/4
             C3(x128, x128, d3),
             Conv(x128, x256, 3, 2),  # 3-P3/8
-        )
-        self.p4 = nn.Sequential(
             C3(x256, x256, d6),
+        )
+        self.p1 = nn.Sequential(
             Conv(x256, x512, 3, 2),  # 5-P4/16
-        )
-        self.p5 = nn.Sequential(
             C3(x512, x512, d9),
-            Conv(x512, x1024, 3, 2),  # 7-P5/32
         )
-        self.sppf = nn.Sequential(
+        self.p2 = nn.Sequential(
+            Conv(x512, x1024, 3, 2),  # 7-P5/32
             C3(x1024, x1024, d3),
             SPPF(x1024, x1024, 5),  # 9
             Conv(x1024, x512, 1, 1),
         )
-        self.sppf_upsample = nn.Upsample(None, 2, "bilinear", align_corners=True)
-        self.neck_pix = nn.Sequential(
+        self.u0 = nn.Upsample(None, 2, "bilinear", align_corners=True)
+        self.neck_0 = nn.Sequential(
             C3(x1024, x512, d3, shortcut=False),
             Conv(x512, x256, 1, 1),
         )
-        self.neck_pix_upsample = nn.Upsample(None, 2, "bilinear", align_corners=True)
-        self.neck_small = C3(x512, x256, d3, shortcut=False)
-        self.neck_small_conv = Conv(x256, x256, 3, 2)
-        self.neck_medium = C3(x512, x512, d3, shortcut=False)
-        self.neck_medium_conv = Conv(x512, x512, 3, 2)
-        self.neck_large = C3(x1024, x1024, d3, shortcut=False)
-
+        self.u1 = nn.Upsample(None, 2, "bilinear", align_corners=True)
+        self.neck_1 = C3(x512, x256, d3, shortcut=False)
+        self.neck_1_conv = Conv(x256, x256, 3, 2)
+        self.neck_2 = C3(x512, x512, d3, shortcut=False)
+        self.neck_2_conv = Conv(x512, x512, 3, 2)
+        self.neck_3 = C3(x1024, x1024, d3, shortcut=False)
         self.detect = DetectHead([x256, x512, x1024], num_classes, anchors, strides=(8, 16, 32), cf=cf)  # head
         initialize_weights(self)
 
     def forward(self, x):
-        x = self.p1(x)
-        x = self.p2(x)
-        b_p3 = self.p3(x)  # 256x
-        b_p4 = self.p4(b_p3)  # 512x
-        b_p5 = self.p5(b_p4)  # 1024x
-        h_p5 = self.sppf(b_p5)  # 512x
-        x = self.sppf_upsample(h_p5)
-        x = torch.cat((x, b_p4), dim=1)  # cat backbone P4  # 1024x
-        h_p4 = self.neck_pix(x)  # 256x
-        x = self.neck_pix_upsample(h_p4)
-        x = torch.cat((x, b_p3), dim=1)  # cat backbone P3  # 512x
-        n_fs = self.neck_small(x)  # 17 (P3/8-small) # 256x
-        x = self.neck_small_conv(n_fs)
-        x = torch.cat((x, h_p4), dim=1)  # cat head P4  # 512x
-        n_fm = self.neck_medium(x)  # 20 (P4/16-medium) # 512x
-        x = self.neck_medium_conv(n_fm)
-        x = torch.cat((x, h_p5), dim=1)  # cat head P5  # 1024x
-        n_fl = self.neck_large(x)  # 23 (P5/32-large) # 1024x
-        return self.detect([n_fs, n_fm, n_fl])  # Detect(P3, P4, P5)
+        backbone_p3 = self.p0(x)
+        backbone_p4 = self.p1(backbone_p3)
+        backbone_p5 = self.p2(backbone_p4)
+        x = self.u0(backbone_p5)
+        x = torch.cat((x, backbone_p4), dim=1)  # cat backbone P4  # 1024x
+        neck_0 = self.neck_0(x)
+        x = self.u1(neck_0)
+        x = torch.cat((x, backbone_p3), dim=1)  # cat backbone P3  # 512x
+        neck_1 = self.neck_1(x)
+        x = self.neck_1_conv(neck_1)
+        x = torch.cat((x, neck_0), dim=1)  # cat head P4  # 512x
+        neck_2 = self.neck_2(x)
+        x = self.neck_2_conv(neck_2)
+        x = torch.cat((x, backbone_p5), dim=1)  # cat head P5  # 1024x
+        neck_3 = self.neck_3(x)
+        return self.detect([neck_1, neck_2, neck_3])  # Detect(P3, P4, P5)
 
     def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
         for m in self.modules():
@@ -272,24 +267,24 @@ class Yolov5U(nn.Module):
 
 def forced_load(model, weights):
     weight_mapper = {
-        "model.0.": "p1.",
-        "model.1.": "p2.",
-        "model.2.": "p3.0.",
-        "model.3.": "p3.1.",
-        "model.4.": "p4.0.",
-        "model.5.": "p4.1.",
-        "model.6.": "p5.0.",
-        "model.7.": "p5.1.",
-        "model.8.": "sppf.0.",
-        "model.9.": "sppf.1.",
-        "model.10.": "sppf.2.",
-        "model.13.": "neck_pix.0.",
-        "model.14.": "neck_pix.1.",
-        "model.17.": "neck_small.",
-        "model.18.": "neck_small_conv.",
-        "model.20.": "neck_medium.",
-        "model.21.": "neck_medium_conv.",
-        "model.23.": "neck_large.",
+        "model.0.": "p0.0.",
+        "model.1.": "p0.1.",
+        "model.2.": "p0.2.",
+        "model.3.": "p0.3.",
+        "model.4.": "p0.4.",
+        "model.5.": "p1.0.",
+        "model.6.": "p1.1.",
+        "model.7.": "p2.0.",
+        "model.8.": "p2.1.",
+        "model.9.": "p2.2.",
+        "model.10.": "p2.3.",
+        "model.13.": "neck_0.0.",
+        "model.14.": "neck_0.1.",
+        "model.17.": "neck_1.",
+        "model.18.": "neck_1_conv.",
+        "model.20.": "neck_2.",
+        "model.21.": "neck_2_conv.",
+        "model.23.": "neck_3.",
         "model.24.": "detect.",
     }
     csd = {}
@@ -331,8 +326,8 @@ if __name__ == "__main__":
         flops /= 1e9
         logger.success(f"Estimated Size:{params:.2f}M, Estimated Bandwidth: {flops * 2:.2f}G, Resolution: {tsize[2:]}")
 
-    cf = torch.Tensor((0.5, 0.1, 0.1, 0.2, 0.05, 0.05))
-    model = yolov5n(6, cf=cf, weights="yolov5n.pt")
+    # cf = torch.Tensor((0.5, 0.1, 0.1, 0.2, 0.05, 0.05))
+    model = yolov5n(80, weights="yolov5n_sd.pt")
 
     # forward test
     for y in model.forward(torch.rand(4, 3, 640, 640)):
@@ -341,6 +336,6 @@ if __name__ == "__main__":
     # size & bandwidth test
     get_model_info(model, (1, 3, 640, 640))
 
-    # onnx test
+    # # onnx test
     # model.eval().fuse()
-    # torch.onnx.export(model, torch.rand(1, 3, 640, 640), "ultralytics_yolov5n.onnx", opset_version=12)
+    # torch.onnx.export(model, torch.rand(1, 3, 640, 640), "test.onnx", opset_version=12)

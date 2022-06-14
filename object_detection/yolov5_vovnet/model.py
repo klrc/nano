@@ -381,42 +381,39 @@ class Yolov5UV(nn.Module):
 
         self.backbone = vovnet27_extra_slim()
         self.sppf = nn.Sequential(
-            C3(x1024, x1024, d3),
             SPPF(x1024, x1024, 5),  # 9
             Conv(x1024, x512, 1, 1),
         )
-        self.sppf_upsample = nn.Upsample(None, 2, "bilinear", align_corners=True)
-        self.neck_pix = nn.Sequential(
+        self.u0 = nn.Upsample(None, 2, "bilinear", align_corners=True)
+        self.neck_0 = nn.Sequential(
             C3(x1024, x512, d3, shortcut=False),
             Conv(x512, x256, 1, 1),
         )
-        self.neck_pix_upsample = nn.Upsample(None, 2, "bilinear", align_corners=True)
-        self.neck_small = C3(x512, x256, d3, shortcut=False)
-        self.neck_small_conv = Conv(x256, x256, 3, 2)
-        self.neck_medium = C3(x512, x512, d3, shortcut=False)
-        self.neck_medium_conv = Conv(x512, x512, 3, 2)
-        self.neck_large = C3(x1024, x1024, d3, shortcut=False)
-
+        self.u1 = nn.Upsample(None, 2, "bilinear", align_corners=True)
+        self.neck_1 = C3(x512, x256, d3, shortcut=False)
+        self.neck_1_conv = Conv(x256, x256, 3, 2)
+        self.neck_2 = C3(x512, x512, d3, shortcut=False)
+        self.neck_2_conv = Conv(x512, x512, 3, 2)
+        self.neck_3 = C3(x1024, x1024, d3, shortcut=False)
         self.detect = DetectHead([x256, x512, x1024], num_classes, anchors, strides=(8, 16, 32), cf=cf)  # head
         initialize_weights(self)
 
     def forward(self, x):
-        b_p3, b_p4, b_p5 = self.backbone(x)  # 128, 256, 512x
-        print(b_p3.shape, b_p4.shape, b_p5.shape)
-        h_p5 = self.sppf(b_p5)  # 512x
-        x = self.sppf_upsample(h_p5)
-        x = torch.cat((x, b_p4), dim=1)  # cat backbone P4  # 1024x
-        h_p4 = self.neck_pix(x)  # 256x
-        x = self.neck_pix_upsample(h_p4)
-        x = torch.cat((x, b_p3), dim=1)  # cat backbone P3  # 512x
-        n_fs = self.neck_small(x)  # 17 (P3/8-small) # 256x
-        x = self.neck_small_conv(n_fs)
-        x = torch.cat((x, h_p4), dim=1)  # cat head P4  # 512x
-        n_fm = self.neck_medium(x)  # 20 (P4/16-medium) # 512x
-        x = self.neck_medium_conv(n_fm)
-        x = torch.cat((x, h_p5), dim=1)  # cat head P5  # 1024x
-        n_fl = self.neck_large(x)  # 23 (P5/32-large) # 1024x
-        return self.detect([n_fs, n_fm, n_fl])  # Detect(P3, P4, P5)
+        backbone_p3, backbone_p4, backbone_p5 = self.backbone(x)  # 128, 256, 512x
+        backbone_p5 = self.sppf(backbone_p5)
+        x = self.u0(backbone_p5)
+        x = torch.cat((x, backbone_p4), dim=1)  # cat backbone P4  # 1024x
+        neck_0 = self.neck_0(x)
+        x = self.u1(neck_0)
+        x = torch.cat((x, backbone_p3), dim=1)  # cat backbone P3  # 512x
+        neck_1 = self.neck_1(x)
+        x = self.neck_1_conv(neck_1)
+        x = torch.cat((x, neck_0), dim=1)  # cat head P4  # 512x
+        neck_2 = self.neck_2(x)
+        x = self.neck_2_conv(neck_2)
+        x = torch.cat((x, backbone_p5), dim=1)  # cat head P5  # 1024x
+        neck_3 = self.neck_3(x)
+        return self.detect([neck_1, neck_2, neck_3])  # Detect(P3, P4, P5)
 
     def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
         for m in self.modules():
@@ -455,6 +452,6 @@ if __name__ == "__main__":
     # size & bandwidth test
     get_model_info(model, (1, 3, 640, 640))
 
-    # onnx test
-    model.eval().fuse()
-    torch.onnx.export(model, torch.rand(1, 3, 640, 640), "ultralytics_yolov5_vovnet.onnx", opset_version=12)
+    # # onnx test
+    # model.eval().fuse()
+    # torch.onnx.export(model, torch.rand(1, 3, 640, 640), "test.onnx", opset_version=12)
