@@ -19,7 +19,7 @@ if __name__ == "__main__":
     settings.fake_osd = True
     settings.fake_darkness = True
     settings.save_dir = "runs/yolov5s"
-    model = yolov5s(num_classes=80, weights="?.pt")
+    model = yolov5s(num_classes=80, weights="runs/yolov5s.0/best.pt")
     train(model, settings, device="0")
 
     settings = DefaultSettings()
@@ -38,5 +38,5 @@ if __name__ == "__main__":
     settings.fake_osd = True
     settings.fake_darkness = True
     settings.save_dir = "runs/yolov5n"
-    model = yolov5n(num_classes=80, weights="?.pt")
+    model = yolov5n(num_classes=80, weights="runs/yolov5n.0/best.pt")
     train(model, settings, device="0")

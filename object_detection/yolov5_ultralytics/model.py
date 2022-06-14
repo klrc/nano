@@ -139,7 +139,7 @@ class DetectHead(nn.Module):
         self.anchor_grid = [torch.zeros(1)] * self.nl  # init anchor grid
         self.stride = torch.tensor(strides)  # strides computed during build
         self.register_buffer("anchors", torch.tensor(anchors).float().view(self.nl, -1, 2))  # shape(nl,na,2)
-        self.mode_dsp_off = True
+        self.mode_dsp = False
         self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in in_channels)  # output conv
         self._initialize_biases(cf)
 
@@ -167,7 +167,7 @@ class DetectHead(nn.Module):
         z = []
         for i in range(self.nl):
             x[i] = self.m[i](x[i])
-            if self.mode_dsp_off:
+            if not self.mode_dsp:
                 # reshape
                 bs, _, ny, nx = x[i].shape
                 x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
@@ -182,7 +182,7 @@ class DetectHead(nn.Module):
                     y[..., 0:2] = (y[..., 0:2] * 2.0 - 0.5 + self.grid[i]) * self.stride[i]  # xy
                     y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
                     z.append(y.view(bs, -1, self.no))
-        if self.training or not self.mode_dsp_off:
+        if self.training or self.mode_dsp:
             return x
         else:
             return torch.cat(z, 1), x
@@ -203,7 +203,7 @@ class Yolov5U(nn.Module):
         # scaled channels
         _cpc = channels_per_chunk
         x64, x128, x256, x512, x1024 = [int((x * width_multiple) // _cpc) * _cpc for x in (64, 128, 256, 512, 1024)]
-        d3, d6, d9 = [int(x * depth_multiple) for x in (3, 6, 9)]
+        d3, d6, d9 = [int(math.ceil(x * depth_multiple)) for x in (3, 6, 9)]
 
         self.p1 = Conv(3, x64, 6, 2, 2)  # 0-P1/2
         self.p2 = Conv(x64, x128, 3, 2)  # 1-P2/4
@@ -266,7 +266,7 @@ class Yolov5U(nn.Module):
                 m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
                 delattr(m, "bn")  # remove batchnorm
                 m.forward = m.forward_fuse  # update forward
-        self.detect.mode_dsp_off = False
+        self.detect.mode_dsp = True
         return self
 
 
