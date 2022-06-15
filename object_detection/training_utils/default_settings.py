@@ -3,7 +3,7 @@ import torch
 
 class DefaultSettings:
     # model settings
-    frozen_dict = None
+    frozen_params = None
     grid_stride = 32
     auto_anchor = True
 

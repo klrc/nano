@@ -132,13 +132,13 @@ def check_before_training(model: nn.Module, device, input_shape, expected_output
         raise e
 
 
-def create_optimizer(model: nn.Module, frozen_layers, optimizer_prototype, lr0, momentum, weight_decay):
+def create_optimizer(model: nn.Module, frozen_params, optimizer_prototype, lr0, momentum, weight_decay):
     for k, v in model.named_parameters():
         v.requires_grad = True
-        if frozen_layers is not None and any(x in k for x in frozen_layers):
+        if frozen_params is not None and any(x == k for x in frozen_params):
             v.requires_grad = False
 
-    pgroup = [], [], []  # optimizer parameter groups
+    pgroup = [[], [], []]  # optimizer parameter groups
     bn = tuple(v for k, v in nn.__dict__.items() if "Norm" in k)  # normalization layers, i.e. BatchNorm2d()
     for v in model.modules():
         if hasattr(v, "bias") and isinstance(v.bias, nn.Parameter):  # bias
@@ -147,6 +147,9 @@ def create_optimizer(model: nn.Module, frozen_layers, optimizer_prototype, lr0, 
             pgroup[1].append(v.weight)
         elif hasattr(v, "weight") and isinstance(v.weight, nn.Parameter):  # weight (with decay)
             pgroup[0].append(v.weight)
+
+    for i in range(3):
+        pgroup[i] = [x for x in pgroup[i] if x.requires_grad]
 
     op = optimizer_prototype
     if op is torch.optim.Adam or op is torch.optim.AdamW:

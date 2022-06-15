@@ -40,10 +40,13 @@ def yolov5_inference(model, frame, conf_thres=0.2, iou_thres=0.45):
     return out
 
 
-def detect(model: nn.Module, frame: np.ndarray, canvas: Canvas, mode="yolov5", ground_truth=None, class_names=None):
+def detect(model: nn.Module, frame: np.ndarray, canvas=None, mode="yolov5", ground_truth=None, class_names=None):
     assert not model.training  # detect in eval mode
     frame = im2tensor(frame).unsqueeze(0)
     frame = letterbox_padding(frame)
+    # init canvas
+    if canvas is None:
+        canvas = Canvas()
     canvas.load(frame[0])
     height, width = frame.shape[-2:]
     # render ground truth
@@ -52,21 +55,19 @@ def detect(model: nn.Module, frame: np.ndarray, canvas: Canvas, mode="yolov5", g
         for cls, x1, y1, x2, y2 in ground_truth:
             pt1, pt2 = (x1 * width, y1 * height), (x2 * width, y2 * height)
             color = canvas.color(cls)
-            title = class_names[cls]
+            title = str(cls) if not class_names else class_names[cls]
             canvas.draw_box(pt1, pt2, alpha=0.4, thickness=-1, color=color)
             canvas.draw_box(pt1, pt2, color=color, title=title)
         canvas.show("ground truth")
-        cv2.setWindowProperty("ground truth", cv2.WND_PROP_TOPMOST, 1)
     # render prediction
     if mode == "yolov5":
         for det in yolov5_inference(model, frame)[0]:
             pt1, pt2, conf, cls = det[:2], det[2:4], det[4], int(det[5])
             color = canvas.color(cls)
-            title = f"{class_names[cls]}: {conf:.2f}"
+            title = f"{str(cls) if not class_names else class_names[cls]}: {conf:.2f}"
             canvas.draw_box(pt1, pt2, alpha=0.4, thickness=-1, color=color)
             canvas.draw_box(pt1, pt2, color=color, title=title)
         canvas.show("prediction")
-        cv2.setWindowProperty("prediction", cv2.WND_PROP_TOPMOST, 1)
     else:
         raise NotImplementedError
 
@@ -81,6 +82,49 @@ def read_labels_as_xyxy(lb):
             c, x, y, w, h = [float(data) for data in line.split(" ")]
             labels.append([int(c), x - w / 2, y - h / 2, x + w / 2, y + h / 2])
         return labels
+
+
+def travel_dataset(path, class_names=None):
+    """
+    1~9: jump to n% of dataset
+    a: prev image
+    *: next image
+    q: quit
+    """
+    # load image paths in queue
+    test_queue = []
+    for image in os.listdir(path):
+        if not image.startswith("._") and (image.endswith(".png") or image.endswith(".jpg")):
+            fp = f"{path}/{image}"
+            test_queue.append(fp)
+    # control loop
+    i = 0
+    canvas = Canvas()
+    while i < len(test_queue):
+        fp = test_queue[i]
+        print(fp)
+        image = cv2.imread(fp)
+        lb = fp.replace(".png", ".txt").replace(".jpg", ".txt").replace("/images", "/labels")
+        lb = read_labels_as_xyxy(lb)
+        image = im2tensor(image).unsqueeze(0)
+        height, width = image.shape[-2:]
+        canvas.load(image[0])
+        for cls, x1, y1, x2, y2 in lb:
+            pt1, pt2 = (x1 * width, y1 * height), (x2 * width, y2 * height)
+            color = canvas.color(cls)
+            title = str(cls) if not class_names else class_names[cls]
+            canvas.draw_box(pt1, pt2, alpha=0.4, thickness=-1, color=color)
+            canvas.draw_box(pt1, pt2, color=color, title=title)
+        canvas.show("ground truth")
+        flag = cv2.waitKey(0)
+        if flag == ord("q"):
+            break
+        elif flag == ord("a"):
+            i -= 1
+        elif flag in [ord(x) for x in "1234567890"]:
+            i = int(len(test_queue) * (flag - ord("0")) / 10)
+        else:
+            i += 1
 
 
 def full_dataset_test(model, path, class_names, inf_size=640):

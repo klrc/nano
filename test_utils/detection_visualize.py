@@ -1,12 +1,13 @@
 import numpy as np
 import torch
 import cv2
+import matplotlib.pyplot as plt
 
 from .utils import tensor2im
 
 
 class Canvas:
-    def __init__(self, image=None) -> None:
+    def __init__(self, image=None, backend="cv2") -> None:
         # random color queue
         self.color_presets = {}
         if image:
@@ -15,6 +16,7 @@ class Canvas:
         self.font_scale = 0.3
         self.font_thickness = 1
         self.font_color = (0, 0, 0)
+        self.backend = backend
 
     def load(self, image, clone=True):
         self.image = self.check_cv2(image, clone)
@@ -95,6 +97,14 @@ class Canvas:
         cv2.imwrite(filename, self.image)
 
     def show(self, title="test", wait_key=False):
-        cv2.imshow(title, self.image)
-        if wait_key:
-            cv2.waitKey(0)
+        if self.backend == "cv2":
+            cv2.imshow(title, self.image)
+            cv2.setWindowProperty(title, cv2.WND_PROP_TOPMOST, 1)
+            if wait_key:
+                cv2.waitKey(0)
+        elif self.backend == "plt":
+            plt.imshow(self.image[:, :, ::-1], aspect='auto')
+            plt.axis("off")
+            plt.show()
+        else:
+            raise NotImplementedError

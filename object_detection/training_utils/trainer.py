@@ -35,7 +35,7 @@ def train(model: nn.Module, config=None, device="cpu"):
     s = sync_settings(config)
     device = select_device(device)
     model = check_before_training(model, device, s.input_shape, s.expected_output_shapes)
-    optimizer = create_optimizer(model, s.frozen_dict, s.optimizer, s.lr0, s.momentum, s.weight_decay)
+    optimizer = create_optimizer(model, s.frozen_params, s.optimizer, s.lr0, s.momentum, s.weight_decay)
     scheduler, lf = create_scheduler(optimizer, s.lrf, s.start_epoch, s.max_epoch, s.cos_lr)
     train_loader, _ = create_dataloader(s.trainset_path, training=True, settings=s)
     val_loader, valset = create_dataloader(s.valset_path, training=False, settings=s)
