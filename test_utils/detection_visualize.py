@@ -6,19 +6,25 @@ from .utils import tensor2im
 
 
 class Canvas:
-    def __init__(self, image) -> None:
+    def __init__(self, image=None) -> None:
         # random color queue
         self.color_presets = {}
-        self.image = self.check_cv2(image)
+        if image:
+            self.load(image)
         self.font = cv2.FONT_HERSHEY_SIMPLEX
         self.font_scale = 0.3
         self.font_thickness = 1
         self.font_color = (0, 0, 0)
 
+    def load(self, image, clone=True):
+        self.image = self.check_cv2(image, clone)
+
     @staticmethod
-    def check_cv2(image):
+    def check_cv2(image, clone):
         if isinstance(image, torch.Tensor):
             image = tensor2im(image)
+        elif clone:
+            image = image.copy()
         assert isinstance(image, np.ndarray)
         return image
 
@@ -88,7 +94,7 @@ class Canvas:
     def save(self, filename):
         cv2.imwrite(filename, self.image)
 
-    def show(self, title="test", wait_key=True):
+    def show(self, title="test", wait_key=False):
         cv2.imshow(title, self.image)
         if wait_key:
             cv2.waitKey(0)
