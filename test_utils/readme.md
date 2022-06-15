@@ -12,6 +12,11 @@
     video_test(model, loader: VideoLoader, class_names, fps, inf_size)
 - model: `torch.nn.Module` detection model
 - loader: `video_loader.VideoLoader` implementation (fake video stream with fixed fps)
+    
+    e.g.:
+
+        # loader = YUV420_VID_LOADER("/Users/sh/Downloads/1280x720_2.yuv", (720, 1280))
+
 - class_names: dataset class names
 - fps: frame rate
 - inf_size: max image size
