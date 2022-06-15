@@ -5,6 +5,7 @@
 - path: dataset images dir (auto detect labels dir)
 - class_names: dataset class names
 - inf_size: max image size
+
 ![](docs/Jun-15-2022%2013-59-38.gif)
 
 ### video_test
@@ -14,6 +15,7 @@
 - class_names: dataset class names
 - fps: frame rate
 - inf_size: max image size
+
 ![](docs/Jun-15-2022%2014-03-11.gif)
 
 ### camera_test
@@ -21,4 +23,5 @@
 - model: `torch.nn.Module` detection model
 - class_names: dataset class names
 - inf_size: max image size
+
 ![](docs/Jun-15-2022%2014-06-03.gif)
