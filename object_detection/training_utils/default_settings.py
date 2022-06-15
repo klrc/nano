@@ -76,3 +76,22 @@ class DefaultSettings:
     max_epoch = 300
     patience = 50  # EarlyStopping patience (epochs without improvement)
     save_dir = "runs/unknown_model"
+
+
+# ==============================================================
+# # fine-tune (more data & strong augmentation)
+# settings = DefaultSettings()
+# settings.trainset_path = [
+#     "../datasets/coco/train2017.txt",
+#     "../datasets/ExDark/images/train",
+# ]
+# settings.valset_path = ["../datasets/coco/val2017.txt"]
+# settings.lr0 = 0.003
+# settings.momentum = 0.75
+# settings.weight_decay = 0.00025
+# settings.mosaic = 0.9
+# settings.lrf = 0.15
+# settings.scale = 0.75
+# settings.mixup = 0.04
+# settings.fake_osd = True
+# settings.fake_darkness = True

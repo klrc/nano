@@ -4,3 +4,6 @@
 runs
 *.pt
 *.zip
+.ipynb_checkpoints
+.yolov5_checkpoints
+.vscode
