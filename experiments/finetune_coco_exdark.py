@@ -21,7 +21,7 @@ if __name__ == "__main__":
     settings.save_dir = "runs/yolov5n"
     model = yolov5n(num_classes=80, weights="yolov5n_sd.pt")
     train(model, settings, device="1")
-    
+
     settings = DefaultSettings()
     settings.trainset_path = [
         "../datasets/coco/train2017.txt",
@@ -40,4 +40,3 @@ if __name__ == "__main__":
     settings.save_dir = "runs/yolov5s"
     model = yolov5s(num_classes=80, weights="yolov5s_sd.pt")
     train(model, settings, device="1")
-

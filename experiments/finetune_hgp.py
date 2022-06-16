@@ -16,7 +16,7 @@ if __name__ == "__main__":
     if not os.path.exists(labels_root):
         os.system(f"mv {output_root} {labels_root}")
     else:
-        os.system(f'rm -r {output_root}')
+        os.system(f"rm -r {output_root}")
     for dataset in ("train2017", "val2017"):
         image_dir = f"{labels_root}/{dataset}"
         output_dir = f"{output_root}/{dataset}"
@@ -39,7 +39,6 @@ if __name__ == "__main__":
                     for line in labels:
                         f.write(f"{line}\n")
 
-
     # fine-tune (more data & strong augmentation)
     settings = DefaultSettings()
     settings.trainset_path = [
@@ -52,8 +51,8 @@ if __name__ == "__main__":
     settings.momentum = 0.75
     settings.weight_decay = 0.00025
     settings.lrf = 0.15
-    settings.names.append('gun')
-    settings.names.append('hand')
+    settings.names.append("gun")
+    settings.names.append("hand")
     settings.nc = 82
     settings.save_dir = "runs/yolov5n"
     model = yolov5n(num_classes=82, weights="runs/yolov5n.1/best.pt")
@@ -69,8 +68,8 @@ if __name__ == "__main__":
     settings.momentum = 0.75
     settings.weight_decay = 0.00025
     settings.lrf = 0.15
-    settings.names.append('gun')
-    settings.names.append('hand')
+    settings.names.append("gun")
+    settings.names.append("hand")
     settings.nc = 82
     settings.save_dir = "runs/yolov5s"
     model = yolov5s(num_classes=82, weights="runs/yolov5s.2/best.pt")
