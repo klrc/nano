@@ -36,7 +36,7 @@ def yolov5_inference(model, frame, conf_thres=0.2, iou_thres=0.45):
         # Inference
         out, _ = model(frame)  # inference, loss outputs
         # list of detections, on (n,6) tensor per image [xyxy, conf, cls]
-        out = non_max_suppression(out, conf_thres, iou_thres, labels=[], multi_label=True, agnostic=False)
+        out = non_max_suppression(out, conf_thres, iou_thres, labels=[], multi_label=True, agnostic=True)
     return out
 
 

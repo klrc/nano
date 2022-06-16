@@ -244,7 +244,7 @@ class ComputeLoss:
                 ],
                 device=self.device,
             ).float()
-            * g
+            * g  # noqa:W503
         )  # offsets
 
         for i in range(self.nl):

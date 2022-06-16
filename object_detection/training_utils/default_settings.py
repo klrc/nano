@@ -74,7 +74,7 @@ class DefaultSettings:
     # other settings
     start_epoch = 0
     max_epoch = 300
-    patience = 50  # EarlyStopping patience (epochs without improvement)
+    patience = 10  # EarlyStopping patience (epochs without improvement)
     save_dir = "runs/unknown_model"
 
 
