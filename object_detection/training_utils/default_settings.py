@@ -6,6 +6,7 @@ class DefaultSettings:
     frozen_params = None
     grid_stride = 32
     auto_anchor = True
+    init_detect_bias = True
 
     # optimizer settings
     optimizer = torch.optim.SGD

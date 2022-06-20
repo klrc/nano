@@ -15,6 +15,7 @@ from .general import (
     create_optimizer,
     create_scheduler,
     increment_path,
+    initialize_detect_bias,
     save_data,
     select_device,
     sync_settings,
@@ -37,10 +38,13 @@ def train(model: nn.Module, config=None, device="cpu"):
     model = check_before_training(model, device, s.input_shape, s.expected_output_shapes)
     optimizer = create_optimizer(model, s.frozen_params, s.optimizer, s.lr0, s.momentum, s.weight_decay)
     scheduler, lf = create_scheduler(optimizer, s.lrf, s.start_epoch, s.max_epoch, s.cos_lr)
-    train_loader, _ = create_dataloader(s.trainset_path, training=True, settings=s)
+    train_loader, trainset = create_dataloader(s.trainset_path, training=True, settings=s)
     val_loader, valset = create_dataloader(s.valset_path, training=False, settings=s)
     if s.auto_anchor:
         check_anchors(valset, model=model, thr=s.anchor_t, imgsz=s.imgsz)
+    if s.init_detect_bias:
+        initialize_detect_bias(model, trainset, s.nc)
+
     hyp = sync_yolov5_hyp(model, s)
 
     ema = ModelEMA(model)

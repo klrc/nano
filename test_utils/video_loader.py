@@ -14,7 +14,7 @@ class VideoLoader:
     def collect(pipe: Queue, size, file_path, fps, color_format, non_block):
         raise NotImplementedError
 
-    def play(self, pipe: Queue, fps=24, color_format=cv2.COLOR_YUV2BGR_I420, non_block=True):
+    def play(self, pipe: Queue, fps=24, color_format=None, non_block=True):
         # Create a virtual video stream
         proc = Process(target=self.collect, args=(pipe, self.size, self.file_path, fps, color_format, non_block))
         proc.daemon = True
@@ -44,12 +44,42 @@ class YUV420_VID_LOADER(VideoLoader):
         # Ending flag as None
         pipe.put(None)
 
+    def play(self, pipe: Queue, fps=24, color_format=cv2.COLOR_YUV2BGR_I420, non_block=True):
+        # Create a virtual video stream
+        proc = Process(target=self.collect, args=(pipe, self.size, self.file_path, fps, color_format, non_block))
+        proc.daemon = True
+        proc.start()
+
+
+class H264_LOADER(VideoLoader):
+    def __init__(self, file_path, size=None) -> None:
+        super().__init__()
+        self.file_path = file_path
+        self.size = size
+
+    @staticmethod
+    def collect(pipe: Queue, size, file_path, fps, color_format, non_block):
+        cap = cv2.VideoCapture(file_path)
+        if not cap.isOpened():
+            os._exit(-1)
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            if size:
+                frame = cv2.resize(frame, size)
+            if not (non_block and pipe.full()):
+                pipe.put(frame if color_format is None else cv2.cvtColor(frame, color_format))
+            time.sleep(1 / fps)
+        # Ending flag as None
+        pipe.put(None)
+
 
 if __name__ == "__main__":
     # Test scripts
-    loader = YUV420_VID_LOADER("/Users/sh/Downloads/1280x720_2.yuv", (720, 1280))
+    loader = H264_LOADER("../datasets/6630-V1.5.7.0误报&漏报视频2000613/误报/hand.h264", (480, 384))
     pipe = Queue(maxsize=2)
-    loader.play(pipe, fps=48)
+    loader.play(pipe, fps=24)
 
     frame = pipe.get()
     while frame is not None:

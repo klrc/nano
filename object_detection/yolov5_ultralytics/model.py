@@ -288,7 +288,10 @@ def forced_load(model, weights):
         "model.24.": "detect.",
     }
     csd = {}
-    for k, v in torch.load(weights).items():
+    map_location = None
+    if not torch.cuda.is_available():
+        map_location = 'cpu'
+    for k, v in torch.load(weights, map_location=map_location).items():
         for pattern in weight_mapper:
             if pattern in k:
                 k = k.replace(pattern, weight_mapper[pattern])

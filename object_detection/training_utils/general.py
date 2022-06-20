@@ -658,3 +658,41 @@ def save_data(data, path, mode="w"):
             f.write("\n")
     else:
         torch.save(data, path)
+
+
+def initialize_detect_bias(model, dataset, nc):
+    cf = torch.bincount(torch.tensor(np.concatenate(dataset.labels, 0)[:, 0]).long(), minlength=nc) + 1.0
+    model.detect._initialize_biases(cf)
+
+
+def convert_dataset_labels(label_root, mapper, dataset_dirs=("train2017", "val2017"), backup_suffix="_raw"):
+    # raw backup
+    backup_root = label_root + backup_suffix
+    if os.path.exists(backup_root):
+        os.system(f"rm -r {label_root}")
+    else:
+        os.system(f"mv {label_root} {backup_root}")
+    # map label classses
+    for dataset in dataset_dirs:
+        source_dir = f"{backup_root}/{dataset}"
+        output_dir = f"{label_root}/{dataset}"
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        # traverse through images
+        print(source_dir)
+        assert os.path.exists(source_dir)
+        for file_name in os.listdir(source_dir):
+            if not file_name.startswith("._") and file_name.endswith(".txt"):
+                labels = []
+                with open(f"{source_dir}/{file_name}", "r") as f:
+                    for line in f.readlines():
+                        c, x, y, w, h = [float(m) for m in line.split(" ")]
+                        c = int(c)
+                        if c in mapper:
+                            c = mapper[c]
+                            line = f"{c} {x} {y} {w} {h}"
+                            labels.append(line)
+
+                with open(f"{output_dir}/{file_name}", "w") as f:
+                    for line in labels:
+                        f.write(f"{line}\n")
