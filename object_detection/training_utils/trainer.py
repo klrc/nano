@@ -43,7 +43,7 @@ def train(model: nn.Module, config=None, device="cpu"):
     if s.auto_anchor:
         check_anchors(valset, model=model, thr=s.anchor_t, imgsz=s.imgsz)
     if s.init_detect_bias:
-        initialize_detect_bias(model, trainset, s.nc)
+        initialize_detect_bias(model, trainset, s.nc, device)
 
     hyp = sync_yolov5_hyp(model, s)
 

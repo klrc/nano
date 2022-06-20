@@ -660,8 +660,9 @@ def save_data(data, path, mode="w"):
         torch.save(data, path)
 
 
-def initialize_detect_bias(model, dataset, nc):
+def initialize_detect_bias(model, dataset, nc, device):
     cf = torch.bincount(torch.tensor(np.concatenate(dataset.labels, 0)[:, 0]).long(), minlength=nc) + 1.0
+    cf = cf.to(device)
     model.detect._initialize_biases(cf)
 
 
