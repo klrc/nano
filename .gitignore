@@ -1,9 +1,9 @@
-# regular ignores
-.idea
+.history
 .DS_Store
-.vscode
-__pycache__
+*.pyc
 runs
-xnnc/src
-*.yuv
-*.png
+*.pt
+*.zip
+.ipynb_checkpoints
+.yolov5_checkpoints
+.vscode
