@@ -34,7 +34,6 @@ def yolov5_inference(model, frame, conf_thres=0.2, iou_thres=0.45):
     with torch.no_grad():
         # Inference
         out, _ = model(frame)  # inference, loss outputs
-        out[..., 5] = 0
         # list of detections, on (n,6) tensor per image [xyxy, conf, cls]
         out = non_max_suppression(out, conf_thres, iou_thres, labels=[], multi_label=True, agnostic=True)
     return out
@@ -63,8 +62,8 @@ def detect(model: nn.Module, frame: np.ndarray, canvas=None, mode="yolov5", grou
     if mode == "yolov5":
         for det in yolov5_inference(model, frame)[0]:
             pt1, pt2, conf, cls = det[:2], det[2:4], det[4], int(det[5])
-            # if cls not in (0, 1, 2, 3, 5, 7, 81):
-            #     continue
+            if cls not in (0, 1, 2, 3, 5, 7, 81):
+                continue
             color = canvas.color(cls)
             title = f"{str(cls) if not class_names else class_names[cls]}: {conf:.2f}"
             canvas.draw_box(pt1, pt2, alpha=0.4, thickness=-1, color=color)

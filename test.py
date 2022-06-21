@@ -1,15 +1,20 @@
 from object_detection.training_utils.default_settings import DefaultSettings
 from object_detection.yolov5_ultralytics import yolov5n, yolov5s
-from test_utils.detection_test import camera_test, video_test
+from test_utils.detection_test import camera_test, travel_dataset, video_test
 from test_utils.video_loader import H264_LOADER
+
 
 names = DefaultSettings.names
 names.append('gun')
 names.append('hand')
 
-# model = yolov5s(80, weights='runs/yolov5s.2/best.pt').eval()
-model = yolov5n(82, weights="runs/yolov5n.7/best.pt").eval()
-# model = yolov5n(80, weights="runs/yolov5n.7/fuse.pt").eval()
+
+# travel_dataset('/Volumes/ASM236X/HGP/images/val2017', class_names=names)
+
+
+model = yolov5s(82, weights='runs/yolov5s.3/best.pt').eval()
+# model = yolov5n(82, weights="runs/yolov5n.7/best.pt").eval()
+# # model = yolov5n(80, weights="runs/yolov5n.7/fuse.pt").eval()
 
 # camera_test(model, class_names=names, inf_size=480)
 

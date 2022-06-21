@@ -4,14 +4,6 @@ from object_detection.training_utils.trainer import train
 from object_detection.yolov5_ultralytics import yolov5n, yolov5s
 
 if __name__ == "__main__":
-    # process dataset
-    label_mapper = {
-        0: DefaultSettings.names.index("cell phone"),  # phone
-        1: 80,  # gun
-        2: 81,  # hand
-    }
-    convert_dataset_labels("../datasets/HGP/labels", label_mapper)
-
     # global settings: fine-tune (more data & strong augmentation)
     DefaultSettings.names.append("gun")
     DefaultSettings.names.append("hand")

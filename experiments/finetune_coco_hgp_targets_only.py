@@ -16,7 +16,13 @@ if __name__ == "__main__":
     }
     convert_dataset_labels("../datasets/coco/labels", mscoco_label_mapper)
     # process HGP
-    hgp_label_mapper = {2: 4}  # cell phone, gun, hand
+    DefaultSettings.names.append('gun')
+    DefaultSettings.names.append('hand')
+    hgp_label_mapper = {
+        DefaultSettings.names.index("person"): 0,
+        DefaultSettings.names.index("car"): 2,
+        DefaultSettings.names.index("hand"): 4,
+    }
     convert_dataset_labels("../datasets/HGP/labels", hgp_label_mapper)
     # global settings: fine-tune (more data & strong augmentation)
     DefaultSettings.names = ["person", "bicycle", "car", "motorcycle", "hand"]
