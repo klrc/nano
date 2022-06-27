@@ -1,5 +1,4 @@
 from object_detection.training_utils.default_settings import DefaultSettings
-from object_detection.training_utils.general import convert_dataset_labels
 from object_detection.training_utils.trainer import train
 from object_detection.yolov5_ultralytics import yolov5n, yolov5s
 
