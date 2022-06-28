@@ -10,7 +10,7 @@ class Canvas:
     def __init__(self, image=None, backend="cv2") -> None:
         # random color queue
         self.color_presets = {}
-        if image:
+        if image is not None:
             self.load(image)
         self.font = cv2.FONT_HERSHEY_SIMPLEX
         self.font_scale = 0.3

@@ -7,7 +7,7 @@ if __name__ == "__main__":
     DefaultSettings.trainset_path = "../datasets/coco/train2017.txt"
     DefaultSettings.valset_path = "../datasets/coco/val2017.txt"
     DefaultSettings.patience = 10
-    DefaultSettings.max_epoch = 100
+    DefaultSettings.max_epoch = 300
 
     settings = DefaultSettings()
     settings.save_dir = "runs/yolov5s"
