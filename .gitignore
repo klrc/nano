@@ -1,4 +1,9 @@
 .history
-.yolov5_checkpoints
-*.pt
+.DS_Store
+*.pyc
 runs
+*.pt
+*.zip
+.ipynb_checkpoints
+.yolov5_checkpoints
+.vscode
