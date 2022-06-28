@@ -1,1 +1,4 @@
 .history
+.yolov5_checkpoints
+*.pt
+runs
