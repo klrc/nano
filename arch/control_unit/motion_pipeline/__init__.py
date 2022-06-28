@@ -1,0 +1,1 @@
+from .core import camera_test, video_test
