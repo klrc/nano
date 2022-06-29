@@ -4,8 +4,7 @@ import torch.nn as nn
 import math
 
 
-# ACTIVATION = nn.ReLU6
-ACTIVATION = nn.SiLU
+ACTIVATION = nn.ReLU6
 DEFAULT_ANCHORS = (
     (10, 13, 16, 30, 33, 23),
     (30, 61, 62, 45, 59, 119),
@@ -311,7 +310,7 @@ def yolov5s(num_classes, anchors=None, cf=None, weights=None, activation=None):
                 if isinstance(c, ACTIVATION):
                     setattr(m, cname, activation())
     if weights is not None:
-        model = forced_load(model, weights)        
+        model = forced_load(model, weights)
     return model
 
 

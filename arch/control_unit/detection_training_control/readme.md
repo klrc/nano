@@ -1,18 +1,18 @@
 ## Get Started
 ```python
-from arch.control_unit.detection_training_control import DefaultSettings, TrainingControlUnit
+from arch.control_unit.detection_training_control import PresetScratch, TrainingControlUnit
 from arch.model.object_detection.yolov5 import yolov5s, yolov5n
 
 if __name__ == "__main__":
-    DefaultSettings.trainset_path = "../datasets/coco/train2017.txt"
-    DefaultSettings.valset_path = "../datasets/coco/val2017.txt"
+    PresetScratch.trainset_path = "../datasets/coco/train2017.txt"
+    PresetScratch.valset_path = "../datasets/coco/val2017.txt"
 
-    settings = DefaultSettings()
+    settings = PresetScratch()
     settings.save_dir = "runs/yolov5s"
     model = yolov5s(num_classes=80)
     TrainingControlUnit(model, settings).run(device="0")
 
-    settings = DefaultSettings()
+    settings = PresetScratch()
     settings.save_dir = "runs/yolov5n"
     model = yolov5n(num_classes=80)
     TrainingControlUnit(model, settings).run(device="0")
@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
 training can be excecuted in queue with this control unit.
 
-as shown above, you can set `DefaultSettings` as global setting, and adjust each settings instance further.
+as shown above, you can set `Preset<XXX>` as global setting, and adjust each settings instance further.
 
 
 ## Evaluation Only
