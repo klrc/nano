@@ -14,6 +14,7 @@ from loguru import logger
 from torch.cuda import amp
 from tqdm import tqdm
 
+from .plots import plot_images
 from .sample_settings import SampleSettings
 from .ema import de_parallel
 from .metrics import ap_per_class
@@ -25,6 +26,7 @@ class Status:
     # global status
     current_epoch = -1
     last_opt_step = -1
+    save_dir = None
 
     # training status
     tr_accumulate = -1
@@ -68,7 +70,9 @@ def sync_yolov5_hyp(model, settings: SampleSettings):
     box = s.box * 3 / nl  # scale to layers
     cls = s.cls * s.nc / 80 * 3 / nl  # scale to classes and layers
     obj = s.obj * (s.imgsz / 640) ** 2 * 3 / nl  # scale to image size and layers
-    hyp = yolov5_fake_hyp(s.cls_pw, s.obj_pw, s.label_smoothing, s.fl_gamma, box, obj, cls, s.anchor_t)
+    hyp = yolov5_fake_hyp(
+        cls_pw=s.cls_pw, obj_pw=s.obj_pw, label_smoothing=s.label_smoothing, fl_gamma=s.fl_gamma, box=box, obj=obj, cls=cls, anchor_t=s.anchor_t
+    )
     return hyp
 
 
@@ -464,9 +468,13 @@ def train_for_one_epoch(
     optimizer.zero_grad()
     cuda = device.type != "cpu"
 
-    for i, (imgs, targets, _, _) in pbar:  # batch -------------------------------------------------------------
+    for i, (imgs, targets, paths, _) in pbar:  # batch -------------------------------------------------------------
         ni = i + u.tr_nb * u.current_epoch  # number integrated batches (since train start)
         imgs = imgs.to(device, non_blocking=True).float() / 255  # uint8 to float32, 0-255 to 0.0-1.0
+
+        # plot image
+        if i == 0 and s.save_plot:
+            plot_images(imgs, targets, paths, f"{u.save_dir}/train_batch_0.jpg", s.names)
 
         # Warmup
         if ni <= u.tr_nw:
@@ -557,6 +565,10 @@ def val_for_one_epoch(model, device, val_loader, criteria, settings: SampleSetti
         im = im.half() if s.half else im.float()  # uint8 to fp16/32
         im /= 255  # 0 - 255 to 0.0 - 1.0
         nb, _, height, width = im.shape  # batch size, channels, height, width
+
+        # plot image
+        if batch_i == 0 and s.save_plot:
+            plot_images(im, targets, paths, f"{u.save_dir}/val_batch_0.jpg", s.names)
 
         # Inference
         out, train_out = model(im)  # inference, loss outputs

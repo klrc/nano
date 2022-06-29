@@ -73,6 +73,7 @@ class SampleSettings:
     verbose = True  # report mAP by class
 
     # other settings
+    save_plot = True
     start_epoch = 0
     max_epoch = 300
     patience = 10  # EarlyStopping patience (epochs without improvement)

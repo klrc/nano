@@ -4,8 +4,7 @@ import torch.nn as nn
 import math
 
 
-# ACTIVATION = nn.ReLU6
-ACTIVATION = nn.SiLU
+ACTIVATION = nn.ReLU6
 DEFAULT_ANCHORS = (
     (10, 13, 16, 30, 33, 23),
     (30, 61, 62, 45, 59, 119),
