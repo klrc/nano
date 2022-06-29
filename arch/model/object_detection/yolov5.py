@@ -310,7 +310,7 @@ def yolov5s(num_classes, anchors=None, cf=None, weights=None, activation=None):
                 if isinstance(c, ACTIVATION):
                     setattr(m, cname, activation())
     if weights is not None:
-        model = forced_load(model, weights)        
+        model = forced_load(model, weights)
     return model
 
 
