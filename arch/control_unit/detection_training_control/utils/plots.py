@@ -1,9 +1,7 @@
-from loguru import logger
 import torch
 import cv2
 import numpy as np
 import math
-import os
 
 def xywh2xyxy(x):
     # Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right
