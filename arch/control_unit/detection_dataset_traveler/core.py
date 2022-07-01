@@ -2,7 +2,7 @@ import os
 import cv2
 
 from ...io.canvas import Canvas
-from ...io.utils import im2tensor
+from ...io.converter import im2tensor
 
 
 def read_labels_as_xyxy(lb):

@@ -84,7 +84,7 @@ def read_labels_as_xyxy(lb):
         return labels
 
 
-def full_dataset_test(model, path, class_names, inf_size=640):
+def full_dataset_test(model, path, class_names, inf_size=640, show_ground_truth=True):
     """
     1~9: jump to n% of dataset
     a: prev image
@@ -105,8 +105,10 @@ def full_dataset_test(model, path, class_names, inf_size=640):
         print(fp)
         image = cv2.imread(fp)
         image = uniform_scale(image, inf_size)
-        lb = fp.replace(".png", ".txt").replace(".jpg", ".txt").replace("/images", "/labels")
-        lb = read_labels_as_xyxy(lb)
+        lb = None
+        if show_ground_truth:
+            lb = fp.replace(".png", ".txt").replace(".jpg", ".txt").replace("/images", "/labels")
+            lb = read_labels_as_xyxy(lb)
         detect(model, image, canvas, ground_truth=lb, class_names=class_names)
         flag = cv2.waitKey(0)
         if flag == ord("q"):
