@@ -1,15 +1,18 @@
 import os
 from xml.dom.minidom import parse
 import cv2
-import sys
-
-sys.path.append(".")
-from arch.io.canvas import Canvas
 
 
-coco_class_names = "people|bicycle|car|motorbike|airplane|bus|train|truck|boat|traffic light|fire hydrant|stop sign|parking meter|bench|bird|cat|dog|horse|sheep|cow|elephant|bear|zebra|giraffe|backpack|umbrella|handbag|tie|suitcase|frisbee|skis|snowboard|sports ball|kite|baseball bat|baseball glove|skateboard|surfboard|tennis racket|bottle|wine glass|cup|fork|knife|spoon|bowl|banana|apple|sandwich|orange|broccoli|carrot|hot dog|pizza|donut|cake|chair|couch|potted plant|bed|table|toilet|tv|laptop|mouse|remote|keyboard|cell phone|microwave|oven|toaster|sink|refrigerator|book|clock|vase|scissors|teddy bear|hair drier|toothbrush|gun|person hand|toy".split(  # noqa:E501
+coco_class_names = "person|bicycle|car|motorbike|airplane|bus|train|truck|boat|traffic light|fire hydrant|stop sign|parking meter|bench|bird|cat|dog|horse|sheep|cow|elephant|bear|zebra|giraffe|backpack|umbrella|handbag|tie|suitcase|frisbee|skis|snowboard|sports ball|kite|baseball bat|baseball glove|skateboard|surfboard|tennis racket|bottle|wine glass|cup|fork|knife|spoon|bowl|banana|apple|sandwich|orange|broccoli|carrot|hot dog|pizza|donut|cake|chair|couch|potted plant|bed|table|toilet|monitor|laptop|mouse|remote|keyboard|phone|microwave|oven|toaster|sink|fridge|book|clock|vase|scissors|toy|hair drier|toothbrush|gun|person hand".split(  # noqa:E501
     "|"
 )  # class names
+
+
+def strike(text):
+    result = ""
+    for c in text:
+        result = result + c + "\u0336"
+    return result
 
 
 def load_labels_as_xyxy(x, y, w, h, height, width):
@@ -31,16 +34,14 @@ def replace_label(name, alias, target):
     return name
 
 
-def process(vis=False):
+def process(debug=False):
 
-    # class_names = []
-    # unexpected_names = []
+    rules = []
 
     image_root = "../datasets/IndoorCVPR_09/ImagesRaw"
-
-    # create dir
     generated_image_root = "../datasets/IndoorCVPR_09/images"
     generated_label_root = "../datasets/IndoorCVPR_09/labels"
+
     for path in (generated_image_root, generated_label_root):
         if not os.path.exists(path):
             os.makedirs(path)
@@ -61,8 +62,6 @@ def process(vis=False):
             if im is None:
                 continue
             height, width, _ = im.shape
-            if vis:
-                canvas = Canvas(im)
 
             # if not well-formed (invalid token): line 844, column 5 occurs, add this line then edit
             # print(xml_path)
@@ -73,28 +72,59 @@ def process(vis=False):
 
             for child in root.getElementsByTagName("object"):
                 name = child.getElementsByTagName("name")[0].childNodes[0].data.strip().lower()
+                raw_name = name
                 # fix typo
-                name = replace_label(name, "lying down", "people")
-                name = replace_label(name, "human", "people")
+                name = replace_label(name, "television set", "television_set")
+                name = replace_label(name, "television stand", "television_stand")
+                name = replace_label(name, "television case", "television_case")
+                name = replace_label(name, "toys", "toy")
+                name = replace_label(name, "toy car", "toy")
+                name = replace_label(name, "toilet seat lid", "toilet_seat_lid")
+                name = replace_label(name, "toilet bowl", "toilet")
+                name = replace_label(name, "toilet seat", "toilet")
+                name = replace_label(name, "sandwichs", "sandwich")
+                name = replace_label(name, "personsitting", "person")
+                name = replace_label(name, "peson walking", "person")
+                name = replace_label(name, "tv", "monitor")
+                name = replace_label(name, "motorcycle", "motorbike")
+                name = replace_label(name, "chairs", "chair")
+                name = replace_label(name, "man", "person")
+                name = replace_label(name, "woman", "person")
+                name = replace_label(name, "perso", "person")
+                name = replace_label(name, "books", "book")
+                name = replace_label(name, "tv stand", "tv_stand")
+                name = replace_label(name, "desk", "table")
+                name = replace_label(name, "table lamp", "table_lamp")
+                name = replace_label(name, "toilet paper dispenser", "toilet_paper")
+                name = replace_label(name, "toilet paper", "toilet_paper")
+                name = replace_label(name, "wc", "toilet")
+                name = replace_label(name, "lying down", "person")
+                name = replace_label(name, "human", "person")
+                name = replace_label(name, "plant pot occluded", "potted plant")
+                name = replace_label(name, "plant pot", "potted plant")
                 name = replace_label(name, "plant in a pot", "potted plant")
-                name = replace_label(name, "person", "people")
                 name = replace_label(name, "van", "car")
-                name = replace_label(name, "televison", "tv")
-                name = replace_label(name, "seats", "chair")
+                name = replace_label(name, "television", "monitor")
+                name = replace_label(name, "televison", "monitor")
+                name = replace_label(name, "seat", "chair")
+                name = replace_label(name, "seats", "bench")
                 name = replace_label(name, "sofa", "couch")
                 name = replace_label(name, "key board", "keyboard")
-                name = replace_label(name, "refigetator", "refrigerator")
-                name = replace_label(name, "refrigator", "refrigerator")
+                name = replace_label(name, "fridger occluded", "fridge")
+                name = replace_label(name, "refrigerator", "fridge")
+                name = replace_label(name, "refigetator", "fridge")
+                name = replace_label(name, "refrigator", "fridge")
                 name = replace_label(name, "bottl", "bottle")
                 is_matched, name = search_in_coco_classes(name)
 
                 # collect labels for further process
-                # if is_matched:
-                #     if name not in class_names:
-                #         class_names.append(name)
-                # else:
-                #     if name not in unexpected_names:
-                #         unexpected_names.append(name)
+                if is_matched:
+                    rule = f"{raw_name} -> {name}"
+                else:
+                    rule = strike(raw_name)
+                if rule not in rules:
+                    rules.append(rule)
+                    print(rule)
 
                 if is_matched:
                     xtl, ytl, xbr, ybr = float("inf"), float("inf"), -1, -1
@@ -113,66 +143,17 @@ def process(vis=False):
 
                     export_data.append([int(coco_class_names.index(name)), objx, objy, objw, objh])
 
-                    if vis:
-                        pt1, pt2 = load_labels_as_xyxy(objx, objy, objw, objh, height, width)
-                        canvas.draw_box(pt1, pt2, title=name)
-
             unique_name = fname.replace(".jpg", "").replace(" ", "_")
             unique_name = f"{scene}_{unique_name}"
-            with open(f"{generated_label_root}/{unique_name}.txt", "w") as f:
-                for line in export_data:
-                    line = " ".join([str(x) for x in line])
-                    f.write(f"{line}\n")
 
-            # os.system(f'cp "{image_path}" {generated_image_root}/{unique_name}.jpg')
-            print(f"{generated_image_root}/{unique_name}.jpg")
-
-            if vis:
-                canvas.show(wait_key=True)
-
-
-def walk(image_root):
-    for fname in os.listdir(image_root):
-        if fname.startswith("._"):
-            continue
-        image_path = f"{image_root}/{fname}"
-        xml_path = image_path.replace("/ImagesRaw", "/Annotations").replace(".jpg", ".xml")
-        if not os.path.exists(xml_path):
-            continue
-
-        im = cv2.imread(image_path)
-        if im is None:
-            continue
-        height, width, _ = im.shape
-        canvas = Canvas(im)
-
-        # if not well-formed (invalid token): line 844, column 5 occurs, add this line then edit
-        # print(xml_path)
-
-        tree = parse(xml_path)
-        root = tree.documentElement
-        for child in root.getElementsByTagName("object"):
-            name = child.getElementsByTagName("name")[0].childNodes[0].data.strip().lower()
-            xtl, ytl, xbr, ybr = float("inf"), float("inf"), -1, -1
-            for pt in child.getElementsByTagName("pt"):
-                x = float(pt.getElementsByTagName("x")[0].childNodes[0].data)
-                y = float(pt.getElementsByTagName("y")[0].childNodes[0].data)
-                xtl = min(xtl, x)
-                ytl = min(ytl, y)
-                xbr = max(xbr, x)
-                ybr = max(ybr, y)
-            xtl /= width
-            ytl /= height
-            xbr /= width
-            ybr /= height
-            objx, objy, objw, objh = (xtl + xbr) / 2, (ytl + ybr) / 2, xbr - xtl, ybr - ytl
-            pt1, pt2 = load_labels_as_xyxy(objx, objy, objw, objh, height, width)
-            canvas.draw_box(pt1, pt2, title=name)
-
-        print(fname)
-        canvas.show(wait_key=True)
+            if not debug:
+                # os.system(f'cp "{image_path}" {generated_image_root}/{unique_name}.jpg')
+                with open(f"{generated_label_root}/{unique_name}.txt", "w") as f:
+                    for line in export_data:
+                        line = " ".join([str(x) for x in line])
+                        f.write(f"{line}\n")
+                print(f"{generated_image_root}/{unique_name}.jpg")
 
 
 if __name__ == "__main__":
-    # walk("/Volumes/ASM236X/IndoorCVPR_09/ImagesRaw/airport_inside")
-    process()
+    process(debug=False)
