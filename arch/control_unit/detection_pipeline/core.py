@@ -61,6 +61,7 @@ def detect(model: nn.Module, frame: np.ndarray, canvas=None, mode="yolov5", grou
         canvas.show("ground truth")
     # render prediction
     if mode == "yolov5":
+        canvas.load(frame[0])
         for det in yolov5_inference(model, frame)[0]:
             pt1, pt2, conf, cls = det[:2], det[2:4], det[4], int(det[5])
             color = canvas.color(cls)
