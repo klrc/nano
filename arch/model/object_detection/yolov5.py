@@ -289,7 +289,7 @@ def forced_load(model, weights):
     csd = {}
     map_location = None
     if not torch.cuda.is_available():
-        map_location = 'cpu'
+        map_location = "cpu"
     for k, v in torch.load(weights, map_location=map_location).items():
         for pattern in weight_mapper:
             if pattern in k:

@@ -101,7 +101,9 @@ def full_dataset_test(model, path, class_names, inf_size=640, show_ground_truth=
     # control loop
     i = 0
     canvas = Canvas()
-    while i < len(test_queue):
+    while len(test_queue):
+        if i >= len(test_queue):
+            i = 0
         fp = test_queue[i]
         print(fp)
         image = cv2.imread(fp)

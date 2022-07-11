@@ -46,12 +46,13 @@ class Canvas:
         alpha = float(alpha)
         self.image = cv2.addWeighted(self.image, 1 - alpha, layer, alpha, 0)
 
-    def draw_point(self, pt1, thickness=3, alpha=1, color=None):
+    def draw_point(self, pt1, thickness=3, radius=1, alpha=1, color=None):
         # draw a single point on canvas
         layer = self.image.copy()
         layer = cv2.circle(
             img=layer,
             center=self._safe_pt(pt1),
+            radius=radius,
             color=color if color else self.color(None),
             thickness=thickness,
         )
@@ -93,6 +94,16 @@ class Canvas:
             )
         self.merge_visible(layer, alpha)
 
+    def draw_heatmap(self, feature, alpha=0.5):
+        h, w, _ = self.image.shape
+        assert len(feature.shape) == 2
+        feature = np.array(feature.abs())
+        heatmap = None
+        heatmap = cv2.normalize(feature, heatmap, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
+        heatmap = cv2.resize(heatmap, (w, h))
+        self.merge_visible(heatmap, alpha)
+
     def save(self, filename):
         cv2.imwrite(filename, self.image)
 
@@ -103,7 +114,7 @@ class Canvas:
             if wait_key:
                 cv2.waitKey(0)
         elif self.backend == "plt":
-            plt.imshow(self.image[:, :, ::-1], aspect='auto')
+            plt.imshow(self.image[:, :, ::-1], aspect="auto")
             plt.axis("off")
             plt.show()
         else:
