@@ -132,7 +132,7 @@ class DetectHead(nn.Module):
         if anchors is None:
             anchors = DEFAULT_ANCHORS
         self.nc = num_classes  # number of classes
-        self.no = num_classes + 5  # number of outputs per anchor
+        self.no = num_classes + 4  # number of outputs per anchor
         self.nl = len(anchors)  # number of detection layers
         self.na = len(anchors[0]) // 2  # number of anchors
         self.grid = [torch.zeros(1)] * self.nl  # init grid
@@ -150,7 +150,7 @@ class DetectHead(nn.Module):
         for mi, s in zip(m.m, m.stride):  # from
             b = mi.bias.view(m.na, -1)  # conv.bias(255) to (3,85)
             b.data[:, 4] += math.log(8 / (640 / s) ** 2)  # obj (8 objects per 640 image)
-            b.data[:, 5:] += math.log(0.6 / (m.nc - 0.999999)) if cf is None else torch.log(cf / cf.sum())  # cls
+            b.data[:, 4:] += math.log(0.6 / (m.nc - 0.999999)) if cf is None else torch.log(cf / cf.sum())  # cls
             mi.bias = torch.nn.Parameter(b.view(-1), requires_grad=True)
 
     def _make_grid(self, nx=20, ny=20, i=0):
