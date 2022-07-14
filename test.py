@@ -1,18 +1,17 @@
-import torch
+# from arch.data.local_video import H264VideoStream
+# import cv2
+
+# if __name__ == '__main__':
+#     video = H264VideoStream('../datasets/v1.5.6.5人形测试/12M左右不报.avi')
+#     for frame in video:
+#         cv2.imshow('test', frame)
+#         cv2.waitKey(0)
 
 
-if __name__ == "__main__":
-    from arch.control_unit.detection_pipeline import full_dataset_test, coco_class_names
-    from arch.control_unit.detection_heatmap_visualizer.core import Probe
-    from arch.model.object_detection.yolov5 import yolov5n
+from arch.data.video import LiveCamera
+import cv2
 
-    # model = yolov5n(80, weights=".yolov5_checkpoints/yolov5n_sd.pt", activation=torch.nn.SiLU).eval()
-    model = yolov5n(6, weights="runs/yolov5n.12/best.pt", activation=torch.nn.SiLU).eval()
-
-    # model = yolov5n(80, weights=".yolov5_checkpoints/yolov5n_sd.pt").eval()
-    # torch.onnx.export(model.fuse(), torch.rand(1, 3, 384, 640), "tmp.onnx", verbose=False, opset_version=12)
-
-    probe = Probe(model, forward_type='yolov5')
-
-    # Full dataset test
-    full_dataset_test(probe, "../datasets/办公室椅子测试", class_names=coco_class_names)
+if __name__ == '__main__':
+    video = LiveCamera(inf_size=480, exit_key='q')
+    for frame in video:
+        cv2.imshow('test', frame)
