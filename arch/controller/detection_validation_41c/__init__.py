@@ -1,0 +1,1 @@
+from .core import val_for_one_epoch as detection_validation

@@ -147,24 +147,24 @@ def check_anchors(dataset, anchors, strides, thr=4.0, imgsz=640):
         return bpr, aat
 
     stride = strides.view(-1, 1, 1)  # model strides
-    anchors = anchors.clone() * stride  # current anchors
-    bpr, aat = metric(anchors.cpu().view(-1, 2))
+    new_anchors = anchors.clone() * stride  # current anchors
+    bpr, aat = metric(new_anchors.cpu().view(-1, 2))
     s = f"\n{aat:.2f} anchors/target, {bpr:.3f} Best Possible Recall (BPR). "
     if bpr > 0.98:  # threshold to recompute
         logger.success(f"{s}Current anchors are a good fit to dataset")
     else:
         print(f"{s}Anchors are a poor fit to dataset ⚠️, attempting to improve...")
-        na = anchors.numel() // 2  # number of anchors
+        na = len(new_anchors[0]) // 2  # number of anchors
         try:
-            anchors = kmean_anchors(dataset, n=na, img_size=imgsz, thr=thr, gen=1000, verbose=False)
+            new_anchors = kmean_anchors(dataset, n=na, img_size=imgsz, thr=thr, gen=1000, verbose=False)
         except Exception as e:
             logger.error(f"{e}")
-        new_bpr = metric(anchors)[0]
+        new_bpr = metric(new_anchors)[0]
         if new_bpr > bpr:  # replace anchors
-            anchors = torch.tensor(anchors, device=anchors.device).type_as(anchors)
-            anchors[:] = anchors.clone().view_as(anchors)
+            new_anchors = torch.tensor(new_anchors, device=anchors.device).type_as(anchors)
+            new_anchors[:] = new_anchors.clone().view_as(anchors)
             check_anchor_order(anchors, strides)  # must be in pixel-space (not grid-space)
-            anchors /= stride
+            anchors = new_anchors / stride
             s = "Done"
         else:
             s = "Done (original anchors better than new anchors, proceeding with original anchors)"

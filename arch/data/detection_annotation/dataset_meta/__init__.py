@@ -1,1 +1,1 @@
-from .mscoco import MSCOCO
+from .mscoco import MSCOCO_META_DATA

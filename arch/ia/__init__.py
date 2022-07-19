@@ -1,1 +1,1 @@
-from .canvas import Canvas
+from .canvas import Canvas, im2tensor, tensor2im

@@ -309,7 +309,7 @@ class Yolo5Dataloader:
         dataset_path,
         image_size,
         batch_size,
-        workers=8,
+        workers=0,
         mosaic=1.0,  # image mosaic (probability)
         mixup=0.0,  # image mixup (probability)
         degrees=0.0,  # image rotation (+/- deg)
@@ -358,6 +358,8 @@ class Yolo5Dataloader:
         nd = torch.cuda.device_count()  # number of CUDA devices
         nw = min([os.cpu_count() // max(nd, 1), batch_size if batch_size > 1 else 0, workers])  # number of workers
         self.dataset = dataset
+        self.batch_size = batch_size
+        self.image_size = image_size
         self.loader = InfiniteDataLoader(
             dataset, batch_size=batch_size, shuffle=shuffle, num_workers=nw, sampler=None, pin_memory=True, collate_fn=dataset.collate_fn
         )
@@ -371,13 +373,12 @@ class Yolo5Dataloader:
         ),
         strides=(8, 16, 32),
         thr=4.0,
-        image_size=640,
     ):
         if not isinstance(anchors, torch.Tensor):
             anchors = torch.tensor(anchors).float().view(len(anchors), -1, 2)
-        if not isinstance(strides):
+        if not isinstance(strides, torch.Tensor):
             strides = torch.tensor(strides)  # strides computed during build
-        return check_anchors(self.dataset, anchors, strides, thr, image_size)
+        return check_anchors(self.dataset, anchors, strides, thr, self.image_size)
 
     def class_frequency(self, nc):
         # https://arxiv.org/abs/1708.02002 section 3.3
