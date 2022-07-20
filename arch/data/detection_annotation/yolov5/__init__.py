@@ -378,7 +378,7 @@ class Yolo5Dataloader:
             anchors = torch.tensor(anchors).float().view(len(anchors), -1, 2)
         if not isinstance(strides, torch.Tensor):
             strides = torch.tensor(strides)  # strides computed during build
-        return check_anchors(self.dataset, anchors, strides, thr, self.image_size)
+        return check_anchors(self.dataset, anchors.cpu(), strides.cpu(), thr, self.image_size)
 
     def class_frequency(self, nc):
         # https://arxiv.org/abs/1708.02002 section 3.3

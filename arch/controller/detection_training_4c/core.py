@@ -15,11 +15,10 @@ from ...utils.file_utils import increment_path
 from ...utils.torch_utils import EarlyStopping, ModelEMA, create_optimizer, create_scheduler, select_device, init_seeds
 
 
-class DetectionTraining41C:
+class DetectionTraining4C:
     def __init__(self) -> None:
         # Basic settings
         # utility settings
-        self.save_plot = True
         self.patience = 30  # EarlyStopping patience (epochs without improvement)
         self.save_dir = "runs/untitled_model"
         self.seed = 0
@@ -74,7 +73,7 @@ class DetectionTraining41C:
     @staticmethod
     def resume(cache_file, model, train_loader, val_loader, loss_func):
         # loaders are not serializable, so we need to set manually.
-        DT = DetectionTraining41C()
+        DT = DetectionTraining4C()
         attrs = torch.load(cache_file)
         for k, v in attrs.items():
             setattr(DT, k, v)
@@ -149,12 +148,12 @@ class DetectionTraining41C:
         nw = max(round(self.warmup_epochs * nb), 100)  # number of warmup iterations, max(3 epochs, 100 iterations)
         for epoch in range(self.last_epoch + 1, self.final_epoch):
             model.train()
-            mloss = torch.zeros(3, device=device)  # mean losses
+            mloss = torch.zeros(2, device=device)  # mean losses
             optimizer.zero_grad()
 
             # Set progress bar
             pbar = enumerate(train_loader)
-            print(("\n" + "%10s" * 7) % ("Epoch", "gpu_mem", "box", "obj", "cls", "labels", "img_size"))
+            print(("\n" + "%10s" * 6) % ("Epoch", "gpu_mem", "box", "cls", "labels", "img_size"))
             pbar = tqdm(pbar, total=nb, bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}")  # progress bar
 
             # Batch loop
@@ -193,7 +192,7 @@ class DetectionTraining41C:
                 # Log
                 mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
                 mem = f"{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G"  # (GB)
-                pbar.set_description(("%10s" * 2 + "%10.4g" * 5) % (f"{epoch}/{self.final_epoch - 1}", mem, *mloss, targets.shape[0], imgs.shape[-1]))
+                pbar.set_description(("%10s" * 2 + "%10.4g" * 4) % (f"{epoch}/{self.final_epoch - 1}", mem, *mloss, targets.shape[0], imgs.shape[-1]))
 
                 # Debug mode
                 if self.debug_mode:

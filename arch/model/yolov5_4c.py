@@ -1,4 +1,3 @@
-from requests import head
 import torch.nn as nn
 import torch
 

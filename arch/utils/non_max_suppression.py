@@ -132,12 +132,6 @@ def non_max_suppression_4c(prediction, conf_thres=0.25, iou_thres=0.45, classes=
         # Cat apriori labels if autolabelling
         if labels and len(labels[xi]):
             raise NotImplementedError
-            lb = labels[xi]
-            v = torch.zeros((len(lb), nc + 4), device=x.device)
-            v[:, :4] = lb[:, 1:5]  # box
-            v[:, 4] = 1.0  # conf
-            v[range(len(lb)), lb[:, 0].long() + 4] = 1.0  # cls
-            x = torch.cat((x, v), 0)
 
         # If none remain process next image
         if not x.shape[0]:

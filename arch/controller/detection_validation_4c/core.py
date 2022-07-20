@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 from ...utils.box_utils import box_iou, scale_coords, xywh2xyxy
-from ...utils.non_max_suppression import non_max_suppression_41c
+from ...utils.non_max_suppression import non_max_suppression_4c
 
 
 def compute_ap(recall, precision):
@@ -162,7 +162,7 @@ def val_for_one_epoch(
 
         # NMS
         targets[:, 2:] *= torch.tensor((width, height, width, height), device=device)  # to pixels
-        out = non_max_suppression_41c(out, conf_thres, iou_thres, labels=None, multi_label=True, agnostic=False)
+        out = non_max_suppression_4c(out, conf_thres, iou_thres, labels=None, multi_label=True, agnostic=False)
 
         # Metrics
         for si, pred in enumerate(out):

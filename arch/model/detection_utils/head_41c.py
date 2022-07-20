@@ -79,8 +79,6 @@ class DH41C(nn.Module):
 class DH41CStandardCharger:
     def __init__(self, head: DH41C, box=0.05, obj=1.0, cls=0.5, label_smoothing=0.0, anchor_t=4.0):
 
-        device = next(head.parameters()).device  # get model device
-
         # Define criteria
         self.loss_cls = nn.BCEWithLogitsLoss()
         self.loss_obj = nn.BCEWithLogitsLoss()
@@ -94,7 +92,6 @@ class DH41CStandardCharger:
         self.nc = head.nc  # number of classes
         self.nl = head.nl  # number of layers
         self.anchors = head.anchors
-        self.device = device
         self.box = box
         self.obj = obj
         self.cls = cls
@@ -146,11 +143,12 @@ class DH41CStandardCharger:
         return iou  # IoU
 
     def build_targets(self, p, targets):
+        device = targets.device
         # Build targets for compute_loss(), input targets(image,class,x,y,w,h)
         na, nt = self.na, targets.shape[0]  # number of anchors, targets
         tcls, tbox, indices, anch = [], [], [], []
-        gain = torch.ones(7, device=self.device)  # normalized to gridspace gain
-        ai = torch.arange(na, device=self.device).float().view(na, 1).repeat(1, nt)  # same as .repeat_interleave(nt)
+        gain = torch.ones(7, device=device)  # normalized to gridspace gain
+        ai = torch.arange(na, device=device).float().view(na, 1).repeat(1, nt)  # same as .repeat_interleave(nt)
         targets = torch.cat((targets.repeat(na, 1, 1), ai[..., None]), 2)  # append anchor indices
 
         g = 0.5  # bias
@@ -164,13 +162,13 @@ class DH41CStandardCharger:
                     [0, -1],  # j,k,l,m
                     # [1, 1], [1, -1], [-1, 1], [-1, -1],  # jk,jm,lk,lm
                 ],
-                device=self.device,
+                device=device,
             ).float()
             * g  # noqa:W503
         )  # offsets
 
         for i in range(self.nl):
-            anchors, shape = self.anchors[i], p[i].shape
+            anchors, shape = self.anchors[i].to(device), p[i].shape
             gain[2:6] = torch.tensor(shape)[[3, 2, 3, 2]]  # xyxy gain
 
             # Match targets to anchors
@@ -210,15 +208,16 @@ class DH41CStandardCharger:
 
 
     def __call__(self, p, targets):  # predictions, targets
-        lcls = torch.zeros(1, device=self.device)  # class loss
-        lbox = torch.zeros(1, device=self.device)  # box loss
-        lobj = torch.zeros(1, device=self.device)  # object loss
+        device = targets.device
+        lcls = torch.zeros(1, device=device)  # class loss
+        lbox = torch.zeros(1, device=device)  # box loss
+        lobj = torch.zeros(1, device=device)  # object loss
         tcls, tbox, indices, anchors = self.build_targets(p, targets)  # targets
 
         # Losses
         for i, pi in enumerate(p):  # layer index, layer predictions
             b, a, gj, gi = indices[i]  # image, anchor, gridy, gridx
-            tobj = torch.zeros(pi.shape[:4], dtype=pi.dtype, device=self.device)  # target obj
+            tobj = torch.zeros(pi.shape[:4], dtype=pi.dtype, device=device)  # target obj
 
             n = b.shape[0]  # number of targets
             if n:
@@ -238,7 +237,7 @@ class DH41CStandardCharger:
 
                 # Classification
                 if self.nc > 1:  # cls loss (only if multiple classes)
-                    t = torch.full_like(pcls, self.cn, device=self.device)  # targets
+                    t = torch.full_like(pcls, self.cn, device=device)  # targets
                     t[range(n), tcls[i]] = self.cp
                     lcls += self.loss_cls(pcls, t)  # BCE
 
